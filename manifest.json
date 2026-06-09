@@ -1,7 +1,7 @@
 {
   "name": "نكهة الدار",
   "short_name": "نكهة الدار",
-  "description": "Épices & saveurs tunisiennes",
+  "description": "Épices et saveurs tunisiennes",
   "start_url": "/customer-app.html",
   "display": "standalone",
   "background_color": "#1a4731",
@@ -11,14 +11,16 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "https://via.placeholder.com/192x192/1a4731/f0b429?text=ND",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "https://via.placeholder.com/512x512/1a4731/f0b429?text=ND",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
