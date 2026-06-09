@@ -884,7 +884,8 @@ function renderAI(){
   return `<div class="cwr">
     <div class="sch">
       <button class="bkb" onclick="S.showAI=false;render()">← ${T('back')}</button>
-      <div class="sct">🤖 ${T('ai')}</div><span></span>
+      <div class="sct">🤖 ${T('ai')}</div>
+      <span style="font-size:10px;font-weight:700;color:var(--gm)">${getRemainingMsgs()}/${MAX_MSGS_PER_DAY}</span>
     </div>
     <div class="cmsg" id="cmsg">
       ${S.msgs.length===0?`<div class="cbub bot" style="white-space:pre-line">${AI.default[S.lang]}</div>
@@ -953,22 +954,122 @@ function demoLogin(){
   S.user={name:L('أحمد بن علي','Ahmed Ben Ali','Ahmed Ben Ali'),phone:'55 123 456'};
   render();
 }
-function sendAI(msg){
-  if(!msg||!msg.trim())return;
-  S.msgs.push({r:'usr',t:msg});
-  const lo=msg.toLowerCase();
-  let resp=AI.default;
-  if(lo.includes('كسكسي')||lo.includes('couscous'))resp=AI.couscous;
-  else if(lo.includes('طاجين')||lo.includes('tagine'))resp=AI.tagine;
-  else if(lo.includes('هريسة')||lo.includes('harissa'))resp=AI.harissa;
-  else if(lo.includes('ولاء')||lo.includes('fidélité')||lo.includes('loyalty'))resp=AI.loyalty;
-  S.msgs.push({r:'bot',t:'...',typing:true});
+/* ═══════════════ CLAUDE AI API ═══════════════ */
+const CLAUDE_API_KEY = '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';
+const MAX_MSGS_PER_DAY = 100;
+
+function getAIUsage() {
+  const today = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem('ai_usage') || '{"date":"","count":0}');
+  if (stored.date !== today) return { date: today, count: 0 };
+  return stored;
+}
+
+function incrementAIUsage() {
+  const usage = getAIUsage();
+  usage.count++;
+  localStorage.setItem('ai_usage', JSON.stringify(usage));
+  return usage.count;
+}
+
+function getRemainingMsgs() {
+  return Math.max(0, MAX_MSGS_PER_DAY - getAIUsage().count);
+}
+
+async function sendAI(msg) {
+  if (!msg || !msg.trim()) return;
+
+  // Check daily limit
+  const remaining = getRemainingMsgs();
+  if (remaining === 0) {
+    showToast(L(
+      'وصلت للحد اليومي (100 رسالة). حاول غداً!',
+      'Limite journalière atteinte (100 messages). Réessayez demain!',
+      'Daily limit reached (100 messages). Try again tomorrow!'
+    ), '⚠️');
+    return;
+  }
+
+  // Warning at 10 remaining
+  if (remaining <= 10) {
+    showToast(L(`تبقى ${remaining} رسائل اليوم`, `${remaining} messages restants aujourd'hui`, `${remaining} messages left today`), '⚠️');
+  }
+
+  S.msgs.push({ r: 'usr', t: msg });
+  S.msgs.push({ r: 'bot', t: '⏳ ' + L('جاري التفكير...', 'En train de réfléchir...', 'Thinking...'), typing: true });
   render();
-  setTimeout(()=>{
+
+  // System prompt — contexte نكهة الدار
+  const systemPrompt = `أنت مساعد ذكي لمتجر "نكهة الدار" التونسي للتوابل والبهارات.
+المنتجات: فلفل أحمر، كركم، قرفة سيلانية، زعتر، نعناع، لوز، جوز، زبيب، مشمش مجفف، زيت زيتون بكر، هريسة تونسية، بذور الشيا.
+برنامج الولاء: مبتدئ(3%)، برونز(5%)، فضي(7%)، ذهبي(10%)، VIP(15%). هدية مجانية عند 200 دينار.
+الدفع: نقداً عند الاستلام فقط. التوصيل: 3-10 دينار حسب المنطقة.
+أجب باللغة التي يكتب بها المستخدم (عربي/فرنسي/إنجليزي).
+كن مفيداً، ودوداً، ومختصراً. اقترح المنتجات المناسبة عند الطلب.`;
+
+  // Build conversation history for context
+  const history = S.msgs
+    .filter(m => !m.typing)
+    .slice(-10) // last 10 messages for context
+    .map(m => ({ role: m.r === 'usr' ? 'user' : 'assistant', content: m.t }));
+
+  // Remove last (typing indicator) from history
+  history.pop();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        system: systemPrompt,
+        messages: [...history, { role: 'user', content: msg }]
+      })
+    });
+
+    const data = await response.json();
+
+    // Remove typing indicator
     S.msgs.pop();
-    S.msgs.push({r:'bot',t:resp[S.lang]||resp.ar,prods:resp.prods||[]});
-    render();
-  },800);
+
+    if (data.content && data.content[0]) {
+      const reply = data.content[0].text;
+      incrementAIUsage();
+
+      // Detect products mentioned and suggest adding to cart
+      const mentionedProds = PRODS.filter(p =>
+        reply.includes(p.ar) || reply.toLowerCase().includes(p.fr.toLowerCase())
+      ).map(p => p.id).slice(0, 5);
+
+      S.msgs.push({ r: 'bot', t: reply, prods: mentionedProds });
+
+      // Show remaining count every 10 messages
+      const used = getAIUsage().count;
+      if (used % 10 === 0) {
+        showToast(L(`${MAX_MSGS_PER_DAY - used} رسالة متبقية اليوم`, `${MAX_MSGS_PER_DAY - used} messages restants`, `${MAX_MSGS_PER_DAY - used} messages left`));
+      }
+    } else {
+      // Fallback if API error
+      S.msgs.push({ r: 'bot', t: L('عذراً، حدث خطأ. حاول مجدداً.', 'Désolé, une erreur est survenue.', 'Sorry, an error occurred.'), prods: [] });
+    }
+  } catch (e) {
+    // Fallback to local responses
+    S.msgs.pop();
+    const lo = msg.toLowerCase();
+    let resp = AI.default;
+    if (lo.includes('كسكسي') || lo.includes('couscous')) resp = AI.couscous;
+    else if (lo.includes('طاجين') || lo.includes('tagine')) resp = AI.tagine;
+    else if (lo.includes('هريسة') || lo.includes('harissa')) resp = AI.harissa;
+    else if (lo.includes('ولاء') || lo.includes('fidélité') || lo.includes('loyalty')) resp = AI.loyalty;
+    S.msgs.push({ r: 'bot', t: resp[S.lang] || resp.ar, prods: resp.prods || [] });
+  }
+  render();
 }
 function renderOrders(){
   const orders=S.orderHistory;
