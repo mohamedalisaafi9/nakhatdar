@@ -235,8 +235,8 @@ body{font-family:'Cairo','Tajawal',sans-serif;background:var(--bei);color:var(--
 .aab{background:var(--gd);color:#fff;border:none;border-radius:var(--r14);padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;width:100%}
 
 /* ── AUTH ── */
-.aus{height:100%;display:flex;flex-direction:column;background:var(--wh)}
-.auh{background:var(--gd);padding:50px 24px 40px;text-align:center;flex-shrink:0}
+.aus{height:100vh;width:100%;display:flex;flex-direction:column;background:var(--wh);overflow-y:auto}
+.auh{background:var(--gd);padding:60px 24px 50px;text-align:center;flex-shrink:0}
 .aulo{font-size:42px;font-weight:900;color:var(--go);font-family:'Cairo',sans-serif}
 .ause{font-size:13px;color:rgba(255,255,255,.7);margin-top:6px}
 .auf{flex:1;padding:24px 20px;overflow-y:auto}
@@ -456,7 +456,7 @@ function T(k){
     phone:L('الهاتف','Téléphone','Phone'),
     name:L('الاسم الكامل','Nom complet','Full name'),
     pass:L('كلمة المرور','Mot de passe','Password'),
-    demo:L('🎮 دخول تجريبي','🎮 Connexion démo','🎮 Demo login'),
+    demo:L('تجربة مباشرة','Essai direct','Quick demo'),
     login:L('تسجيل الدخول','Se connecter','Sign in'),
     register:L('إنشاء حساب','Créer un compte','Create account'),
     yourorders:L('طلباتي','Mes commandes','My orders'),
@@ -484,7 +484,11 @@ function T(k){
 /* ═══════════════ RENDER ENGINE ═══════════════ */
 function render(){
   const root=document.getElementById('root');
-  if(!S.user){root.innerHTML=renderAuth();return;}
+  if(!S.user){
+    root.innerHTML=renderAuth();
+    root.style.flexDirection='column';
+    return;
+  }
   root.innerHTML=`
     ${hdr()}
     <div class="ps" id="ps">
@@ -755,6 +759,7 @@ function renderSuccess(){
 /* ── DELIVERY MODAL ── */
 function renderDelivery(){
   if(!S.df.phone&&S.user?.phone)S.df.phone=S.user.phone;
+  if(!S.df.phone&&S.authF?.phone)S.df.phone=S.authF.phone;
   const govs=[...new Set(ZONES.map(z=>z.gov))];
   const cities=[...new Set(ZONES.filter(z=>z.gov===S.df.gov).map(z=>z.city))];
   const areas=ZONES.filter(z=>z.gov===S.df.gov&&z.city===S.df.city&&z.area);
@@ -794,7 +799,7 @@ function renderAccount(){
   return `<div class="ach">
     <div class="aca">${initials}</div>
     <div class="acn">${S.user.name}</div>
-    <div class="acp">${S.user.phone||'+216 00 000 000'}</div>
+    <div class="acp">${S.user.phone?'+216 '+S.user.phone:L('أضف رقم هاتفك','Ajoutez votre téléphone','Add your phone')}</div>
     <div class="atb">${tier.icon} ${L(tier.ar,tier.fr,tier.fr)} · −${tier.disc}%</div>
   </div>
   <div class="acb">
@@ -916,6 +921,11 @@ function renderAI(){
 function renderAuth(){
   return `<div class="aus">
     <div class="auh">
+      <div style="display:flex;justify-content:center;gap:6px;margin-bottom:20px">
+        <button onclick="setLang('ar')" style="padding:4px 12px;border-radius:20px;border:1.5px solid ${S.lang==='ar'?'var(--go)':'rgba(255,255,255,.3)'};background:${S.lang==='ar'?'var(--go)':'transparent'};color:${S.lang==='ar'?'var(--gd)':'rgba(255,255,255,.8)'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">عربي</button>
+        <button onclick="setLang('fr')" style="padding:4px 12px;border-radius:20px;border:1.5px solid ${S.lang==='fr'?'var(--go)':'rgba(255,255,255,.3)'};background:${S.lang==='fr'?'var(--go)':'transparent'};color:${S.lang==='fr'?'var(--gd)':'rgba(255,255,255,.8)'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">FR</button>
+        <button onclick="setLang('en')" style="padding:4px 12px;border-radius:20px;border:1.5px solid ${S.lang==='en'?'var(--go)':'rgba(255,255,255,.3)'};background:${S.lang==='en'?'var(--go)':'transparent'};color:${S.lang==='en'?'var(--gd)':'rgba(255,255,255,.8)'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">EN</button>
+      </div>
       <div class="aulo">نكهة الدار</div>
       <div class="ause">${L('توابل وبهارات من أجود المزارع التونسية','Épices des meilleures fermes tunisiennes','Spices from Tunisia\'s finest farms')}</div>
     </div>
@@ -923,7 +933,10 @@ function renderAuth(){
       <div class="autt">${S.authMode==='login'?T('login'):T('register')}</div>
       <div class="ausb">${S.authMode==='login'?L('أدخل بياناتك للمتابعة','Entrez vos informations','Enter your details'):L('أنشئ حساباً للاستفادة من العروض','Créez un compte pour profiter des offres','Create an account to enjoy offers')}</div>
       ${S.authMode==='register'?`<input class="auinp" placeholder="${T('name')}" oninput="S.authF.name=this.value">`:''}
-      <input class="auinp" type="tel" placeholder="+216 XX XXX XXX" oninput="S.authF.phone=this.value">
+      <div style="position:relative;margin-bottom:10px">
+        <span style="position:absolute;top:50%;transform:translateY(-50%);right:14px;font-size:13px;font-weight:700;color:var(--tm);pointer-events:none;z-index:1">+216</span>
+        <input class="auinp" type="tel" placeholder="XX XXX XXX" maxlength="8" style="padding-right:55px;margin-bottom:0" oninput="S.authF.phone=this.value.replace(/[^0-9]/g,'').slice(0,8)">
+      </div>
       <input class="auinp" type="password" placeholder="${T('pass')}" oninput="S.authF.pass=this.value">
       <button class="aubt" onclick="doAuth()">${S.authMode==='login'?T('login'):T('register')}</button>
       <button class="dmb" onclick="demoLogin()">🎮 ${T('demo')}</button>
