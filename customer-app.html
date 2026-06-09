@@ -4,11 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>نكهة الدار</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#1a4731">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="نكهة الدار">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1107,14 +1103,192 @@ function startTimer(){
     if(S.timerSecs===0){clearInterval(timerInt);timerInt=null;S.timerSecs=5400;}
   },1000);
 }
-render();
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('SW registered'))
-      .catch(err => console.log('SW error:', err));
+/* ═══════════════ SUPABASE INTEGRATION ═══════════════ */
+const SUPA_URL = 'https://ahneptqrbbtraysfjjk.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobmVwdHFyYmJ0cmF5c2ZzamprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE5ODEsImV4cCI6MjA5NjU2Nzk4MX0.iUbGqgfe_j9I5_X4eXsFVKd9Whl0Y7ktJ1McvG9kzWc';
+let db = null;
+
+async function initSupabase() {
+  try {
+    const { createClient } = supabase;
+    db = createClient(SUPA_URL, SUPA_KEY);
+
+    // Check existing session
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      S.user = { id: session.user.id, name: session.user.user_metadata?.full_name || 'مستخدم', phone: session.user.user_metadata?.phone || '' };
+      await loadProducts();
+      await loadCart();
+      await loadZones();
+    }
+
+    // Listen auth changes
+    db.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        S.user = { id: session.user.id, name: session.user.user_metadata?.full_name || 'مستخدم', phone: session.user.user_metadata?.phone || '' };
+        await loadProducts();
+        await loadCart();
+        await loadZones();
+        render();
+      } else if (event === 'SIGNED_OUT') {
+        S.user = null; S.cart = {}; render();
+      }
+    });
+  } catch(e) {
+    console.log('Supabase not available, using demo mode');
   }
+  render();
+}
+
+// ── LOAD PRODUCTS ──
+async function loadProducts() {
+  if (!db) return;
+  try {
+    const { data } = await db.from('products').select('*, categories(name_ar,name_fr,slug)').eq('is_active', true);
+    if (data && data.length > 0) {
+      // Map Supabase products to app format
+      data.forEach(p => {
+        const existing = PRODS.find(x => x.id === p.id);
+        if (!existing) {
+          PRODS.push({
+            id: p.id, cat: p.categories?.slug || 'spices',
+            e: p.images?.[0] || '📦',
+            ar: p.name_ar, fr: p.name_fr, en: p.name_en || p.name_fr,
+            u: p.unit, p: parseFloat(p.price),
+            pp: p.promo_price ? parseFloat(p.promo_price) : null,
+            s: p.stock_qty || 0, new: p.is_new, feat: p.is_featured,
+            dar: p.description_ar || '', dfr: p.description_fr || '',
+            ben: p.benefits_ar ? p.benefits_ar.split('\n') : []
+          });
+        }
+      });
+    }
+  } catch(e) { console.log('Using demo products'); }
+}
+
+// ── LOAD CART from Supabase ──
+async function loadCart() {
+  if (!db || !S.user?.id) return;
+  try {
+    const { data } = await db.from('cart_items').select('product_id, quantity').eq('user_id', S.user.id);
+    if (data) { S.cart = {}; data.forEach(item => { S.cart[item.product_id] = item.quantity; }); }
+  } catch(e) { console.log('Using local cart'); }
+}
+
+// ── LOAD DELIVERY ZONES ──
+async function loadZones() {
+  if (!db) return;
+  try {
+    const { data } = await db.from('delivery_zones').select('*').eq('is_active', true);
+    if (data && data.length > 0) {
+      ZONES.length = 0;
+      data.forEach(z => ZONES.push({ id: z.id, gov: z.governorate, city: z.city, area: z.area || '', price: parseFloat(z.price) }));
+    }
+  } catch(e) { console.log('Using demo zones'); }
+}
+
+// ── SYNC CART to Supabase ──
+async function syncCart(productId, quantity) {
+  if (!db || !S.user?.id) return;
+  try {
+    await db.rpc('upsert_cart_item', { p_user_id: S.user.id, p_product_id: productId, p_quantity: quantity });
+  } catch(e) { console.log('Cart sync failed, using local'); }
+}
+
+// ── OVERRIDE addCart & rmCart to sync ──
+const _addCart = addCart;
+const _rmCart  = rmCart;
+window.addCart = function(id) {
+  S.cart[id] = (S.cart[id] || 0) + 1;
+  syncCart(id, S.cart[id]);
+  render();
+};
+window.rmCart = function(id) {
+  if (S.cart[id] > 1) S.cart[id]--;
+  else delete S.cart[id];
+  syncCart(id, S.cart[id] || 0);
+  render();
+};
+
+// ── AUTH with Supabase ──
+async function doAuth() {
+  if (!db) { S.user = { name: S.authF.name || 'مستخدم', phone: S.authF.phone }; render(); return; }
+  const email = (S.authF.phone || 'user') + '@nakhat.tn';
+  try {
+    if (S.authMode === 'register') {
+      const { data, error } = await db.auth.signUp({
+        email, password: S.authF.pass,
+        options: { data: { full_name: S.authF.name, phone: S.authF.phone } }
+      });
+      if (error) { showToast(error.message, '⚠️'); return; }
+      showToast(L('تم إنشاء الحساب!','Compte créé!','Account created!'));
+    } else {
+      const { data, error } = await db.auth.signInWithPassword({ email, password: S.authF.pass });
+      if (error) { showToast(L('بيانات خاطئة','Identifiants incorrects','Wrong credentials'), '⚠️'); return; }
+    }
+  } catch(e) {
+    S.user = { name: S.authF.name || 'مستخدم', phone: S.authF.phone }; render();
+  }
+}
+
+async function demoLogin() {
+  if (!db) { S.user = { name: L('أحمد بن علي','Ahmed Ben Ali','Ahmed Ben Ali'), phone: '55 123 456' }; render(); return; }
+  try {
+    const { data, error } = await db.auth.signInWithPassword({ email: 'demo@nakhat.tn', password: 'Demo123456!' });
+    if (error) {
+      // Create demo user if not exists
+      await db.auth.signUp({ email: 'demo@nakhat.tn', password: 'Demo123456!', options: { data: { full_name: 'Ahmed Ben Ali', phone: '55 123 456' } } });
+      await db.auth.signInWithPassword({ email: 'demo@nakhat.tn', password: 'Demo123456!' });
+    }
+  } catch(e) {
+    S.user = { name: L('أحمد بن علي','Ahmed Ben Ali','Ahmed Ben Ali'), phone: '55 123 456' }; render();
+  }
+}
+
+// ── OVERRIDE logout ──
+const origLogout = window.render;
+function logout() { if (db) db.auth.signOut(); S.user = null; S.cart = {}; render(); }
+
+// ── OVERRIDE placeOrder to use Supabase checkout function ──
+async function placeOrder() {
+  if (!S.df.phone) { showToast(L('أدخل رقم هاتفك','Entrez votre numéro','Enter your phone'), '⚠️'); return; }
+  const sub = cartSub(), itemIds = Object.keys(S.cart);
+
+  if (db && S.user?.id) {
+    try {
+      const { data, error } = await db.rpc('checkout', {
+        p_user_id:     S.user.id,
+        p_governorate: S.df.gov,
+        p_city:        S.df.city,
+        p_area:        S.df.area || '',
+        p_street:      S.df.street || '',
+        p_house:       S.df.house || '',
+        p_phone:       S.df.phone,
+        p_coupon_code: S.coupon || null
+      });
+      if (error) { showToast(error.message, '⚠️'); return; }
+      const orderNum = 'ND-' + Date.now().toString().slice(-6);
+      S.lastOrder = { id: orderNum, num: orderNum, total: sub, hasGift: sub >= 200, date: new Date().toISOString(), items: itemIds };
+      S.orderHistory.unshift(S.lastOrder);
+      S.demoSpend += sub; S.modal = null; S.orderDone = true; S.cart = {};
+      render(); return;
+    } catch(e) { console.log('Using local checkout'); }
+  }
+
+  // Fallback local
+  const orderNum = 'ND-' + Date.now().toString().slice(-6);
+  S.lastOrder = { id: orderNum, num: orderNum, total: sub, hasGift: sub >= 200, date: new Date().toISOString(), items: itemIds };
+  S.orderHistory.unshift(S.lastOrder);
+  S.demoSpend += sub; S.modal = null; S.orderDone = true; S.cart = {};
+  render();
+}
+
+// ── INIT ──
+if (typeof supabase !== 'undefined') {
+  initSupabase();
+} else {
+  render();
+}
 </script>
 </body>
 </html>

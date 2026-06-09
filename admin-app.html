@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نكهة الدار — Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -1476,8 +1477,145 @@ function renderOrders() {
     </div>
   </div>`;}
 
+/* ═══════════════ SUPABASE ADMIN ═══════════════ */
+const SUPA_URL = 'https://ahneptqrbbtraysfjjk.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobmVwdHFyYmJ0cmF5c2ZzamprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE5ODEsImV4cCI6MjA5NjU2Nzk4MX0.iUbGqgfe_j9I5_X4eXsFVKd9Whl0Y7ktJ1McvG9kzWc';
+let db = null;
+
+async function initAdminSupabase() {
+  try {
+    db = supabase.createClient(SUPA_URL, SUPA_KEY);
+    await loadAdminData();
+    listenOrders();
+  } catch(e) { console.log('Using demo data'); }
+  render();
+}
+
+async function loadAdminData() {
+  if (!db) return;
+  try {
+    // Load orders
+    const { data: orders } = await db.from('orders')
+      .select('*, profiles(full_name, phone)')
+      .order('created_at', { ascending: false });
+    if (orders && orders.length > 0) {
+      MOCK.orders = orders.map(o => ({
+        id: o.order_number || o.id,
+        customer: o.profiles?.full_name || 'Client',
+        phone: o.customer_phone || o.profiles?.phone || '—',
+        total: parseFloat(o.total),
+        status: o.status,
+        date: o.created_at?.split('T')[0],
+        zone: o.city || '—',
+        driver: o.driver_id || null,
+        items: 0
+      }));
+      MOCK.stats.totalOrders = orders.length;
+      MOCK.stats.pendingOrders = orders.filter(o => o.status==='received'||o.status==='preparing').length;
+      MOCK.stats.deliveredOrders = orders.filter(o => o.status==='delivered').length;
+      const todayStr = new Date().toISOString().split('T')[0];
+      MOCK.stats.todaySales = orders.filter(o => o.created_at?.startsWith(todayStr)).reduce((s,o) => s + parseFloat(o.total||0), 0);
+    }
+
+    // Load products
+    const { data: prods } = await db.from('products').select('*, categories(name_fr)');
+    if (prods && prods.length > 0) {
+      MOCK.products = prods.map(p => ({
+        id: p.id, emoji: p.images?.[0] || '📦', name: p.name_ar, fr: p.name_fr,
+        cat: p.categories?.name_fr || 'Épices', price: parseFloat(p.price),
+        promoPrice: p.promo_price ? parseFloat(p.promo_price) : null,
+        stock: parseFloat(p.stock_qty||0), unit: p.unit || '100g', isActive: p.is_active
+      }));
+    }
+
+    // Load zones
+    const { data: zones } = await db.from('delivery_zones').select('*');
+    if (zones && zones.length > 0) {
+      MOCK.zones = zones.map(z => ({
+        id: z.id, gov: z.governorate, city: z.city, area: z.area||'',
+        price: parseFloat(z.price), isActive: z.is_active
+      }));
+    }
+
+    // Load coupons
+    const { data: coupons } = await db.from('coupons').select('*');
+    if (coupons && coupons.length > 0) {
+      MOCK.coupons = coupons.map(c => ({
+        code: c.code, disc: parseFloat(c.discount_pct), min: parseFloat(c.min_order||0),
+        uses: c.current_uses||0, maxUses: c.max_uses||1000,
+        valid: c.valid_until?.split('T')[0]||'—', isActive: c.is_active
+      }));
+    }
+  } catch(e) { console.log('Using mock data:', e.message); }
+}
+
+// ── REALTIME — nouvelles commandes ──
+function listenOrders() {
+  if (!db) return;
+  try {
+    db.channel('admin-orders')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
+        const o = payload.new;
+        MOCK.orders.unshift({
+          id: o.order_number || o.id,
+          customer: 'Nouveau client', phone: o.customer_phone || '—',
+          total: parseFloat(o.total), status: o.status,
+          date: new Date().toISOString().split('T')[0],
+          zone: o.city || '—', driver: null, items: 0
+        });
+        MOCK.stats.pendingOrders++;
+        MOCK.stats.totalOrders++;
+        toast('🔔 Nouvelle commande reçue !');
+        render();
+      })
+      .subscribe();
+  } catch(e) { console.log('Realtime not available'); }
+}
+
+// ── OVERRIDE updateOrderStatus to sync Supabase ──
+const _localUpdateStatus = updateOrderStatus;
+window.updateOrderStatus = async function(id, status) {
+  const o = MOCK.orders.find(x => x.id===id);
+  if (o) { o.status = status; MOCK.stats.pendingOrders = MOCK.orders.filter(x=>x.status==='received'||x.status==='preparing').length; toast(`Statut mis à jour : ${status}`); render(); }
+  if (!db) return;
+  try {
+    // Find real UUID from order_number
+    const { data } = await db.from('orders').select('id').eq('order_number', id).single();
+    if (data) await db.from('orders').update({ status }).eq('id', data.id);
+  } catch(e) { console.log('Status sync failed'); }
+};
+
+// ── OVERRIDE saveZone to sync Supabase ──
+const _localSaveZone = saveZone;
+window.saveZone = async function() {
+  const gov   = document.getElementById('z-gov')?.value?.trim();
+  const city  = document.getElementById('z-city')?.value?.trim();
+  const area  = document.getElementById('z-area')?.value?.trim() || '';
+  const price = parseFloat(document.getElementById('z-price')?.value);
+  if (!gov || !city || isNaN(price)) { toast('Tous les champs sont obligatoires','error'); return; }
+  if (db) {
+    try {
+      if (adminState.editItem?.id) {
+        await db.from('delivery_zones').update({ governorate:gov, city, area, price }).eq('id', adminState.editItem.id);
+      } else {
+        await db.from('delivery_zones').insert({ governorate:gov, city, area, price, is_active:true });
+      }
+      await loadAdminData();
+    } catch(e) { console.log('Zone sync failed'); }
+  } else {
+    if (adminState.editItem) { const z=MOCK.zones.find(x=>x.id===adminState.editItem.id); if(z){z.gov=gov;z.city=city;z.area=area;z.price=price;} }
+    else { MOCK.zones.push({id:'z'+Date.now(),gov,city,area,price,isActive:true}); }
+  }
+  toast(adminState.editItem?'✅ Zone modifiée !':'✅ Zone ajoutée !');
+  closeModal();
+};
+
 // ── INIT ──
-render();
+if (typeof supabase !== 'undefined') {
+  initAdminSupabase();
+} else {
+  render();
+}
 </script>
 </body>
 </html>
