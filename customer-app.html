@@ -393,9 +393,10 @@ let S={
   orderDone:false, lastOrder:null,
   orderHistory:[],
   df:{gov:'Sousse',city:'Sousse',area:'Sousse Centre',street:'',house:'',phone:''},
+  addrEditMode:false,
   savedAddresses:[],
   coupon:'', couponApplied:null,
-  msgs:[], timerSecs:5400, demoSpend:120
+  msgs:[], timerSecs:5400, demoSpend:0
 };
 
 /* ═══════════════ HELPERS ═══════════════ */
@@ -415,7 +416,7 @@ function T(k){
   const t={
     home:L('الرئيسية','Accueil','Home'),
     promos:L('العروض','Promos','Promos'),
-    loyalty:L('الولاء','Fidélité','Loyalty'),
+    loyalty:L('المكافآت','Récompenses','Rewards'),
     cart:L('السلة','Panier','Cart'),
     account:L('حسابي','Compte','Account'),
     search:L('ابحث عن منتج...','Rechercher...','Search...'),
@@ -492,7 +493,7 @@ function render(){
         S.tab==='home'?renderHome():S.tab==='promos'?renderPromos():
         S.tab==='loyalty'?renderLoyalty():S.tab==='cart'?renderCart():renderAccount()}
     </div>
-    ${!S.showAI&&!S.showNotif&&!S.detailId&&!S.subPage?bnav():''}
+    ${!S.showAI&&!S.showNotif&&!S.detailId?bnav():''}
     ${S.modal==='delivery'?renderDelivery():''}`;
   if(S.tab==='promos')startTimer();
   if(S.showAI)setTimeout(()=>{const c=document.getElementById('cmsg');if(c)c.scrollTop=c.scrollHeight;},60);
@@ -501,17 +502,22 @@ function render(){
 /* ── HEADER ── */
 function hdr(){
   const c=cartCount();
+  const isSubPage=S.showAI||S.showNotif||S.detailId||S.subPage;
   return `<div class="hd">
-    <div class="hl"><div class="hlm">نكهة<br>الدار</div>
+    <div class="hl" onclick="S.tab='home';S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;render()" style="cursor:pointer"><div class="hlm">نكهة<br>الدار</div>
       <div><div class="ht">نكهة الدار</div><div class="hs">ÉPICES & SAVEURS</div></div>
     </div>
     <div class="ha">
+      ${!isSubPage?`
       <button class="hib" onclick="S.showAI=!S.showAI;S.showNotif=false;S.detailId=null;render()"
         style="${S.showAI?'background:var(--go);color:var(--gd)':''}">🤖</button>
       <button class="hib" onclick="S.showNotif=!S.showNotif;S.showAI=false;S.detailId=null;render()">🔔</button>
       <button class="hib cbd" onclick="S.tab='cart';S.showAI=false;S.showNotif=false;S.detailId=null;render()">
         🛒${c>0?`<span class="cbc">${c}</span>`:''}
-      </button>
+      </button>`:`
+      <button class="hib" onclick="S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;render()" style="font-size:13px;font-weight:700">
+        ✕ ${L('رجوع','Retour','Back')}
+      </button>`}
     </div>
   </div>`;}
 
@@ -653,7 +659,7 @@ function renderLoyalty(){
   </div>
   <div class="gp2" style="margin:0 16px 16px">
     <span style="font-size:32px">🎁</span>
-    <div><div style="font-weight:700;font-size:13px;color:var(--gd)">${L('هدية مجانية عند 200 دت!','Cadeau gratuit à 200 DT!','Free gift from 200 DT!')}</div>
+    <div><div style="font-weight:700;font-size:13px;color:var(--gd)">${L('🎁 هدية مجانية لكل طلب يتجاوز 200 دت (هدية واحدة لكل طلب)','🎁 Cadeau offert pour toute commande ≥200 DT (un cadeau par commande)','🎁 Free gift for orders ≥200 DT (one gift per order)')}</div>
     <div style="font-size:11px;color:var(--tm);margin-top:2px">${L('سلة هدايا حرفية قيمة 25 دت','Panier artisanal valeur 25 DT','Artisanal basket worth 25 DT')}</div></div>
   </div>
   <div class="sec"><div class="set">📊 ${L('مستويات الولاء','Niveaux fidélité','Loyalty Levels')}</div></div>
@@ -668,14 +674,7 @@ function renderLoyalty(){
       ${t.id===tier.id?`<span class="pill pg">✓ ${L('مستواك','Votre niveau','Your level')}</span>`:''}
     </div>`).join('')}
   </div>
-  <div style="padding:0 16px 16px">
-    <div style="font-size:12px;font-weight:700;color:var(--tm);margin-bottom:8px">${T('sim')}</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      ${[50,150,300,600].map(a=>`<button onclick="S.demoSpend=Math.min(S.demoSpend+${a},99999);render()"
-        style="background:var(--bei);border:1.5px solid var(--bm);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+${a} DT</button>`).join('')}
-      <button onclick="S.demoSpend=0;render()" style="background:var(--bei);border:1.5px solid var(--rd);color:var(--rd);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
-    </div>
-  </div>`;}
+`;}
 
 /* ── CART ── */
 function renderCart(){
@@ -731,27 +730,31 @@ function renderCart(){
 
 function renderSuccess(){
   const o=S.lastOrder;
-  const steps=[{k:'received',i:'📥'},{k:'preparing',i:'👨‍🍳'},{k:'ready',i:'📦'},{k:'outfordelivery',i:'🚚'},{k:'delivered',i:'✅'}];
   return `<div class="osc">
-    <div class="osi">🎉</div>
+    <div class="osi">✅</div>
     <div class="ost">${T('orderdone')}</div>
     <div class="onb">${o.num}</div>
-    <div style="font-size:13px;color:var(--tm);margin-bottom:16px">${T('ordermsg')}</div>
-    ${o.hasGift?`<div class="gn" style="justify-content:center;margin-bottom:16px">🎁 ${T('gift')}</div>`:''}
-    <div class="ttl">${steps.map((s,i)=>`
-      <div class="ts2 ${i===0?'dn':''}">
-        <div class="sdt ${i===0?'dn':i===0?'cur':''}"><span>${s.i}</span></div>
-        <div class="sdi">
-          <div class="sdn">${T(s.k)}</div>
-          ${i===0?`<div class="sdt2">${new Date().toLocaleTimeString()}</div>`:''}
-        </div>
-      </div>`).join('')}
+    ${o.hasGift?`<div class="gn" style="justify-content:center;margin-bottom:12px">🎁 ${T('gift')}</div>`:''}
+    <div style="background:var(--gop);border:1.5px solid var(--go);border-radius:var(--r14);padding:16px;margin-bottom:16px;text-align:right">
+      <div style="font-size:14px;font-weight:700;color:var(--gd);margin-bottom:8px">
+        📞 ${L('سيتصل بك فريقنا قريباً لتأكيد طلبك وتحديد موعد التوصيل','Notre équipe vous appellera bientôt pour confirmer votre commande','Our team will call you soon to confirm your order')}
+      </div>
+      <div style="font-size:12px;color:var(--tm)">
+        ${L('التأكيد يتم عبر الهاتف من قبل الإدارة','La confirmation se fait par téléphone par l'administration','Confirmation is done by phone by the administration')}
+      </div>
     </div>
+    <div style="background:var(--bei);border-radius:var(--r14);padding:12px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--td);margin-bottom:6px">📋 ${L('تفاصيل الطلب','Détails commande','Order details')}</div>
+      <div style="font-size:13px;color:var(--tm)">${L('الإجمالي','Total','Total')}: <strong style="color:var(--g)">${fp(o.total)}</strong></div>
+      <div style="font-size:13px;color:var(--tm)">${L('الدفع','Paiement','Payment')}: <strong>${L('نقداً عند الاستلام','À la livraison','Cash on delivery')}</strong></div>
+    </div>
+    <div class="pi" style="justify-content:center">💵 ${T('cod')}</div>
     <button class="ckb" style="margin-top:16px" onclick="S.orderDone=false;S.cart={};render()">${T('neworder')}</button>
   </div>`;}
 
 /* ── DELIVERY MODAL ── */
 function renderDelivery(){
+  if(!S.df.phone&&S.user?.phone)S.df.phone=S.user.phone;
   const govs=[...new Set(ZONES.map(z=>z.gov))];
   const cities=[...new Set(ZONES.filter(z=>z.gov===S.df.gov).map(z=>z.city))];
   const areas=ZONES.filter(z=>z.gov===S.df.gov&&z.city===S.df.city&&z.area);
@@ -777,7 +780,7 @@ function renderDelivery(){
       <div class="fg"><div class="fl">${T('house')}</div>
         <input class="fi" placeholder="${T('house')}" value="${S.df.house}" oninput="S.df.house=this.value"></div>
       <div class="fg"><div class="fl">${T('phone')}</div>
-        <input class="fi" type="tel" placeholder="+216 XX XXX XXX" value="${S.df.phone}" oninput="S.df.phone=this.value"></div>
+        <input class="fi" type="tel" placeholder="XX XXX XXX" maxlength="8" value="${S.df.phone}" oninput="S.df.phone=this.value.replace(/\D/g,'').slice(0,8)" pattern="[0-9]{8}"><div style="font-size:10px;color:var(--ts);margin-top:3px">8 ${L('أرقام فقط','chiffres seulement','digits only')}</div></div>
       <div class="dfd"><span>${T('delfee')}</span><span>${fp(fee)}</span></div>
       <div class="pi">${T('cod')}</div>
       <button class="cfb" onclick="placeOrder()">✅ ${T('confirm')}</button>
@@ -885,7 +888,10 @@ function renderAI(){
     <div class="sch">
       <button class="bkb" onclick="S.showAI=false;render()">← ${T('back')}</button>
       <div class="sct">🤖 ${T('ai')}</div>
-      <span style="font-size:10px;font-weight:700;color:var(--gm)">${getRemainingMsgs()}/${MAX_MSGS_PER_DAY}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:700;color:var(--gm)">${getRemainingMsgs()}/${MAX_MSGS_PER_DAY}</span>
+        <button onclick="S.msgs=[];render()" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;color:var(--ts)">🗑️ ${L('مسح','Effacer','Clear')}</button>
+      </div>
     </div>
     <div class="cmsg" id="cmsg">
       ${S.msgs.length===0?`<div class="cbub bot" style="white-space:pre-line">${AI.default[S.lang]}</div>
@@ -1273,9 +1279,23 @@ function reorder(orderId){
   render();
 }
 function addAll(ids){
-  ids.forEach(id=>S.cart[id]=(S.cart[id]||0)+1);
-  render();
-  showToast(`${L('تمت الإضافة للسلة!','Ajouté au panier!','Added to cart!')} (${ids.length})`);
+  if(!ids||!ids.length)return;
+  let added=0;
+  ids.forEach(id=>{
+    // Check if valid product ID exists
+    const prod = PRODS.find(p=>p.id===id);
+    if(prod){
+      S.cart[id]=(S.cart[id]||0)+1;
+      if(db&&S.user?.id) syncCart(id,S.cart[id]);
+      added++;
+    }
+  });
+  if(added>0){
+    render();
+    showToast(`${L('تمت الإضافة للسلة!','Ajouté au panier!','Added to cart!')} (${added} ${L('منتجات','produits','products')})`);
+  } else {
+    showToast(L('لم يتم التعرف على المنتجات','Produits non reconnus','Products not found'),'⚠️');
+  }
 }
 
 let timerInt=null;
@@ -1471,7 +1491,39 @@ async function placeOrder() {
   render();
 }
 
+// ── SESSION PERSISTENCE via localStorage ──
+function saveSession(){
+  try{
+    localStorage.setItem('nd_cart', JSON.stringify(S.cart));
+    localStorage.setItem('nd_favs', JSON.stringify([...S.favs]));
+    if(S.user) localStorage.setItem('nd_user', JSON.stringify(S.user));
+    localStorage.setItem('nd_lang', S.lang);
+    localStorage.setItem('nd_spend', S.demoSpend.toString());
+    localStorage.setItem('nd_history', JSON.stringify(S.orderHistory));
+    localStorage.setItem('nd_addrs', JSON.stringify(S.savedAddresses));
+  }catch(e){}
+}
+function loadSession(){
+  try{
+    const cart=localStorage.getItem('nd_cart'); if(cart)S.cart=JSON.parse(cart);
+    const favs=localStorage.getItem('nd_favs'); if(favs)S.favs=new Set(JSON.parse(favs));
+    const user=localStorage.getItem('nd_user'); if(user)S.user=JSON.parse(user);
+    const lang=localStorage.getItem('nd_lang'); if(lang)S.lang=lang;
+    const spend=localStorage.getItem('nd_spend'); if(spend)S.demoSpend=parseFloat(spend)||0;
+    const hist=localStorage.getItem('nd_history'); if(hist)S.orderHistory=JSON.parse(hist);
+    const addrs=localStorage.getItem('nd_addrs'); if(addrs)S.savedAddresses=JSON.parse(addrs);
+  }catch(e){}
+}
+
+// Auto-save every time render is called
+const _origRender = render;
+window.render = function(){
+  _origRender();
+  saveSession();
+};
+
 // ── INIT ──
+loadSession(); // Load saved session first
 if (typeof supabase !== 'undefined') {
   initSupabase();
 } else {
