@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>نكهة الدار</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gd:#1a4731;--g:#2d6a4f;--gm:#40916c;--gl:#74c69d;--gp:#d8f3dc;
+  --go:#f0b429;--gop:#fef9e7;--bei:#f5f0e8;--bm:#ede4d0;
+  --wh:#fff;--td:#1a1a2e;--tm:#4a4a5a;--ts:#8a8a9a;
+  --rd:#e63946;--ora:#f4a261;
+  --r8:8px;--r14:14px;--r22:22px;
+  --sh:0 1px 6px rgba(0,0,0,.07);--shm:0 4px 16px rgba(0,0,0,.10);
+  --tr:all .22s cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Cairo','Tajawal',sans-serif;background:var(--bei);color:var(--td);direction:rtl}
+#root{height:100vh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;background:var(--wh);position:relative;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.15)}
+
+/* ── HEADER ── */
+.hd{background:var(--gd);color:#fff;padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hl{display:flex;align-items:center;gap:8px}
+.hlm{width:40px;height:40px;background:var(--go);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gd);line-height:1.2;text-align:center}
+.ht{font-size:17px;font-weight:900}
+.hs{font-size:9px;color:var(--gl);letter-spacing:.8px}
+.ha{display:flex;align-items:center;gap:6px}
+.hib{background:rgba(255,255,255,.12);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:17px;transition:var(--tr)}
+.hib:hover{background:rgba(255,255,255,.2)}
+.cbd{position:relative}
+.cbc{position:absolute;top:-5px;left:-5px;background:var(--go);color:var(--gd);font-size:9px;font-weight:900;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* ── SCROLL ── */
+.ps{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.ps::-webkit-scrollbar{display:none}
+
+/* ── BOTTOM NAV ── */
+.bn{display:flex;background:var(--wh);border-top:1px solid var(--bm);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 6px;cursor:pointer;transition:var(--tr);border:none;background:none;color:var(--ts);font-family:inherit;font-size:9px;gap:3px;position:relative}
+.ni.active{color:var(--g)}
+.nic{font-size:20px;line-height:1}
+.nil{font-size:9px;font-weight:600}
+.nib{position:absolute;top:6px;right:calc(50% - 16px);background:var(--rd);color:#fff;font-size:8px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* ── SEARCH ── */
+.sb{padding:12px 16px;background:var(--bei);border-bottom:1px solid var(--bm)}
+.siw{background:var(--wh);border-radius:var(--r22);display:flex;align-items:center;gap:8px;padding:10px 14px;box-shadow:var(--sh)}
+.siw input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;background:transparent;color:var(--td)}
+.siw input::placeholder{color:var(--ts)}
+
+/* ── SECTION ── */
+.sec{padding:16px 16px 0}
+.seh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.set{font-size:16px;font-weight:700;color:var(--td)}
+.sea{font-size:12px;color:var(--gm);font-weight:600;cursor:pointer;border:none;background:none;font-family:inherit}
+
+/* ── BANNER ── */
+.bsc{display:flex;gap:12px;overflow-x:auto;padding:0 16px 16px;scroll-snap-type:x mandatory}
+.bsc::-webkit-scrollbar{display:none}
+.bc{min-width:90%;background:var(--gd);border-radius:var(--r22);padding:20px;scroll-snap-align:start;position:relative;overflow:hidden;flex-shrink:0}
+.bc::before{content:'';position:absolute;top:-30px;left:-30px;width:140px;height:140px;background:rgba(255,255,255,.05);border-radius:50%}
+.bc.gold{background:linear-gradient(135deg,var(--go) 0%,#9b7309 100%)}
+.bbg{background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:8px}
+.btt{font-size:18px;font-weight:900;color:#fff;margin-bottom:4px}
+.bst{font-size:12px;color:rgba(255,255,255,.8)}
+.bct{margin-top:12px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block;font-family:inherit}
+
+/* ── CATEGORY CHIPS ── */
+.csc{display:flex;gap:8px;overflow-x:auto;padding:0 16px;margin-bottom:16px}
+.csc::-webkit-scrollbar{display:none}
+.cc{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;cursor:pointer;padding:8px 10px;border-radius:var(--r14);background:var(--bei);border:1.5px solid transparent;transition:var(--tr);min-width:64px}
+.cc.active{background:var(--gp);border-color:var(--gm)}
+.cci{font-size:22px}
+.ccn{font-size:10px;font-weight:600;color:var(--tm);white-space:nowrap}
+.cc.active .ccn{color:var(--g)}
+
+/* ── PRODUCT GRID / SCROLL ── */
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+.psc{display:flex;gap:10px;overflow-x:auto;padding:0 16px 16px}
+.psc::-webkit-scrollbar{display:none}
+.psc .pcd{min-width:140px;flex-shrink:0}
+
+/* ── PRODUCT CARD ── */
+.pcd{background:var(--wh);border-radius:var(--r14);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:var(--tr);border:1px solid var(--bm)}
+.pcd:active{transform:scale(.97)}
+.pim{width:100%;aspect-ratio:1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative}
+.pbg{position:absolute;top:6px;right:6px;background:var(--rd);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+.pbg.new{background:var(--gm)}
+.pfv{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.pb{padding:8px 10px 10px}
+.pn{font-size:12px;font-weight:700;color:var(--td);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pu{font-size:10px;color:var(--ts);margin-bottom:5px}
+.ppr{display:flex;align-items:center;gap:5px}
+.pp{font-size:14px;font-weight:900;color:var(--g)}
+.pop{font-size:10px;text-decoration:line-through;color:var(--ts)}
+.ab{width:26px;height:26px;border-radius:50%;background:var(--g);border:none;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:auto;transition:var(--tr);flex-shrink:0}
+.ab.ic{background:var(--go)}
+
+/* ── PROMO PAGE ── */
+.pbar{margin:12px 16px;background:var(--rd);color:#fff;border-radius:var(--r14);padding:14px 16px;display:flex;align-items:center;gap:10px}
+.pts{display:flex;gap:8px;padding:0 16px;overflow-x:auto;margin-bottom:12px}
+.pts::-webkit-scrollbar{display:none}
+.ptc{flex-shrink:0;padding:6px 14px;border-radius:20px;background:var(--bei);border:1.5px solid var(--bm);font-size:11px;font-weight:600;color:var(--tm);cursor:pointer;font-family:inherit;transition:var(--tr)}
+.ptc.active{background:var(--rd);color:#fff;border-color:var(--rd)}
+.ftd{background:var(--td);color:#fff;border-radius:var(--r14);padding:10px 16px;margin:0 16px 12px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
+.tdd{background:var(--rd);color:#fff;font-size:18px;font-weight:900;width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.tds{font-size:20px;font-weight:900;color:var(--go)}
+
+/* ── LOYALTY ── */
+.lh{background:var(--gd);color:#fff;margin:12px 16px;border-radius:var(--r22);padding:20px;text-align:center;position:relative;overflow:hidden}
+.lh::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,.04);border-radius:50%}
+.li{font-size:48px;margin-bottom:6px}
+.ln{font-size:22px;font-weight:900;color:var(--go)}
+.ld{font-size:14px;color:rgba(255,255,255,.8);margin-bottom:12px}
+.pb2{background:rgba(255,255,255,.15);border-radius:20px;height:8px;margin:8px 0;overflow:hidden}
+.pf{height:100%;background:var(--go);border-radius:20px;transition:width .6s ease}
+.pl{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.6)}
+.lsg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:16px}
+.lsc{background:var(--wh);border-radius:var(--r14);padding:12px;text-align:center;box-shadow:var(--sh)}
+.lsv{font-size:20px;font-weight:900;color:var(--g)}
+.lsl{font-size:11px;color:var(--ts);margin-top:2px}
+.tl{padding:0 16px 16px}
+.tr2{display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r14);margin-bottom:6px;background:var(--bei)}
+.tr2.cur{background:var(--gp);border:1.5px solid var(--gm)}
+.tri{font-size:22px;width:36px;text-align:center}
+.trn{font-size:13px;font-weight:700;color:var(--td)}
+.trr{font-size:11px;color:var(--ts)}
+.trd{font-size:14px;font-weight:900;color:var(--g)}
+.gp2{background:var(--gop);border:1.5px solid var(--go);border-radius:var(--r14);padding:14px;margin:0 16px 16px;display:flex;align-items:center;gap:12px}
+
+/* ── CART ── */
+.cw{padding:12px 16px 80px}
+.ce{text-align:center;padding:60px 20px}
+.cei{font-size:60px;margin-bottom:12px}
+.cet{font-size:16px;font-weight:700;color:var(--tm);margin-bottom:4px}
+.ces{font-size:13px;color:var(--ts)}
+.ci{background:var(--wh);border-radius:var(--r14);border:1px solid var(--bm);padding:10px;display:flex;gap:10px;margin-bottom:8px;box-shadow:var(--sh)}
+.cii{width:56px;height:56px;background:var(--bei);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.cib{flex:1}
+.cin{font-size:13px;font-weight:700;color:var(--td)}
+.ciu{font-size:10px;color:var(--ts)}
+.cipr{display:flex;align-items:center;gap:8px;margin-top:6px}
+.cip{font-size:14px;font-weight:900;color:var(--g)}
+.qc{display:flex;align-items:center;gap:6px;margin-right:auto}
+.qb{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--g);background:var(--wh);color:var(--g);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit}
+.qb:hover{background:var(--g);color:#fff}
+.qn{font-size:14px;font-weight:700;color:var(--td);min-width:20px;text-align:center}
+.cprow{background:var(--bei);border-radius:var(--r14);padding:10px 12px;display:flex;gap:8px;margin-bottom:12px}
+.cpi{flex:1;border:none;background:transparent;font-family:inherit;font-size:13px;color:var(--td);outline:none}
+.cpab{background:var(--gd);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.cpok{font-size:11px;color:var(--gm);font-weight:600;margin-top:4px}
+.cs{background:var(--wh);border-radius:var(--r14);padding:14px;box-shadow:var(--sh);border:1px solid var(--bm)}
+.sr{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--tm)}
+.sr.tot{font-size:16px;font-weight:900;color:var(--td);border-top:1px solid var(--bm);margin-top:8px;padding-top:8px}
+.sr.dis{color:var(--rd)}
+.pi{background:var(--gop);border:1.5px solid var(--go);border-radius:var(--r14);padding:10px 14px;margin:10px 0;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--gd)}
+.gn{background:var(--gp);border:1.5px solid var(--gm);border-radius:var(--r14);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--gd);margin-bottom:8px}
+.ckb{width:100%;background:var(--gd);color:#fff;border:none;border-radius:var(--r22);padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;transition:var(--tr);margin-top:12px}
+.ckb:hover{background:var(--g)}
+.ckb:disabled{background:var(--ts);cursor:not-allowed}
+
+/* ── DELIVERY MODAL ── */
+.mo{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;flex-direction:column;justify-content:flex-end}
+.ms{background:var(--wh);border-radius:var(--r22) var(--r22) 0 0;padding:20px 16px 30px;max-height:85vh;overflow-y:auto}
+.ms::-webkit-scrollbar{display:none}
+.mh{width:40px;height:4px;background:var(--bm);border-radius:2px;margin:0 auto 16px}
+.mt2{font-size:17px;font-weight:900;margin-bottom:16px;color:var(--td)}
+.fg{margin-bottom:12px}
+.fl{font-size:12px;font-weight:600;color:var(--tm);margin-bottom:4px}
+.fi,.fs{width:100%;padding:10px 12px;border:1.5px solid var(--bm);border-radius:var(--r8);font-family:inherit;font-size:14px;color:var(--td);background:var(--wh);outline:none;transition:var(--tr)}
+.fi:focus,.fs:focus{border-color:var(--gm)}
+.dfd{background:var(--gp);border-radius:var(--r14);padding:10px 14px;font-size:13px;font-weight:700;color:var(--gd);display:flex;justify-content:space-between;margin-bottom:12px}
+.cfb{width:100%;background:var(--g);color:#fff;border:none;border-radius:var(--r22);padding:13px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit}
+
+/* ── ACCOUNT ── */
+.ach{background:var(--gd);color:#fff;padding:20px 16px 30px;text-align:center;margin-bottom:-16px}
+.aca{width:72px;height:72px;border-radius:50%;background:var(--go);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:var(--gd)}
+.acn{font-size:17px;font-weight:900}
+.acp{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.atb{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#fff;margin-top:8px}
+.acb{padding:0 16px 80px}
+.aca2{background:var(--wh);border-radius:var(--r14);box-shadow:var(--sh);overflow:hidden;margin-bottom:10px;margin-top:16px}
+.ar{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bei);cursor:pointer;transition:var(--tr)}
+.ar:last-child{border-bottom:none}
+.ar:hover{background:var(--bei)}
+.ari{font-size:20px;width:32px;text-align:center}
+.arl{flex:1;font-size:14px;font-weight:600;color:var(--td)}
+.arc{font-size:12px;color:var(--ts)}
+.ar.dng .arl{color:var(--rd)}
+.ls{display:flex;gap:6px;padding:8px 14px}
+.lo{flex:1;padding:8px;border:1.5px solid var(--bm);border-radius:var(--r8);text-align:center;font-size:12px;font-weight:700;cursor:pointer;transition:var(--tr);font-family:inherit;background:var(--wh);color:var(--tm)}
+.lo.active{background:var(--g);color:#fff;border-color:var(--g)}
+
+/* ── PRODUCT DETAIL ── */
+.pdb{padding:16px}
+.pdn{font-size:18px;font-weight:900;color:var(--td);margin-bottom:4px}
+.pdu{font-size:12px;color:var(--ts);margin-bottom:10px}
+.pdpr{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.pdp{font-size:22px;font-weight:900;color:var(--g)}
+.pdop{font-size:14px;text-decoration:line-through;color:var(--ts)}
+.pdsec{font-size:13px;font-weight:700;color:var(--tm);margin-bottom:6px}
+.pdd{font-size:13px;color:var(--tm);line-height:1.6;margin-bottom:14px}
+.pdbf{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.bfit{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tm)}
+.pdft{padding:16px;background:var(--wh);border-top:1px solid var(--bm);display:flex;align-items:center;gap:12px}
+.pdqc{display:flex;align-items:center;gap:10px;background:var(--bei);border-radius:var(--r22);padding:6px 12px}
+.pdab{flex:1;background:var(--gd);color:#fff;border:none;border-radius:var(--r22);padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit}
+
+/* ── NOTIFICATIONS ── */
+.nit{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bei)}
+.nit.unr{background:var(--gp)}
+.nii{width:38px;height:38px;border-radius:50%;background:var(--gp);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.nib2{flex:1}
+.nitt{font-size:13px;font-weight:700;color:var(--td)}
+.nitx{font-size:12px;color:var(--ts);margin-top:2px}
+.nttm{font-size:10px;color:var(--ts);margin-top:4px}
+
+/* ── AI CHAT ── */
+.cwr{display:flex;flex-direction:column;height:100%}
+.cmsg{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.cmsg::-webkit-scrollbar{display:none}
+.cbub{max-width:85%;padding:10px 14px;border-radius:var(--r14);font-size:13px;line-height:1.5}
+.cbub.bot{background:var(--bei);align-self:flex-start;border-radius:4px var(--r14) var(--r14) var(--r14)}
+.cbub.usr{background:var(--g);color:#fff;align-self:flex-end;border-radius:var(--r14) 4px var(--r14) var(--r14)}
+.csgs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 8px}
+.csg{background:var(--bei);border:1.5px solid var(--bm);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;color:var(--td);font-family:inherit}
+.csg:hover{background:var(--gp);border-color:var(--gm);color:var(--gd)}
+.cib2{padding:10px 16px;background:var(--wh);border-top:1px solid var(--bm);display:flex;gap:8px;flex-shrink:0}
+.cin2{flex:1;padding:10px 14px;border:1.5px solid var(--bm);border-radius:var(--r22);font-family:inherit;font-size:13px;outline:none;color:var(--td);background:var(--bei)}
+.cin2:focus{border-color:var(--gm)}
+.csd{background:var(--g);border:none;border-radius:50%;width:38px;height:38px;color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.aab{background:var(--gd);color:#fff;border:none;border-radius:var(--r14);padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;width:100%}
+
+/* ── AUTH ── */
+.aus{height:100%;display:flex;flex-direction:column;background:var(--wh)}
+.auh{background:var(--gd);padding:50px 24px 40px;text-align:center;flex-shrink:0}
+.aulo{font-size:42px;font-weight:900;color:var(--go);font-family:'Cairo',sans-serif}
+.ause{font-size:13px;color:rgba(255,255,255,.7);margin-top:6px}
+.auf{flex:1;padding:24px 20px;overflow-y:auto}
+.autt{font-size:18px;font-weight:900;color:var(--td);margin-bottom:4px}
+.ausb{font-size:13px;color:var(--ts);margin-bottom:20px}
+.auinp{width:100%;padding:12px 14px;border:1.5px solid var(--bm);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;color:var(--td);background:var(--wh);margin-bottom:10px;transition:var(--tr)}
+.auinp:focus{border-color:var(--gm)}
+.aubt{width:100%;background:var(--gd);color:#fff;border:none;border-radius:var(--r22);padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;transition:var(--tr);margin-top:4px}
+.aubt:hover{background:var(--g)}
+.ausw{text-align:center;font-size:13px;color:var(--ts);margin-top:14px}
+.ausw span{color:var(--g);font-weight:700;cursor:pointer}
+.dmb{width:100%;background:var(--bei);color:var(--gd);border:1.5px solid var(--bm);border-radius:var(--r22);padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+
+/* ── ORDER SUCCESS ── */
+.osc{text-align:center;padding:40px 24px 80px}
+.osi{font-size:70px;margin-bottom:16px}
+.ost{font-size:20px;font-weight:900;color:var(--gd);margin-bottom:6px}
+.oss{font-size:13px;color:var(--tm);margin-bottom:20px}
+.onb{background:var(--gp);border-radius:var(--r14);padding:10px 20px;font-size:16px;font-weight:900;color:var(--gd);display:inline-block;margin-bottom:20px}
+.ttl{padding:16px;text-align:right}
+.ts2{display:flex;align-items:flex-start;gap:12px;padding-bottom:20px;position:relative}
+.ts2:last-child{padding-bottom:0}
+.ts2::after{content:'';position:absolute;top:24px;right:15px;width:2px;height:calc(100% - 6px);background:var(--bm)}
+.ts2:last-child::after{display:none}
+.ts2.dn::after{background:var(--gl)}
+.sdt{width:30px;height:30px;border-radius:50%;background:var(--bm);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;z-index:1;position:relative}
+.sdt.dn{background:var(--g);color:#fff}
+.sdt.cur{background:var(--go);color:var(--gd)}
+.sdi{flex:1;padding-top:4px}
+.sdn{font-size:13px;font-weight:700;color:var(--td)}
+.sdt2{font-size:11px;color:var(--ts);margin-top:2px}
+
+/* ── UTILS ── */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.pg{background:var(--gp);color:var(--g)}
+.po{background:var(--gop);color:var(--go)}
+.pr{background:#fce8e8;color:var(--rd)}
+.sch{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bei);background:var(--wh);flex-shrink:0;position:sticky;top:0;z-index:10}
+.sct{font-size:16px;font-weight:900;color:var(--td)}
+.bkb{background:var(--bei);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--td)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+/* ═══════════════ DATA ═══════════════ */
+const CATS=[
+  {id:'all',icon:'🏪',ar:'الكل',fr:'Tous',en:'All'},
+  {id:'spices',icon:'🌶️',ar:'التوابل',fr:'Épices',en:'Spices'},
+  {id:'herbs',icon:'🌿',ar:'الأعشاب',fr:'Herbes',en:'Herbs'},
+  {id:'nuts',icon:'🥜',ar:'المكسرات',fr:'Noix',en:'Nuts'},
+  {id:'dried',icon:'🍇',ar:'الفواكه المجففة',fr:'Fruits secs',en:'Dried Fruits'},
+  {id:'oils',icon:'🫙',ar:'الزيوت',fr:'Huiles',en:'Oils'},
+  {id:'trad',icon:'🏺',ar:'تقليدي',fr:'Traditionnel',en:'Traditional'},
+  {id:'healthy',icon:'🥗',ar:'صحي',fr:'Santé',en:'Healthy'}
+];
+const PRODS=[
+  {id:'p1',cat:'spices',e:'🌶️',ar:'فلفل أحمر حار',fr:'Piment rouge',en:'Hot Chili',u:'100g',p:4.500,pp:3.200,s:45,new:false,feat:true,
+   dar:'توابل تونسية أصيلة تمنح أكلتك نكهة لا تُنسى',dfr:'Épice tunisienne authentique',
+   ben:['🔥 مضاد للأكسدة القوي','💊 يحسن الدورة الدموية','⚡ يرفع طاقة الجسم']},
+  {id:'p2',cat:'spices',e:'🟡',ar:'كركم أصلي',fr:'Curcuma naturel',en:'Turmeric',u:'100g',p:5.900,pp:null,s:30,new:true,feat:true,
+   dar:'كركم خالص مطحون طازجاً من أجود المزارع',dfr:'Curcuma pur fraîchement moulu',
+   ben:['💛 مضاد للالتهابات','🧠 يدعم صحة الدماغ','🫀 يقوي القلب']},
+  {id:'p3',cat:'spices',e:'🍂',ar:'قرفة سيلانية',fr:'Cannelle de Ceylan',en:'Ceylon Cinnamon',u:'60g',p:6.200,pp:4.800,s:22,new:false,feat:false,
+   dar:'قرفة سيلانية ذات رائحة عطرية مميزة',dfr:'Cannelle de Ceylan parfumée',
+   ben:['🩸 ينظم السكر في الدم','🛡️ يقوي المناعة']},
+  {id:'p4',cat:'herbs',e:'🌿',ar:'زعتر بلدي',fr:'Zaatar artisanal',en:'Artisanal Zaatar',u:'120g',p:7.800,pp:null,s:18,new:false,feat:true,
+   dar:'زعتر طبيعي مجفف من أجود المناطق التونسية',dfr:'Zaatar naturel séché des meilleures régions',
+   ben:['💪 يقوي المناعة','🧠 يحسن التركيز','🌱 غني بمضادات الأكسدة']},
+  {id:'p5',cat:'herbs',e:'🌱',ar:'نعناع مجفف',fr:'Menthe séchée',en:'Dried Mint',u:'50g',p:3.200,pp:null,s:40,new:false,feat:false,
+   dar:'نعناع طازج مجفف بعناية للحفاظ على نكهته',dfr:'Menthe fraîche soigneusement séchée',
+   ben:['🫁 يهدئ الجهاز الهضمي','🌬️ منعش ومنشط']},
+  {id:'p6',cat:'nuts',e:'🥜',ar:'لوز طبيعي',fr:'Amandes naturelles',en:'Natural Almonds',u:'250g',p:12.500,pp:10.000,s:60,new:false,feat:true,
+   dar:'لوز طبيعي محلي عالي الجودة',dfr:'Amandes locales naturelles haute qualité',
+   ben:['❤️ يحمي القلب','💪 غني بالبروتين','🦴 يقوي العظام']},
+  {id:'p7',cat:'nuts',e:'🌰',ar:'جوز طبيعي',fr:'Noix de Grenoble',en:'Walnuts',u:'200g',p:9.500,pp:null,s:35,new:true,feat:false,
+   dar:'جوز طازج ومغذٍ غني بالأوميغا 3',dfr:'Noix fraîches riches en oméga-3',
+   ben:['🧠 يغذي الدماغ','💪 مصدر طاقة ممتاز']},
+  {id:'p8',cat:'dried',e:'🍇',ar:'زبيب ذهبي',fr:'Raisins secs dorés',en:'Golden Raisins',u:'200g',p:5.600,pp:null,s:50,new:false,feat:true,
+   dar:'زبيب ذهبي حلو طبيعي بدون إضافات',dfr:'Raisins secs dorés naturellement sucrés',
+   ben:['⚡ مصدر طاقة فوري','🦷 يحتوي على الكالسيوم']},
+  {id:'p9',cat:'dried',e:'🍑',ar:'مشمش مجفف',fr:'Abricots secs',en:'Dried Apricots',u:'200g',p:7.200,pp:5.900,s:28,new:false,feat:false,
+   dar:'مشمش مجفف طبيعي دون إضافات كيماوية',dfr:'Abricots secs naturels sans additifs',
+   ben:['🔶 غني بالبيتا كاروتين','💧 يرطب الجسم']},
+  {id:'p10',cat:'oils',e:'🫒',ar:'زيت زيتون بكر',fr:"Huile d'olive vierge extra",en:'Extra Virgin Olive Oil',u:'500ml',p:18.000,pp:null,s:25,new:false,feat:true,
+   dar:'زيت زيتون بكر ممتاز من مزارعنا التونسية',dfr:"Huile d'olive extra vierge de nos fermes",
+   ben:['❤️ يحمي القلب','🧴 يغذي البشرة','🫀 يخفض الكوليسترول']},
+  {id:'p11',cat:'trad',e:'🏺',ar:'هريسة تونسية',fr:'Harissa tunisienne',en:'Tunisian Harissa',u:'200g',p:4.200,pp:null,s:55,new:false,feat:true,
+   dar:'هريسة تونسية أصيلة تحضير يدوي تقليدي',dfr:'Harissa tunisienne authentique artisanale',
+   ben:['🌶️ تضيف حرارة ونكهة','🇹🇳 منتج تقليدي أصيل']},
+  {id:'p12',cat:'healthy',e:'🌾',ar:'بذور الشيا',fr:'Graines de chia',en:'Chia Seeds',u:'150g',p:8.900,pp:7.200,s:32,new:true,feat:false,
+   dar:'بذور الشيا الغنية بالأوميغا 3 والألياف',dfr:'Graines de chia riches en oméga-3',
+   ben:['⚡ مصدر طاقة ممتاز','🧠 يغذي الدماغ','💧 يحافظ على الترطيب']}
+];
+const ZONES=[
+  {id:'z1',gov:'Sousse',city:'Sousse',area:'Sousse Centre',price:3.000},
+  {id:'z2',gov:'Sousse',city:'Sousse',area:'Khezama',price:4.000},
+  {id:'z3',gov:'Sousse',city:'Hammam Sousse',area:'',price:5.000},
+  {id:'z4',gov:'Sousse',city:'Akouda',area:'',price:7.000},
+  {id:'z5',gov:'Sousse',city:'Kantaoui',area:'',price:6.000},
+  {id:'z6',gov:'Tunis',city:'Tunis',area:'Tunis Centre',price:8.000},
+  {id:'z7',gov:'Sfax',city:'Sfax',area:'Sfax Centre',price:10.000}
+];
+const TIERS=[
+  {id:'starter',icon:'🌱',ar:'مبتدئ',fr:'Starter',min:0,max:99,disc:3,color:'#78909c'},
+  {id:'bronze',icon:'🥉',ar:'برونز',fr:'Bronze',min:100,max:199,disc:5,color:'#cd7f32'},
+  {id:'silver',icon:'🥈',ar:'فضي',fr:'Argent',min:200,max:399,disc:7,color:'#90a4ae'},
+  {id:'gold',icon:'🥇',ar:'ذهبي',fr:'Or',min:400,max:999,disc:10,color:'#f0b429'},
+  {id:'vip',icon:'💎',ar:'VIP',fr:'VIP',min:1000,max:99999,disc:15,color:'#9b59b6'}
+];
+const COUPONS={WELCOME10:{disc:10,min:0},RAMADAN15:{disc:15,min:50},AID20:{disc:20,min:100}};
+const AI={
+  couscous:{
+    ar:'🍲 لعمل كسكسي ممتاز، ستحتاج:\n• كركم أصلي + فلفل أحمر\n• هريسة تونسية\n• زيت زيتون بكر\n• نعناع مجفف للتزيين\n\nنصيحة: أضف الكركم أثناء الطهي لأفضل نتيجة!',
+    fr:"🍲 Pour un couscous parfait:\n• Curcuma + Piment rouge\n• Harissa tunisienne\n• Huile d'olive vierge\n• Menthe séchée pour décorer\n\nConseil: ajoutez le curcuma pendant la cuisson!",
+    en:'🍲 For a perfect couscous:\n• Turmeric + Hot chili\n• Tunisian harissa\n• Extra virgin olive oil\n• Dried mint for garnish\n\nTip: add turmeric while cooking for best results!',
+    prods:['p2','p1','p11','p10','p5']
+  },
+  tagine:{
+    ar:'🥘 لطاجين مثالي:\n• كركم أصلي + قرفة سيلانية\n• فلفل أحمر حار\n• زيت زيتون بكر\n• زعتر بلدي\n\nالسر: استخدم زيت الزيتون البكر لنكهة أحلى!',
+    fr:"🥘 Pour la tagine parfaite:\n• Curcuma + Cannelle de Ceylan\n• Piment rouge\n• Huile d'olive\n• Zaatar\n\nSecret: l'huile d'olive extra-vierge pour plus de saveur!",
+    en:'🥘 For the perfect tagine:\n• Turmeric + Ceylon cinnamon\n• Hot chili pepper\n• Olive oil\n• Zaatar\n\nSecret: use extra virgin olive oil for richer flavor!',
+    prods:['p2','p3','p1','p10','p4']
+  },
+  harissa:{
+    ar:'🌶️ هريستنا التونسية مصنوعة يدوياً بأصناف الفلفل الأحمر المحلي.\n\nكيف تستخدمها:\n• مع الخبز والزيتون فطوراً\n• في التجين والمرق\n• مع المأكولات البحرية\n\nتوفر في البراد بعد الفتح.',
+    fr:'🌶️ Notre harissa tunisienne est faite artisanalement avec des piments locaux.\n\nUtilisation:\n• Avec pain et olives au petit déj\n• Dans les plats mijotés\n• Avec les fruits de mer\n\nConserver au frais après ouverture.',
+    en:'🌶️ Our Tunisian harissa is handmade with local peppers.\n\nHow to use:\n• With bread and olives for breakfast\n• In stews and soups\n• With seafood\n\nRefrigerate after opening.',
+    prods:['p11','p1','p10']
+  },
+  loyalty:{
+    ar:'🎁 برنامج الولاء لنكهة الدار:\n\n🌱 مبتدئ (0-99 دت): خصم 3%\n🥉 برونز (100-199 دت): خصم 5%\n🥈 فضي (200-399 دت): خصم 7%\n🥇 ذهبي (400-999 دت): خصم 10%\n💎 VIP (1000+ دت): خصم 15%\n\n🎀 هدية مجانية على كل طلب ≥200 دت!',
+    fr:"🎁 Programme fidélité نكهة الدار:\n\n🌱 Starter (0-99 DT): -3%\n🥉 Bronze (100-199 DT): -5%\n🥈 Argent (200-399 DT): -7%\n🥇 Or (400-999 DT): -10%\n💎 VIP (1000+ DT): -15%\n\n🎀 Cadeau gratuit sur chaque commande ≥200 DT!",
+    en:'🎁 Nakhat Eddar loyalty program:\n\n🌱 Starter (0-99 DT): -3%\n🥉 Bronze (100-199 DT): -5%\n🥈 Silver (200-399 DT): -7%\n🥇 Gold (400-999 DT): -10%\n💎 VIP (1000+ DT): -15%\n\n🎀 Free gift on every order ≥200 DT!',
+    prods:[]
+  },
+  default:{
+    ar:'👋 مرحباً! أنا مساعد نكهة الدار الذكي.\n\nيمكنني مساعدتك في:\n• اقتراح وصفات تونسية شهية\n• اختيار التوابل المناسبة\n• شرح فوائد المنتجات\n• برنامج الولاء والخصومات\n\nجرب: "أريد عمل كسكسي" أو "ما فوائد الكركم؟"',
+    fr:"👋 Bonjour! Je suis l'assistant intelligent de نكهة الدار.\n\nJe peux vous aider avec:\n• Suggestions de recettes tunisiennes\n• Choix des épices\n• Bienfaits des produits\n• Programme fidélité\n\nEssayez: 'Je veux faire un couscous'",
+    en:"👋 Hello! I'm the smart assistant of نكهة الدار.\n\nI can help with:\n• Tunisian recipe suggestions\n• Choosing the right spices\n• Product benefits\n• Loyalty program\n\nTry: 'I want to make couscous'",
+    prods:[]
+  }
+};
+
+/* ═══════════════ STATE ═══════════════ */
+let S={
+  lang:'ar', tab:'home', catF:'all', search:'',
+  cart:{},       // {id: qty} — simulé persistant
+  favs:new Set(),
+  user:null, authMode:'login', authF:{name:'',phone:'',pass:''},
+  promoType:'daily', modal:null,
+  detailId:null, showAI:false, showNotif:false,
+  subPage:null,
+  orderDone:false, lastOrder:null,
+  orderHistory:[],
+  df:{gov:'Sousse',city:'Sousse',area:'Sousse Centre',street:'',house:'',phone:''},
+  savedAddresses:[],
+  coupon:'', couponApplied:null,
+  msgs:[], timerSecs:5400, demoSpend:120
+};
+
+/* ═══════════════ HELPERS ═══════════════ */
+const L=(ar,fr,en)=>S.lang==='ar'?ar:S.lang==='fr'?fr:en;
+function fp(n){return n.toFixed(3)+' DT';}
+function getTier(s){return TIERS.find(t=>s>=t.min&&s<=t.max)||TIERS[0];}
+function getDisc(){return S.user?getTier(S.demoSpend).disc:3;}
+function cartCount(){return Object.values(S.cart).reduce((a,b)=>a+b,0);}
+function cartSub(){
+  return PRODS.filter(p=>S.cart[p.id]).reduce((a,p)=>a+(p.pp||p.p)*S.cart[p.id],0);
+}
+function delivFee(){
+  const z=ZONES.find(z=>z.gov===S.df.gov&&z.city===S.df.city&&(z.area===S.df.area||z.area===''));
+  return z?z.price:5;
+}
+function T(k){
+  const t={
+    home:L('الرئيسية','Accueil','Home'),
+    promos:L('العروض','Promos','Promos'),
+    loyalty:L('الولاء','Fidélité','Loyalty'),
+    cart:L('السلة','Panier','Cart'),
+    account:L('حسابي','Compte','Account'),
+    search:L('ابحث عن منتج...','Rechercher...','Search...'),
+    feat:L('منتجات مميزة','Produits vedettes','Featured'),
+    new:L('وصل حديثاً','Nouveautés','New Arrivals'),
+    promoLabel:L('عروض اليوم','Promos du jour','Today\'s Deals'),
+    seeall:L('عرض الكل','Voir tout','See all'),
+    addcart:L('أضف للسلة','Ajouter','Add'),
+    incart:L('في السلة ✓','Dans panier ✓','In cart ✓'),
+    empty:L('سلتك فارغة','Votre panier est vide','Your cart is empty'),
+    emptysub:L('ابدأ التسوق الآن!','Commencez à magasiner!','Start shopping!'),
+    sub:L('المجموع الجزئي','Sous-total','Subtotal'),
+    loydisc:L('خصم الولاء','Remise fidélité','Loyalty discount'),
+    cupdisc:L('خصم الكوبون','Remise coupon','Coupon discount'),
+    delfee:L('رسوم التوصيل','Frais livraison','Delivery fee'),
+    total:L('الإجمالي','Total','Total'),
+    apply:L('تطبيق','Appliquer','Apply'),
+    couponph:L('أدخل كود الكوبون','Code coupon','Coupon code'),
+    cod:L('💵 الدفع عند الاستلام','💵 Paiement à la livraison','💵 Cash on Delivery'),
+    checkout:L('🚚 إتمام الطلب','🚚 Finaliser','🚚 Checkout'),
+    confirm:L('✅ تأكيد الطلب','✅ Confirmer','✅ Confirm order'),
+    gift:L('🎁 سلة هدايا مرفقة!','🎁 Panier cadeau inclus!','🎁 Gift basket included!'),
+    giftnear:L(' دت متبقي للهدية المجانية!',' DT restants pour le cadeau!',' DT left for free gift!'),
+    orderdone:L('🎉 تم تأكيد طلبك!','🎉 Commande confirmée!','🎉 Order Confirmed!'),
+    ordermsg:L('سيتم التواصل معك قريباً لتأكيد التوصيل.','Nous vous contacterons bientôt.','We will contact you soon for delivery.'),
+    neworder:L('طلب جديد','Nouvelle commande','New order'),
+    back:L('رجوع','Retour','Back'),
+    desc:L('الوصف','Description','Description'),
+    benefits:L('🌿 الفوائد الصحية','🌿 Bienfaits','🌿 Benefits'),
+    addtocart:L('🛒 أضف للسلة','🛒 Ajouter au panier','🛒 Add to cart'),
+    qty:L('الكمية','Quantité','Quantity'),
+    gov:L('الولاية','Gouvernorat','Governorate'),
+    city:L('المدينة','Ville','City'),
+    area:L('المنطقة','Zone','Area'),
+    street:L('الشارع','Rue','Street'),
+    house:L('رقم المنزل','Numéro','House number'),
+    phone:L('الهاتف','Téléphone','Phone'),
+    name:L('الاسم الكامل','Nom complet','Full name'),
+    pass:L('كلمة المرور','Mot de passe','Password'),
+    demo:L('🎮 دخول تجريبي','🎮 Connexion démo','🎮 Demo login'),
+    login:L('تسجيل الدخول','Se connecter','Sign in'),
+    register:L('إنشاء حساب','Créer un compte','Create account'),
+    yourorders:L('طلباتي','Mes commandes','My orders'),
+    favs:L('المفضلة','Favoris','Favorites'),
+    addresses:L('عناوين التوصيل','Adresses','Addresses'),
+    logout:L('تسجيل الخروج','Déconnexion','Logout'),
+    notif:L('الإشعارات','Notifications','Notifications'),
+    ai:L('مساعد ذكي','Assistant IA','AI Assistant'),
+    lang:L('اللغة','Langue','Language'),
+    monthly:L('إنفاق الشهر','Dépenses du mois','Monthly spend'),
+    saved:L('المبلغ الموفّر','Montant économisé','Amount saved'),
+    nexttier:L('للمستوى التالي','Pour le niveau suivant','To next level'),
+    still:L('تبقى','Encore','Still'),
+    sim:L('🎮 محاكاة (تجريبي)','🎮 Simulation (démo)','🎮 Simulate (demo)'),
+    received:L('تم الاستلام','Reçu','Received'),
+    preparing:L('جاري التحضير','En préparation','Preparing'),
+    ready:L('جاهز','Prêt','Ready'),
+    outfordelivery:L('في الطريق','En livraison','Out for delivery'),
+    delivered:L('تم التوصيل','Livré','Delivered'),
+    type:L('اكتب رسالة...','Écrivez un message...','Type a message...')
+  };
+  return t[k]||k;
+}
+
+/* ═══════════════ RENDER ENGINE ═══════════════ */
+function render(){
+  const root=document.getElementById('root');
+  if(!S.user){root.innerHTML=renderAuth();return;}
+  root.innerHTML=`
+    ${hdr()}
+    <div class="ps" id="ps">
+      ${S.showAI?renderAI():S.showNotif?renderNotif():S.detailId?renderDetail():
+        S.subPage==='orders'?renderOrders():S.subPage==='favs'?renderFavs():S.subPage==='addresses'?renderAddresses():
+        S.tab==='home'?renderHome():S.tab==='promos'?renderPromos():
+        S.tab==='loyalty'?renderLoyalty():S.tab==='cart'?renderCart():renderAccount()}
+    </div>
+    ${!S.showAI&&!S.showNotif&&!S.detailId&&!S.subPage?bnav():''}
+    ${S.modal==='delivery'?renderDelivery():''}`;
+  if(S.tab==='promos')startTimer();
+  if(S.showAI)setTimeout(()=>{const c=document.getElementById('cmsg');if(c)c.scrollTop=c.scrollHeight;},60);
+}
+
+/* ── HEADER ── */
+function hdr(){
+  const c=cartCount();
+  return `<div class="hd">
+    <div class="hl"><div class="hlm">نكهة<br>الدار</div>
+      <div><div class="ht">نكهة الدار</div><div class="hs">ÉPICES & SAVEURS</div></div>
+    </div>
+    <div class="ha">
+      <button class="hib" onclick="S.showAI=!S.showAI;S.showNotif=false;S.detailId=null;render()"
+        style="${S.showAI?'background:var(--go);color:var(--gd)':''}">🤖</button>
+      <button class="hib" onclick="S.showNotif=!S.showNotif;S.showAI=false;S.detailId=null;render()">🔔</button>
+      <button class="hib cbd" onclick="S.tab='cart';S.showAI=false;S.showNotif=false;S.detailId=null;render()">
+        🛒${c>0?`<span class="cbc">${c}</span>`:''}
+      </button>
+    </div>
+  </div>`;}
+
+/* ── BOTTOM NAV ── */
+function bnav(){
+  const tabs=[
+    {id:'home',icon:'🏠',label:T('home')},{id:'promos',icon:'🔥',label:T('promos')},
+    {id:'loyalty',icon:'🎁',label:T('loyalty')},{id:'cart',icon:'🛒',label:T('cart')},
+    {id:'account',icon:'👤',label:T('account')}];
+  const c=cartCount();
+  return `<div class="bn">${tabs.map(t=>`
+    <button class="ni ${S.tab===t.id?'active':''}" onclick="S.tab='${t.id}';S.showAI=false;S.showNotif=false;S.detailId=null;render()">
+      <span class="nic">${t.icon}</span><span class="nil">${t.label}</span>
+      ${t.id==='cart'&&c>0?`<span class="nib">${c}</span>`:''}
+    </button>`).join('')}</div>`;}
+
+/* ── PRODUCT CARD ── */
+function pcard(p,mini){
+  const price=p.pp||p.p, inc=S.cart[p.id]||0, fav=S.favs.has(p.id);
+  const disc=getDisc();
+  const discP=S.user&&disc>0?(price*(1-disc/100)).toFixed(3):null;
+  return `<div class="pcd" onclick="S.detailId='${p.id}';render()">
+    <div class="pim">${p.e}
+      ${p.pp?`<span class="pbg">−${Math.round((1-p.pp/p.p)*100)}%</span>`:''}
+      ${p.new&&!p.pp?`<span class="pbg new">${L('جديد','Nouveau','New')}</span>`:''}
+      <button class="pfv" onclick="event.stopPropagation();toggleFav('${p.id}')">${fav?'❤️':'🤍'}</button>
+    </div>
+    <div class="pb">
+      <div class="pn">${S.lang==='ar'?p.ar:p.fr}</div>
+      <div class="pu">${p.u}</div>
+      <div class="ppr">
+        <span class="pp">${fp(price)}</span>
+        ${p.pp?`<span class="pop">${fp(p.p)}</span>`:''}
+        <button class="ab ${inc?'ic':''}" onclick="event.stopPropagation();addCart('${p.id}')">
+          ${inc?inc:'+'}
+        </button>
+      </div>
+      ${discP?`<div style="font-size:10px;color:#27ae60;font-weight:700;margin-top:2px">${L('بعد الخصم:','Après remise:','After discount:')} ${discP} DT</div>`:''}
+    </div>
+  </div>`;}
+
+/* ── HOME ── */
+function renderHome(){
+  const feat=PRODS.filter(p=>p.feat), newP=PRODS.filter(p=>p.new), promo=PRODS.filter(p=>p.pp);
+  const filt=S.search?PRODS.filter(p=>p.ar.includes(S.search)||p.fr.toLowerCase().includes(S.search.toLowerCase())):
+    S.catF==='all'?feat:PRODS.filter(p=>p.cat===S.catF);
+
+  return `<div class="sb"><div class="siw">
+    <span>🔍</span>
+    <input placeholder="${T('search')}" value="${S.search}" oninput="S.search=this.value;render()">
+    ${S.search?`<button onclick="S.search='';render()" style="border:none;background:none;cursor:pointer;font-size:14px;color:var(--ts)">✕</button>`:''}
+  </div></div>
+
+  ${!S.search&&S.catF==='all'?`
+  <div style="padding:12px 0 0">
+    <div class="bsc">
+      <div class="bc">
+        <div class="bbg">🌟 ${L('عرض خاص','Offre spéciale','Special Offer')}</div>
+        <div class="btt">${L('توابل أصيلة','Épices authentiques','Authentic Spices')}</div>
+        <div class="bst">${L('جودة لا مثيل لها من تونس','Qualité incomparable de Tunisie','Unrivalled quality from Tunisia')}</div>
+        <button class="bct" onclick="S.tab='promos';render()">${L('اكتشف العروض','Voir les offres','See offers')} ←</button>
+      </div>
+      <div class="bc gold">
+        <div class="bbg">💎 ${L('برنامج الولاء','Programme fidélité','Loyalty Program')}</div>
+        <div class="btt">${L('وفّر حتى 15%','Économisez 15%','Save up to 15%')}</div>
+        <div class="bst">${L('كلما اشتريت أكثر، وفّرت أكثر','Plus vous achetez, plus vous économisez','The more you buy, the more you save')}</div>
+        <button class="bct" onclick="S.tab='loyalty';render()">${L('اعرف أكثر','En savoir plus','Learn more')} ←</button>
+      </div>
+    </div>
+  </div>
+  <div class="sec"><div class="seh"><div class="set">${L('التصنيفات','Catégories','Categories')}</div></div></div>
+  <div class="csc">${CATS.map(c=>`
+    <div class="cc ${S.catF===c.id?'active':''}" onclick="S.catF='${c.id}';render()">
+      <span class="cci">${c.icon}</span>
+      <span class="ccn">${c[S.lang]}</span>
+    </div>`).join('')}</div>
+  <div class="sec"><div class="seh">
+    <div class="set">⭐ ${T('feat')}</div>
+    <button class="sea" onclick="S.catF='all';render()">${T('seeall')}</button>
+  </div></div>
+  <div class="psc">${feat.map(p=>pcard(p,true)).join('')}</div>
+  <div class="sec"><div class="seh"><div class="set">🆕 ${T('new')}</div></div></div>
+  <div class="psc">${newP.map(p=>pcard(p,true)).join('')}</div>
+  <div class="sec"><div class="seh">
+    <div class="set">🔥 ${T('promoLabel')}</div>
+    <button class="sea" onclick="S.tab='promos';render()">${T('seeall')}</button>
+  </div></div>
+  <div class="psc">${promo.map(p=>pcard(p,true)).join('')}</div>` :
+  `<div class="sec" style="padding-bottom:16px">
+    <div class="seh"><div class="set">${S.search?`🔍 ${L('نتائج','Résultats','Results')} (${filt.length})`:CATS.find(c=>c.id===S.catF)?.e+' '+CATS.find(c=>c.id===S.catF)?.[S.lang]}</div>
+      ${S.catF!=='all'?`<button class="sea" onclick="S.catF='all';render()">✕</button>`:''}
+    </div>
+    <div class="pg">${filt.map(p=>pcard(p)).join('')}</div>
+  </div>`}`;
+}
+
+/* ── PROMOS ── */
+function renderPromos(){
+  const types=[{id:'daily',ar:'يومية',fr:'Quotidien',en:'Daily'},{id:'weekly',ar:'أسبوعية',fr:'Hebdo',en:'Weekly'},{id:'flash',ar:'فلاش ⚡',fr:'Flash ⚡',en:'Flash ⚡'},{id:'seasonal',ar:'موسمية',fr:'Saisonnière',en:'Seasonal'}];
+  const h=Math.floor(S.timerSecs/3600),m=Math.floor((S.timerSecs%3600)/60),sc=S.timerSecs%60;
+  const pad=n=>String(n).padStart(2,'0');
+  const promo=PRODS.filter(p=>p.pp);
+  return `<div class="pbar"><span style="font-size:24px">🔥</span>
+    <div><div style="font-size:14px;font-weight:700">${L('عروض حصرية اليوم!','Offres exclusives aujourd\'hui!','Exclusive deals today!')}</div>
+    <div style="font-size:11px;opacity:.8">${L('لا تفوّت هذه الفرص الرائعة','Ne manquez pas ces offres','Don\'t miss these amazing offers')}</div></div>
+  </div>
+  <div class="pts">${types.map(t=>`
+    <button class="ptc ${S.promoType===t.id?'active':''}" onclick="S.promoType='${t.id}';render()">
+      ${t[S.lang]}</button>`).join('')}</div>
+  ${S.promoType==='flash'?`<div class="ftd">
+    <span style="font-size:18px">⚡</span>
+    <span style="flex:1">${L('ينتهي خلال:','Se termine dans:','Ends in:')}</span>
+    <div class="tdd" id="th">${pad(h)}</div><span class="tds">:</span>
+    <div class="tdd" id="tm">${pad(m)}</div><span class="tds">:</span>
+    <div class="tdd" id="ts">${pad(sc)}</div>
+  </div>`:''}
+  <div class="pg" style="padding:0 16px 80px">
+    ${promo.map(p=>pcard(p)).join('')}
+    ${PRODS.filter(p=>!p.pp).slice(0,2).map(p=>pcard(p)).join('')}
+  </div>`;}
+
+/* ── LOYALTY ── */
+function renderLoyalty(){
+  const sp=S.demoSpend, tier=getTier(sp), next=TIERS.find(t=>t.min>tier.min);
+  const pct=next?Math.min(100,(sp-tier.min)/(next.min-tier.min)*100):100;
+  const saved=(sp*tier.disc/100).toFixed(3);
+  return `<div class="lh">
+    <div class="li">${tier.icon}</div>
+    <div class="ln">${L(tier.ar,tier.fr,tier.fr)}</div>
+    <div style="font-size:28px;font-weight:900;color:var(--go)">−${tier.disc}%</div>
+    <div style="font-size:12px;opacity:.7;margin-top:6px">${T('monthly')}: <strong>${fp(sp)}</strong></div>
+    ${next?`<div class="pb2"><div class="pf" style="width:${pct}%"></div></div>
+    <div class="pl"><span>${fp(sp)}</span><span>${T('still')} ${fp(next.min-sp)} ${T('nexttier')} ${next.icon}</span></div>`:
+    `<div style="font-size:12px;opacity:.8;margin-top:8px">🎉 ${L('أنت في أعلى مستوى!','Niveau maximum atteint!','Max level reached!')}</div>`}
+  </div>
+  <div class="lsg">
+    <div class="lsc"><div class="lsv">${fp(sp)}</div><div class="lsl">${T('monthly')}</div></div>
+    <div class="lsc"><div class="lsv" style="color:var(--go)">−${fp(parseFloat(saved))}</div><div class="lsl">${T('saved')}</div></div>
+  </div>
+  <div class="gp2" style="margin:0 16px 16px">
+    <span style="font-size:32px">🎁</span>
+    <div><div style="font-weight:700;font-size:13px;color:var(--gd)">${L('هدية مجانية عند 200 دت!','Cadeau gratuit à 200 DT!','Free gift from 200 DT!')}</div>
+    <div style="font-size:11px;color:var(--tm);margin-top:2px">${L('سلة هدايا حرفية قيمة 25 دت','Panier artisanal valeur 25 DT','Artisanal basket worth 25 DT')}</div></div>
+  </div>
+  <div class="sec"><div class="set">📊 ${L('مستويات الولاء','Niveaux fidélité','Loyalty Levels')}</div></div>
+  <div class="tl">${TIERS.map(t=>`
+    <div class="tr2 ${t.id===tier.id?'cur':''}">
+      <div class="tri">${t.icon}</div>
+      <div style="flex:1">
+        <div class="trn">${L(t.ar,t.fr,t.fr)}</div>
+        <div class="trr">${fp(t.min)} – ${t.max>9999?'∞':fp(t.max)} / ${L('شهر','mois','month')}</div>
+      </div>
+      <div class="trd">−${t.disc}%</div>
+      ${t.id===tier.id?`<span class="pill pg">✓ ${L('مستواك','Votre niveau','Your level')}</span>`:''}
+    </div>`).join('')}
+  </div>
+  <div style="padding:0 16px 16px">
+    <div style="font-size:12px;font-weight:700;color:var(--tm);margin-bottom:8px">${T('sim')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${[50,150,300,600].map(a=>`<button onclick="S.demoSpend=Math.min(S.demoSpend+${a},99999);render()"
+        style="background:var(--bei);border:1.5px solid var(--bm);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+${a} DT</button>`).join('')}
+      <button onclick="S.demoSpend=0;render()" style="background:var(--bei);border:1.5px solid var(--rd);color:var(--rd);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Reset</button>
+    </div>
+  </div>`;}
+
+/* ── CART ── */
+function renderCart(){
+  if(S.orderDone&&S.lastOrder)return renderSuccess();
+  const items=PRODS.filter(p=>S.cart[p.id]);
+  if(!items.length)return `<div class="ce"><div class="cei">🛒</div>
+    <div class="cet">${T('empty')}</div><div class="ces">${T('emptysub')}</div>
+    <button class="ckb" style="max-width:200px;margin:16px auto 0;display:block" onclick="S.tab='home';render()">
+      ${L('تسوق الآن','Magasiner maintenant','Shop now')}</button></div>`;
+
+  const sub=cartSub(), disc=getDisc(), ldAmt=sub*disc/100;
+  const cAmt=S.couponApplied?sub*S.couponApplied.disc/100:0;
+  const fee=delivFee(), tot=Math.max(0,sub-ldAmt-cAmt+fee);
+  const hasGift=sub>=200;
+
+  return `<div class="cw">
+    ${hasGift?`<div class="gn">🎁 ${T('gift')}</div>`:
+    `<div style="background:var(--gop);border:1px solid var(--go);border-radius:12px;padding:8px 12px;font-size:11px;font-weight:600;color:var(--gd);margin-bottom:8px">
+      🎁 ${fp(Math.max(0,200-sub))}${T('giftnear')}</div>`}
+
+    ${items.map(p=>`<div class="ci">
+      <div class="cii">${p.e}</div>
+      <div class="cib">
+        <div class="cin">${S.lang==='ar'?p.ar:p.fr}</div>
+        <div class="ciu">${p.u} · ${fp(p.pp||p.p)} × ${S.cart[p.id]}</div>
+        <div class="cipr">
+          <span class="cip">${fp((p.pp||p.p)*S.cart[p.id])}</span>
+          <div class="qc">
+            <button class="qb" onclick="rmCart('${p.id}')">−</button>
+            <span class="qn">${S.cart[p.id]}</span>
+            <button class="qb" onclick="addCart('${p.id}')">+</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('')}
+
+    <div class="cprow">
+      <input class="cpi" id="cup" placeholder="${T('couponph')}" value="${S.coupon}" oninput="S.coupon=this.value.toUpperCase()">
+      <button class="cpab" onclick="applyCoupon()">${T('apply')}</button>
+    </div>
+    ${S.couponApplied?`<div class="cpok">✅ ${L('كوبون مطبّق!','Coupon appliqué!','Coupon applied!')} −${S.couponApplied.disc}%</div>`:''}
+
+    <div class="cs">
+      <div class="sr"><span>${T('sub')}</span><span>${fp(sub)}</span></div>
+      <div class="sr dis"><span>${T('loydisc')} (−${disc}%)</span><span>−${fp(ldAmt)}</span></div>
+      ${cAmt?`<div class="sr dis"><span>${T('cupdisc')}</span><span>−${fp(cAmt)}</span></div>`:''}
+      <div class="sr"><span>${T('delfee')} (${S.df.city})</span><span>${fp(fee)}</span></div>
+      <div class="sr tot"><span>${T('total')}</span><span style="color:var(--g)">${fp(tot)}</span></div>
+    </div>
+    <div class="pi">${T('cod')}</div>
+    <button class="ckb" onclick="S.modal='delivery';render()">${T('checkout')}</button>
+  </div>`;}
+
+function renderSuccess(){
+  const o=S.lastOrder;
+  const steps=[{k:'received',i:'📥'},{k:'preparing',i:'👨‍🍳'},{k:'ready',i:'📦'},{k:'outfordelivery',i:'🚚'},{k:'delivered',i:'✅'}];
+  return `<div class="osc">
+    <div class="osi">🎉</div>
+    <div class="ost">${T('orderdone')}</div>
+    <div class="onb">${o.num}</div>
+    <div style="font-size:13px;color:var(--tm);margin-bottom:16px">${T('ordermsg')}</div>
+    ${o.hasGift?`<div class="gn" style="justify-content:center;margin-bottom:16px">🎁 ${T('gift')}</div>`:''}
+    <div class="ttl">${steps.map((s,i)=>`
+      <div class="ts2 ${i===0?'dn':''}">
+        <div class="sdt ${i===0?'dn':i===0?'cur':''}"><span>${s.i}</span></div>
+        <div class="sdi">
+          <div class="sdn">${T(s.k)}</div>
+          ${i===0?`<div class="sdt2">${new Date().toLocaleTimeString()}</div>`:''}
+        </div>
+      </div>`).join('')}
+    </div>
+    <button class="ckb" style="margin-top:16px" onclick="S.orderDone=false;S.cart={};render()">${T('neworder')}</button>
+  </div>`;}
+
+/* ── DELIVERY MODAL ── */
+function renderDelivery(){
+  const govs=[...new Set(ZONES.map(z=>z.gov))];
+  const cities=[...new Set(ZONES.filter(z=>z.gov===S.df.gov).map(z=>z.city))];
+  const areas=ZONES.filter(z=>z.gov===S.df.gov&&z.city===S.df.city&&z.area);
+  const fee=delivFee();
+  return `<div class="mo" onclick="if(event.target===this){S.modal=null;render()}">
+    <div class="ms">
+      <div class="mh"></div>
+      <div class="mt2">🚚 ${T('delfee')}</div>
+      <div class="fg"><div class="fl">${T('gov')}</div>
+        <select class="fs" onchange="S.df.gov=this.value;S.df.city=ZONES.find(z=>z.gov===this.value)?.city||'';S.df.area='';render()">
+          ${govs.map(g=>`<option ${g===S.df.gov?'selected':''}>${g}</option>`).join('')}
+        </select></div>
+      <div class="fg"><div class="fl">${T('city')}</div>
+        <select class="fs" onchange="S.df.city=this.value;S.df.area='';render()">
+          ${cities.map(c=>`<option ${c===S.df.city?'selected':''}>${c}</option>`).join('')}
+        </select></div>
+      ${areas.length?`<div class="fg"><div class="fl">${T('area')}</div>
+        <select class="fs" onchange="S.df.area=this.value;render()">
+          ${areas.map(z=>`<option ${z.area===S.df.area?'selected':''}>${z.area}</option>`).join('')}
+        </select></div>`:''}
+      <div class="fg"><div class="fl">${T('street')}</div>
+        <input class="fi" placeholder="${T('street')}" value="${S.df.street}" oninput="S.df.street=this.value"></div>
+      <div class="fg"><div class="fl">${T('house')}</div>
+        <input class="fi" placeholder="${T('house')}" value="${S.df.house}" oninput="S.df.house=this.value"></div>
+      <div class="fg"><div class="fl">${T('phone')}</div>
+        <input class="fi" type="tel" placeholder="+216 XX XXX XXX" value="${S.df.phone}" oninput="S.df.phone=this.value"></div>
+      <div class="dfd"><span>${T('delfee')}</span><span>${fp(fee)}</span></div>
+      <div class="pi">${T('cod')}</div>
+      <button class="cfb" onclick="placeOrder()">✅ ${T('confirm')}</button>
+    </div>
+  </div>`;}
+
+/* ── ACCOUNT ── */
+function renderAccount(){
+  const tier=getTier(S.demoSpend);
+  const initials=(S.user.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  return `<div class="ach">
+    <div class="aca">${initials}</div>
+    <div class="acn">${S.user.name}</div>
+    <div class="acp">${S.user.phone||'+216 00 000 000'}</div>
+    <div class="atb">${tier.icon} ${L(tier.ar,tier.fr,tier.fr)} · −${tier.disc}%</div>
+  </div>
+  <div class="acb">
+    <div class="aca2">
+      <div class="ar" onclick="S.tab='loyalty';render()">
+        <span class="ari">🏆</span><span class="arl">${T('loyalty')}</span>
+        <span class="pill po">${tier.icon} ${L(tier.ar,tier.fr,tier.fr)}</span>
+        <span class="arc">‹</span></div>
+      <div class="ar" onclick="S.subPage='orders';render()">
+        <span class="ari">📦</span><span class="arl">${T('yourorders')}</span>
+        <span class="pill pg">${S.orderHistory.length}</span>
+        <span class="arc">‹</span></div>
+      <div class="ar" onclick="S.subPage='favs';render()">
+        <span class="ari">❤️</span><span class="arl">${T('favs')}</span>
+        <span class="pill pr">${S.favs.size}</span>
+        <span class="arc">‹</span></div>
+      <div class="ar" onclick="S.subPage='addresses';render()">
+        <span class="ari">📍</span><span class="arl">${T('addresses')}</span><span class="arc">‹</span></div>
+    </div>
+    <div class="aca2">
+      <div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--ts)">${T('lang')}</div>
+      <div class="ls">
+        <button class="lo ${S.lang==='ar'?'active':''}" onclick="setLang('ar')">عربي</button>
+        <button class="lo ${S.lang==='fr'?'active':''}" onclick="setLang('fr')">Français</button>
+        <button class="lo ${S.lang==='en'?'active':''}" onclick="setLang('en')">English</button>
+      </div>
+    </div>
+    <div class="aca2">
+      <div class="ar dng" onclick="S.user=null;render()">
+        <span class="ari">🚪</span><span class="arl">${T('logout')}</span></div>
+    </div>
+  </div>`;}
+
+/* ── PRODUCT DETAIL ── */
+function renderDetail(){
+  const p=PRODS.find(x=>x.id===S.detailId);if(!p)return '';
+  const price=p.pp||p.p, qty=S.cart[p.id]||0;
+  return `<div style="padding-bottom:80px">
+    <div class="sch">
+      <button class="bkb" onclick="S.detailId=null;render()">← ${T('back')}</button>
+      <div class="sct">${S.lang==='ar'?p.ar:p.fr}</div>
+      <button onclick="toggleFav('${p.id}')" style="background:none;border:none;font-size:22px;cursor:pointer">${S.favs.has(p.id)?'❤️':'🤍'}</button>
+    </div>
+    <div style="width:100%;aspect-ratio:1.1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:90px">${p.e}</div>
+    <div class="pdb">
+      <div class="pdn">${S.lang==='ar'?p.ar:p.fr}</div>
+      <div class="pdu">${p.u}</div>
+      <div class="pdpr">
+        <span class="pdp">${fp(price)}</span>
+        ${p.pp?`<span class="pdop">${fp(p.p)}</span><span class="pill pr">−${Math.round((1-p.pp/p.p)*100)}%</span>`:''}
+      </div>
+      <div class="pdsec">${T('desc')}</div>
+      <div class="pdd">${S.lang==='ar'?(p.dar||''):p.dfr||''}</div>
+      ${p.ben&&p.ben.length?`<div class="pdsec">${T('benefits')}</div>
+      <div class="pdbf">${p.ben.map(b=>`<div class="bfit"><span>${b}</span></div>`).join('')}</div>`:''}
+    </div>
+    <div class="pdft">
+      <div class="pdqc">
+        <button class="qb" onclick="rmCart('${p.id}')">−</button>
+        <span class="qn">${qty}</span>
+        <button class="qb" onclick="addCart('${p.id}')">+</button>
+      </div>
+      <button class="pdab" onclick="addCart('${p.id}')">${T('addtocart')}</button>
+    </div>
+  </div>`;}
+
+/* ── NOTIFICATIONS ── */
+function renderNotif(){
+  const ns=[
+    {i:'🔥',t:L('عرض خاص اليوم!','Offre spéciale!','Special offer!'),x:L('خصم 20% على الزعتر البلدي','20% sur le zaatar artisanal','20% off artisanal zaatar'),d:'10:30',u:true},
+    {i:'🎁',t:L('قريب من مكافأتك!','Presque récompensé!','Almost rewarded!'),x:L('تبقى 80 دت للوصول للمستوى الفضي','Encore 80 DT pour Argent','80 DT left for Silver'),d:'09:15',u:true},
+    {i:'💎',t:L('مرحباً بك في مستوى برونز!','Bienvenue Bronze!','Welcome to Bronze!'),x:L('تهانينا! خصم 5% على كل طلب','Félicitations! 5% sur chaque commande','Congrats! 5% off each order'),d:L('أمس','Hier','Yesterday'),u:false},
+    {i:'📦',t:L('طلبك في الطريق!','Votre commande est en route!','Your order is on its way!'),x:L('سيصل خلال 30 دقيقة','Arrivée dans 30 minutes','Arriving in 30 minutes'),d:L('الاثنين','Lundi','Monday'),u:false}
+  ];
+  return `<div class="sch">
+    <button class="bkb" onclick="S.showNotif=false;render()">← ${T('back')}</button>
+    <div class="sct">🔔 ${T('notif')}</div><span></span>
+  </div>
+  ${ns.map(n=>`<div class="nit ${n.u?'unr':''}">
+    <div class="nii">${n.i}</div>
+    <div class="nib2">
+      <div class="nitt">${n.t}</div>
+      <div class="nitx">${n.x}</div>
+      <div class="nttm">${n.d}</div>
+    </div>
+  </div>`).join('')}`;}
+
+/* ── AI ── */
+function renderAI(){
+  return `<div class="cwr">
+    <div class="sch">
+      <button class="bkb" onclick="S.showAI=false;render()">← ${T('back')}</button>
+      <div class="sct">🤖 ${T('ai')}</div><span></span>
+    </div>
+    <div class="cmsg" id="cmsg">
+      ${S.msgs.length===0?`<div class="cbub bot" style="white-space:pre-line">${AI.default[S.lang]}</div>
+      <div class="csgs">
+        <button class="csg" onclick="sendAI('${L('أريد عمل كسكسي','Je veux faire un couscous','I want to make couscous')}')">${L('كسكسي','Couscous','Couscous')}</button>
+        <button class="csg" onclick="sendAI('${L('وصفة طاجين','Recette tagine','Tagine recipe')}')">${L('طاجين','Tagine','Tagine')}</button>
+        <button class="csg" onclick="sendAI('${L('فوائد الهريسة','Harissa tunisienne','Tunisian harissa')}')">${L('الهريسة','Harissa','Harissa')}</button>
+        <button class="csg" onclick="sendAI('${L('برنامج الولاء','Programme fidélité','Loyalty program')}')">${L('الولاء','Fidélité','Loyalty')}</button>
+      </div>`:
+      S.msgs.map(m=>`<div class="cbub ${m.r}" style="white-space:pre-line">${m.t}
+        ${m.prods&&m.prods.length?`<button class="aab" onclick="addAll(${JSON.stringify(m.prods)})">🛒 ${L('أضف الكل للسلة','Tout ajouter','Add all to cart')}</button>`:''}
+      </div>`).join('')}
+    </div>
+    <div class="cib2">
+      <input class="cin2" id="cinp" placeholder="${T('type')}"
+        onkeydown="if(event.key==='Enter'){sendAI(this.value);this.value=''}">
+      <button class="csd" onclick="const i=document.getElementById('cinp');sendAI(i.value);i.value=''">➤</button>
+    </div>
+  </div>`;}
+
+/* ── AUTH ── */
+function renderAuth(){
+  return `<div class="aus">
+    <div class="auh">
+      <div class="aulo">نكهة الدار</div>
+      <div class="ause">${L('توابل وبهارات من أجود المزارع التونسية','Épices des meilleures fermes tunisiennes','Spices from Tunisia\'s finest farms')}</div>
+    </div>
+    <div class="auf">
+      <div class="autt">${S.authMode==='login'?T('login'):T('register')}</div>
+      <div class="ausb">${S.authMode==='login'?L('أدخل بياناتك للمتابعة','Entrez vos informations','Enter your details'):L('أنشئ حساباً للاستفادة من العروض','Créez un compte pour profiter des offres','Create an account to enjoy offers')}</div>
+      ${S.authMode==='register'?`<input class="auinp" placeholder="${T('name')}" oninput="S.authF.name=this.value">`:''}
+      <input class="auinp" type="tel" placeholder="+216 XX XXX XXX" oninput="S.authF.phone=this.value">
+      <input class="auinp" type="password" placeholder="${T('pass')}" oninput="S.authF.pass=this.value">
+      <button class="aubt" onclick="doAuth()">${S.authMode==='login'?T('login'):T('register')}</button>
+      <button class="dmb" onclick="demoLogin()">🎮 ${T('demo')}</button>
+      <div class="ausw">${S.authMode==='login'?L('ليس لديك حساب؟ ','Pas de compte? ','No account? '):L('لديك حساب؟ ','Déjà un compte? ','Have an account? ')}
+        <span onclick="S.authMode=S.authMode==='login'?'register':'login';render()">${S.authMode==='login'?T('register'):T('login')}</span>
+      </div>
+    </div>
+  </div>`;}
+
+/* ═══════════════ ACTIONS ═══════════════ */
+function setLang(l){S.lang=l;render();}
+function addCart(id){S.cart[id]=(S.cart[id]||0)+1;render();}
+function rmCart(id){if(S.cart[id]>1)S.cart[id]--;else delete S.cart[id];render();}
+function toggleFav(id){S.favs.has(id)?S.favs.delete(id):S.favs.add(id);render();}
+function applyCoupon(){
+  const c=S.coupon.trim().toUpperCase(), sub=cartSub();
+  if(COUPONS[c]&&sub>=COUPONS[c].min){S.couponApplied=COUPONS[c];showToast(`${L('تم تطبيق الكوبون!','Coupon appliqué!','Coupon applied!')} −${COUPONS[c].disc}%`);}
+  else{S.couponApplied=null;showToast(L('كود غير صحيح أو الحد الأدنى غير محقق','Code invalide ou minimum non atteint','Invalid code or minimum not met'),'⚠️');}
+  render();
+}
+function placeOrder(){
+  if(!S.df.phone){showToast(L('أدخل رقم هاتفك','Entrez votre numéro','Enter your phone'),'⚠️');return;}
+  const sub=cartSub(), itemIds=Object.keys(S.cart);
+  const orderNum='ND-'+Date.now().toString().slice(-6);
+  S.lastOrder={id:orderNum,num:orderNum,total:sub,hasGift:sub>=200,date:new Date().toISOString(),items:itemIds};
+  S.orderHistory.unshift(S.lastOrder);
+  S.demoSpend+=sub; S.modal=null; S.orderDone=true; render();
+}
+function doAuth(){
+  S.user={name:S.authF.name||L('مستخدم','Utilisateur','User'),phone:S.authF.phone||'55 000 000'};
+  render();
+}
+function demoLogin(){
+  S.user={name:L('أحمد بن علي','Ahmed Ben Ali','Ahmed Ben Ali'),phone:'55 123 456'};
+  render();
+}
+function sendAI(msg){
+  if(!msg||!msg.trim())return;
+  S.msgs.push({r:'usr',t:msg});
+  const lo=msg.toLowerCase();
+  let resp=AI.default;
+  if(lo.includes('كسكسي')||lo.includes('couscous'))resp=AI.couscous;
+  else if(lo.includes('طاجين')||lo.includes('tagine'))resp=AI.tagine;
+  else if(lo.includes('هريسة')||lo.includes('harissa'))resp=AI.harissa;
+  else if(lo.includes('ولاء')||lo.includes('fidélité')||lo.includes('loyalty'))resp=AI.loyalty;
+  S.msgs.push({r:'bot',t:'...',typing:true});
+  render();
+  setTimeout(()=>{
+    S.msgs.pop();
+    S.msgs.push({r:'bot',t:resp[S.lang]||resp.ar,prods:resp.prods||[]});
+    render();
+  },800);
+}
+function renderOrders(){
+  const orders=S.orderHistory;
+  return `<div class="sch">
+    <button class="bkb" onclick="S.subPage=null;render()">← ${T('back')}</button>
+    <div class="sct">📦 ${T('yourorders')}</div><span></span>
+  </div>
+  ${orders.length===0?`<div style="text-align:center;padding:60px 20px">
+    <div style="font-size:60px;margin-bottom:12px">📦</div>
+    <div style="font-size:15px;font-weight:700;color:var(--tm);margin-bottom:6px">${L('لا توجد طلبات بعد','Aucune commande','No orders yet')}</div>
+    <div style="font-size:12px;color:var(--ts);margin-bottom:20px">${L('ابدأ تسوقك الآن!','Commencez à magasiner!','Start shopping now!')}</div>
+    <button class="ckb" style="max-width:180px;margin:0 auto;display:block" onclick="S.subPage=null;S.tab='home';render()">${L('تسوق الآن','Magasiner','Shop now')}</button>
+  </div>`:orders.map(o=>`
+  <div style="background:var(--wh);border-radius:var(--r14);border:1px solid var(--bm);padding:14px;margin:10px 16px;box-shadow:var(--sh)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <code style="font-size:12px;font-weight:700;color:var(--g)">${o.num}</code>
+      <span style="background:var(--gp);color:var(--g);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">
+        ${L('تم الاستلام','Reçu','Received')}
+      </span>
+    </div>
+    <div style="font-size:12px;color:var(--ts);margin-bottom:8px">📅 ${new Date(o.date).toLocaleDateString(S.lang==='ar'?'ar-TN':S.lang==='fr'?'fr-TN':'en-GB')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;font-weight:700;color:var(--td)">${fp(o.total)} ${o.hasGift?'🎁':''}</div>
+      <button onclick="reorder('${o.id}')" style="background:var(--g);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+        🔄 ${L('إعادة الطلب','Recommander','Reorder')}
+      </button>
+    </div>
+  </div>`).join('')}`;}
+
+function renderFavs(){
+  const favProds=PRODS.filter(p=>S.favs.has(p.id));
+  return `<div class="sch">
+    <button class="bkb" onclick="S.subPage=null;render()">← ${T('back')}</button>
+    <div class="sct">❤️ ${T('favs')}</div><span></span>
+  </div>
+  ${favProds.length===0?`<div style="text-align:center;padding:60px 20px">
+    <div style="font-size:60px;margin-bottom:12px">🤍</div>
+    <div style="font-size:15px;font-weight:700;color:var(--tm);margin-bottom:6px">${L('لا توجد منتجات مفضلة','Aucun favori','No favorites yet')}</div>
+    <div style="font-size:12px;color:var(--ts);margin-bottom:20px">${L('اضغط على ❤️ لإضافة منتج للمفضلة','Appuyez sur ❤️ pour ajouter aux favoris','Tap ❤️ to add products to favorites')}</div>
+    <button class="ckb" style="max-width:200px;margin:0 auto;display:block" onclick="S.subPage=null;S.tab='home';render()">${L('تسفح المنتجات','Explorer','Browse products')}</button>
+  </div>`:
+  `<div class="pg" style="padding:12px 16px 80px">${favProds.map(p=>pcard(p)).join('')}</div>`}`;}
+
+function renderAddresses(){
+  const zones_govs=[...new Set(ZONES.map(z=>z.gov))];
+  const editMode=S.addrEditMode;
+  return `<div class="sch">
+    <button class="bkb" onclick="S.subPage=null;S.addrEditMode=false;render()">← ${T('back')}</button>
+    <div class="sct">📍 ${T('addresses')}</div>
+    <button onclick="S.addrEditMode=!S.addrEditMode;render()" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:700;color:var(--g)">
+      ${editMode?L('إلغاء','Annuler','Cancel'):L('+ إضافة','+ Ajouter','+ Add')}
+    </button>
+  </div>
+
+  ${editMode?`<div style="padding:12px 16px">
+    <div style="background:var(--wh);border-radius:var(--r14);padding:14px;border:1px solid var(--bm);box-shadow:var(--sh)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--td)">📍 ${L('عنوان جديد','Nouvelle adresse','New address')}</div>
+      <div class="fg" style="margin-bottom:10px"><div class="fl">${T('gov')}</div>
+        <select class="fs" id="a-gov" onchange="S.df.gov=this.value;render()">
+          ${zones_govs.map(g=>`<option ${g===S.df.gov?'selected':''}>${g}</option>`).join('')}
+        </select></div>
+      <div class="fg" style="margin-bottom:10px"><div class="fl">${T('city')}</div>
+        <input class="fi" id="a-city" placeholder="${T('city')}" value="${S.df.city||''}" oninput="S.df.city=this.value"></div>
+      <div class="fg" style="margin-bottom:10px"><div class="fl">${T('street')}</div>
+        <input class="fi" id="a-street" placeholder="${T('street')}" value="${S.df.street||''}" oninput="S.df.street=this.value"></div>
+      <div class="fg" style="margin-bottom:10px"><div class="fl">${T('house')}</div>
+        <input class="fi" id="a-house" placeholder="${T('house')}" value="${S.df.house||''}" oninput="S.df.house=this.value"></div>
+      <button class="cfb" style="margin-top:4px" onclick="saveAddress()">${L('💾 حفظ العنوان','💾 Enregistrer','💾 Save address')}</button>
+    </div>
+  </div>`:''}
+
+  ${S.savedAddresses.length===0&&!editMode?`<div style="text-align:center;padding:50px 20px">
+    <div style="font-size:50px;margin-bottom:12px">📍</div>
+    <div style="font-size:14px;font-weight:700;color:var(--tm);margin-bottom:6px">${L('لا توجد عناوين محفوظة','Aucune adresse enregistrée','No saved addresses')}</div>
+    <button class="ckb" style="max-width:200px;margin:12px auto 0;display:block" onclick="S.addrEditMode=true;render()">+ ${L('إضافة عنوان','Ajouter une adresse','Add address')}</button>
+  </div>`:
+  S.savedAddresses.map((a,i)=>`
+  <div style="background:var(--wh);border-radius:var(--r14);border:1px solid var(--bm);padding:14px;margin:8px 16px;box-shadow:var(--sh);display:flex;gap:12px;align-items:flex-start">
+    <div style="width:36px;height:36px;border-radius:50%;background:var(--gp);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📍</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--td)">${a.city}${a.street?', '+a.street:''}</div>
+      <div style="font-size:11px;color:var(--ts);margin-top:2px">${a.gov}${a.house?' — '+L('رقم','N°','No.')+''+a.house:''}</div>
+      ${i===0?`<span style="background:var(--gp);color:var(--g);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block">${L('افتراضي','Par défaut','Default')}</span>`:''}
+    </div>
+    <button onclick="S.savedAddresses.splice(${i},1);render()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--ts)">🗑️</button>
+  </div>`).join('')}`;}
+
+function saveAddress(){
+  if(!S.df.city||!S.df.street){
+    const msg=L('أدخل المدينة والشارع على الأقل','Entrez au moins la ville et la rue','Enter at least city and street');
+    showToast(msg,'⚠️');return;
+  }
+  S.savedAddresses.unshift({gov:S.df.gov,city:S.df.city,street:S.df.street,house:S.df.house});
+  S.addrEditMode=false;
+  showToast(L('تم حفظ العنوان!','Adresse enregistrée!','Address saved!'),'✅');
+  render();
+}
+
+function showToast(msg, icon='✅'){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gd);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:700;font-family:Cairo,sans-serif;z-index:999;opacity:0;transition:all .3s;white-space:nowrap';document.getElementById('root').appendChild(t);}
+  t.textContent=`${icon} ${msg}`;
+  t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},2200);
+}
+
+function reorder(orderId){
+  const o=S.orderHistory.find(x=>x.id===orderId);
+  if(!o||!o.items)return;
+  o.items.forEach(id=>S.cart[id]=(S.cart[id]||0)+1);
+  S.subPage=null;S.tab='cart';
+  showToast(L('تمت إضافة المنتجات للسلة!','Produits ajoutés au panier!','Products added to cart!'));
+  render();
+}
+function addAll(ids){
+  ids.forEach(id=>S.cart[id]=(S.cart[id]||0)+1);
+  render();
+  showToast(`${L('تمت الإضافة للسلة!','Ajouté au panier!','Added to cart!')} (${ids.length})`);
+}
+
+let timerInt=null;
+function startTimer(){
+  if(timerInt)return;
+  timerInt=setInterval(()=>{
+    S.timerSecs=Math.max(0,S.timerSecs-1);
+    const h=document.getElementById('th'),m=document.getElementById('tm'),sc=document.getElementById('ts');
+    const p=n=>String(n).padStart(2,'0');
+    if(h)h.textContent=p(Math.floor(S.timerSecs/3600));
+    if(m)m.textContent=p(Math.floor((S.timerSecs%3600)/60));
+    if(sc)sc.textContent=p(S.timerSecs%60);
+    if(S.timerSecs===0){clearInterval(timerInt);timerInt=null;S.timerSecs=5400;}
+  },1000);
+}
+render();
+</script>
+</body>
+</html>

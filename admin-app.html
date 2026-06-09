@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نكهة الدار — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --sidebar-w: 220px;
+  --green: #2d6a4f;
+  --green-dark: #1a4731;
+  --green-light: #74c69d;
+  --green-pale: #d8f3dc;
+  --gold: #c9971a;
+  --gold-pale: #fef9e7;
+  --red: #e63946;
+  --orange: #f4a261;
+  --blue: #2196f3;
+  --bg: #f8f9fa;
+  --white: #ffffff;
+  --border: #e9ecef;
+  --text: #212529;
+  --text-mid: #6c757d;
+  --shadow: 0 1px 4px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LAYOUT ── */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--green-dark);color:#fff;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-ar{font-family:'Cairo',sans-serif;font-size:18px;font-weight:900;color:var(--gold)}
+.logo-en{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:.8px;margin-top:2px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar-nav::-webkit-scrollbar{display:none}
+.nav-section-title{font-size:9px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;padding:12px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:500;color:rgba(255,255,255,.75);transition:all .18s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.15);color:#fff}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;margin-right:auto}
+.sidebar-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(255,255,255,.5)}
+.admin-info{display:flex;align-items:center;gap:8px}
+.admin-avatar{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--green-dark)}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.page-title{font-size:17px;font-weight:700;color:var(--text)}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .18s}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-dark)}
+.btn-outline{background:var(--white);color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--bg)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.search-box{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px}
+.search-box input{border:none;background:transparent;outline:none;font-size:13px;color:var(--text);width:200px}
+
+/* ── CONTENT ── */
+.content{flex:1;padding:20px 24px}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--white);border-radius:12px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.stat-label{font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text)}
+.stat-change{font-size:11px;font-weight:600;margin-top:4px}
+.stat-change.up{color:#28a745}
+.stat-change.down{color:var(--red)}
+.stat-icon{font-size:18px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── CARD ── */
+.card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-body{padding:16px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--bg);padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tbody tr:hover{background:#f8f9fa}
+tbody tr:last-child td{border-bottom:none}
+.td-emoji{font-size:22px;text-align:center;width:40px}
+
+/* ── STATUS BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-received{background:#e3f2fd;color:#1565c0}
+.badge-preparing{background:#fff3e0;color:#e65100}
+.badge-ready{background:#e8f5e9;color:#2e7d32}
+.badge-outfordelivery{background:#ede7f6;color:#4527a0}
+.badge-delivered{background:var(--green-pale);color:var(--green)}
+.badge-cancelled{background:#ffebee;color:var(--red)}
+.badge-instock{background:var(--green-pale);color:var(--green)}
+.badge-lowstock{background:#fff3e0;color:#e65100}
+.badge-outofstock{background:#ffebee;color:var(--red)}
+.badge-starter{background:#eceff1;color:#455a64}
+.badge-bronze{background:#fbe9e7;color:#bf360c}
+.badge-silver{background:#e0f7fa;color:#006064}
+.badge-gold{background:var(--gold-pale);color:var(--gold)}
+.badge-vip{background:#f3e5f5;color:#6a1b9a}
+.badge-active{background:var(--green-pale);color:var(--green)}
+.badge-inactive{background:#f5f5f5;color:var(--text-mid)}
+
+/* ── GRID 2/3 ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:12px;font-weight:600;color:var(--text-mid)}
+.form-input,.form-select,.form-textarea{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:all .18s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(45,106,79,.1)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--white);border-radius:14px;box-shadow:var(--shadow-md);width:100%;max-width:540px;max-height:85vh;overflow-y:auto}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-mid);line-height:1;padding:2px}
+.modal-body{padding:20px}
+
+/* ── PROGRESS ── */
+.progress-bar{background:var(--border);border-radius:4px;height:6px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:4px;transition:width .4s}
+
+/* ── CHART WRAP ── */
+.chart-wrap{height:220px;position:relative}
+
+/* ── STATUS SELECT ── */
+.status-select{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;background:var(--white)}
+
+/* ── AUTH ── */
+.admin-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--green-dark)}
+.auth-card{background:var(--white);border-radius:16px;padding:36px;width:100%;max-width:380px;box-shadow:var(--shadow-md)}
+.auth-logo{text-align:center;margin-bottom:24px}
+.auth-logo-ar{font-family:'Cairo',sans-serif;font-size:28px;font-weight:900;color:var(--green-dark)}
+.auth-logo-sub{font-size:12px;color:var(--text-mid);margin-top:4px}
+.auth-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.auth-sub{font-size:13px;color:var(--text-mid);margin-bottom:20px}
+.auth-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:10px;outline:none;transition:.18s}
+.auth-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+.auth-submit{width:100%;background:var(--green-dark);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s;margin-top:4px}
+.auth-submit:hover{background:var(--green)}
+.auth-demo{text-align:center;font-size:12px;color:var(--text-mid);margin-top:12px;cursor:pointer}
+.auth-demo span{color:var(--green);font-weight:600}
+
+/* ── DRIVER CARD ── */
+.driver-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px}
+.driver-avatar{width:38px;height:38px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--green);flex-shrink:0}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-available{background:#28a745}
+.dot-busy{background:var(--orange)}
+.dot-offline{background:var(--text-mid)}
+
+/* ── ZONE CARD ── */
+.zone-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px}
+.zone-price{font-size:18px;font-weight:800;color:var(--green-dark)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:9px 16px;font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer;border-bottom:2px solid transparent;transition:.18s;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let adminState = {
+  loggedIn: false,
+  loginForm: {email:'',pass:''},
+  page: 'dashboard',
+  modal: null,
+  editItem: null,
+  activeTab: 0,
+  searchQ: '',
+  filterStatus: 'all'
+};
+
+// ── MOCK DATA ──
+const MOCK = {
+  stats: {
+    todaySales: 847.500,
+    weekSales: 5234.200,
+    monthSales: 18760.000,
+    totalOrders: 312,
+    pendingOrders: 14,
+    deliveredOrders: 289
+  },
+  orders: [
+    {id:'ND-001',customer:'أحمد بن علي',phone:'55 123 456',total:127.500,status:'preparing',date:'2024-01-15',items:3,zone:'Sousse Centre',driver:'Mohamed K.'},
+    {id:'ND-002',customer:'سارة المنصوري',phone:'22 987 654',total:284.000,status:'out_for_delivery',date:'2024-01-15',items:6,zone:'Khezama',driver:'Ali B.'},
+    {id:'ND-003',customer:'Karim Gharbi',phone:'98 456 123',total:63.200,status:'received',date:'2024-01-15',items:2,zone:'Akouda',driver:null},
+    {id:'ND-004',customer:'Nadia Trabelsi',phone:'20 111 222',total:198.750,status:'ready',date:'2024-01-14',items:5,zone:'Kantaoui',driver:null},
+    {id:'ND-005',customer:'Omar Bensalem',phone:'55 777 888',total:45.000,status:'delivered',date:'2024-01-14',items:1,zone:'Hammam Sousse',driver:'Mohamed K.'},
+    {id:'ND-006',customer:'Rim Oueslati',phone:'27 333 444',total:312.500,status:'delivered',date:'2024-01-13',items:8,zone:'Tunis Centre',driver:'Ali B.'}
+  ],
+  products: [
+    {id:'p1',emoji:'🌶️',name:'فلفل أحمر حار',cat:'Épices',price:4.500,promoPrice:3.200,stock:45,unit:'100g',isActive:true},
+    {id:'p2',emoji:'🟡',name:'كركم أصلي',cat:'Épices',price:5.900,promoPrice:null,stock:30,unit:'100g',isActive:true},
+    {id:'p3',emoji:'🍂',name:'قرفة سيلانية',cat:'Épices',price:6.200,promoPrice:4.800,stock:5,unit:'60g',isActive:true},
+    {id:'p4',emoji:'🌿',name:'زعتر بلدي',cat:'Herbes',price:7.800,promoPrice:null,stock:0,unit:'120g',isActive:false},
+    {id:'p5',emoji:'🥜',name:'لوز طبيعي',cat:'Noix',price:12.500,promoPrice:10.000,stock:60,unit:'250g',isActive:true},
+    {id:'p6',emoji:'🫒',name:'زيت زيتون بكر',cat:'Huiles',price:18.000,promoPrice:null,stock:25,unit:'500ml',isActive:true},
+    {id:'p7',emoji:'🏺',name:'هريسة تونسية',cat:'Traditionnel',price:4.200,promoPrice:null,stock:3,unit:'200g',isActive:true},
+    {id:'p8',emoji:'🌾',name:'بذور الشيا',cat:'Santé',price:8.900,promoPrice:7.200,stock:32,unit:'150g',isActive:true}
+  ],
+  categories: [
+    {id:'spices',name:'Épices',nameAr:'التوابل',icon:'🌶️',count:8,isActive:true},
+    {id:'herbs',name:'Herbes',nameAr:'الأعشاب',icon:'🌿',count:5,isActive:true},
+    {id:'nuts',name:'Noix',nameAr:'المكسرات',icon:'🥜',count:6,isActive:true},
+    {id:'dried-fruits',name:'Fruits secs',nameAr:'الفواكه المجففة',icon:'🍇',count:4,isActive:true},
+    {id:'oils',name:'Huiles',nameAr:'الزيوت',icon:'🫙',count:3,isActive:true},
+    {id:'traditional',name:'Traditionnel',nameAr:'منتجات تقليدية',icon:'🏺',count:7,isActive:true},
+    {id:'healthy',name:'Aliments sains',nameAr:'أغذية صحية',icon:'🥗',count:5,isActive:true}
+  ],
+  customers: [
+    {id:'u1',name:'أحمد بن علي',phone:'55 123 456',orders:12,spend:847.500,tier:'gold',lastOrder:'2024-01-15'},
+    {id:'u2',name:'سارة المنصوري',phone:'22 987 654',orders:8,spend:1284.000,tier:'vip',lastOrder:'2024-01-15'},
+    {id:'u3',name:'Karim Gharbi',phone:'98 456 123',orders:3,spend:163.200,tier:'bronze',lastOrder:'2024-01-15'},
+    {id:'u4',name:'Nadia Trabelsi',phone:'20 111 222',orders:21,spend:3198.750,tier:'vip',lastOrder:'2024-01-14'},
+    {id:'u5',name:'Omar Bensalem',phone:'55 777 888',orders:1,spend:45.000,tier:'starter',lastOrder:'2024-01-14'}
+  ],
+  drivers: [
+    {id:'d1',name:'Mohamed Khemiri',phone:'55 400 111',zones:['Sousse Centre','Khezama'],status:'busy',orders:8},
+    {id:'d2',name:'Ali Bchir',phone:'22 500 222',zones:['Akouda','Kantaoui'],status:'available',orders:12},
+    {id:'d3',name:'Youssef Ayari',phone:'98 300 333',zones:['Hammam Sousse'],status:'offline',orders:6}
+  ],
+  zones: [
+    {id:'z1',gov:'Sousse',city:'Sousse',area:'Sousse Centre',price:3.000,isActive:true},
+    {id:'z2',gov:'Sousse',city:'Sousse',area:'Khezama',price:4.000,isActive:true},
+    {id:'z3',gov:'Sousse',city:'Hammam Sousse',area:'',price:5.000,isActive:true},
+    {id:'z4',gov:'Sousse',city:'Akouda',area:'',price:7.000,isActive:true},
+    {id:'z5',gov:'Sousse',city:'Kantaoui',area:'',price:6.000,isActive:true},
+    {id:'z6',gov:'Tunis',city:'Tunis',area:'Tunis Centre',price:8.000,isActive:true},
+    {id:'z7',gov:'Sfax',city:'Sfax',area:'Sfax Centre',price:10.000,isActive:false}
+  ],
+  coupons: [
+    {code:'WELCOME10',disc:10,min:0,uses:47,maxUses:1000,valid:'2025-12-31',isActive:true},
+    {code:'RAMADAN15',disc:15,min:50,uses:128,maxUses:500,valid:'2024-04-30',isActive:true},
+    {code:'AID20',disc:20,min:100,uses:23,maxUses:200,valid:'2024-07-31',isActive:false}
+  ],
+  salesData: {
+    labels:['Jan 8','Jan 9','Jan 10','Jan 11','Jan 12','Jan 13','Jan 14','Jan 15'],
+    revenue:[540,720,680,850,920,760,1140,847],
+    orders:[8,12,10,14,16,11,18,12]
+  },
+  topProducts: [
+    {name:'زيت زيتون بكر',sales:48,revenue:864,emoji:'🫒'},
+    {name:'لوز طبيعي',sales:62,revenue:620,emoji:'🥜'},
+    {name:'هريسة تونسية',sales:91,revenue:382,emoji:'🏺'},
+    {name:'كركم أصلي',sales:44,revenue:260,emoji:'🟡'}
+  ]
+};
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+function render() {
+  const root = document.getElementById('root');
+  if (!adminState.loggedIn) { root.innerHTML = renderLoginPage(); return; }
+  root.innerHTML = `
+  <div class="layout">
+    ${renderSidebar()}
+    <div class="main">
+      ${renderTopbar()}
+      <div class="content">
+        ${renderPage()}
+      </div>
+    </div>
+  </div>
+  ${adminState.modal ? renderModal() : ''}`;
+  bindEvents();
+  if (adminState.page === 'dashboard') initCharts();
+}
+
+function renderLoginPage() {
+  return `
+  <div class="admin-auth">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-ar">نكهة الدار</div>
+        <div class="auth-logo-sub">Administration — لوحة الإدارة</div>
+      </div>
+      <div class="auth-title">Connexion Admin</div>
+      <div class="auth-sub">Accès réservé aux administrateurs</div>
+      <input class="auth-input" type="email" placeholder="Email admin"
+        value="${adminState.loginForm.email}" oninput="adminState.loginForm.email=this.value">
+      <input class="auth-input" type="password" placeholder="Mot de passe"
+        oninput="adminState.loginForm.pass=this.value">
+      <button class="auth-submit" onclick="doLogin()">Se connecter</button>
+      <div class="auth-demo" onclick="demoLogin()">
+        🎮 Accès démo: <span>admin@nakhar.tn / admin123</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSidebar() {
+  const pages = [
+    {section:'Principal',items:[
+      {id:'dashboard',icon:'📊',label:'Tableau de bord'},
+      {id:'orders',icon:'📦',label:'Commandes',badge:MOCK.stats.pendingOrders},
+    ]},
+    {section:'Catalogue',items:[
+      {id:'products',icon:'🛍️',label:'Produits'},
+      {id:'categories',icon:'🏷️',label:'Catégories'},
+      {id:'promotions',icon:'🔥',label:'Promotions'},
+    ]},
+    {section:'Livraison',items:[
+      {id:'zones',icon:'📍',label:'Zones de livraison'},
+      {id:'drivers',icon:'🚚',label:'Livreurs'},
+    ]},
+    {section:'Clients',items:[
+      {id:'customers',icon:'👥',label:'Clients'},
+      {id:'coupons',icon:'🎟️',label:'Coupons'},
+    ]},
+    {section:'Outils',items:[
+      {id:'notifications',icon:'🔔',label:'Notifications'},
+      {id:'analytics',icon:'📈',label:'Analytiques'},
+    ]}
+  ];
+
+  return `
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-ar">نكهة الدار</div>
+      <div class="logo-en">ADMIN PANEL v2.0</div>
+    </div>
+    <nav class="sidebar-nav">
+      ${pages.map(s=>`
+      <div class="nav-section-title">${s.section}</div>
+      ${s.items.map(i=>`
+      <button class="nav-item ${adminState.page===i.id?'active':''}" onclick="setPage('${i.id}')">
+        <span class="nav-icon">${i.icon}</span>
+        <span>${i.label}</span>
+        ${i.badge?`<span class="nav-badge">${i.badge}</span>`:''}
+      </button>`).join('')}`).join('')}
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-info">
+        <div class="admin-avatar">A</div>
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,.9);font-weight:600">Admin</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5)">admin@nakhar.tn</div>
+        </div>
+      </div>
+      <button onclick="adminState.loggedIn=false;render()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;margin-top:8px;display:block">Déconnexion →</button>
+    </div>
+  </div>`;
+}
+
+function renderTopbar() {
+  const titles = {dashboard:'Tableau de bord 📊',orders:'Gestion des commandes 📦',products:'Gestion des produits 🛍️',categories:'Catégories 🏷️',promotions:'Promotions 🔥',zones:'Zones de livraison 📍',drivers:'Livreurs 🚚',customers:'Clients 👥',coupons:'Coupons 🎟️',notifications:'Notifications 🔔',analytics:'Analytiques 📈'};
+  return `
+  <div class="topbar">
+    <div class="page-title">${titles[adminState.page]||adminState.page}</div>
+    <div class="topbar-actions">
+      <div class="search-box">
+        🔍 <input placeholder="Rechercher..." value="${adminState.searchQ}"
+          oninput="adminState.searchQ=this.value;render()">
+      </div>
+      ${adminState.page==='products'?`<button class="btn btn-primary" onclick="openModal('add-product')">+ Produit</button>`:''}
+      ${adminState.page==='coupons'?`<button class="btn btn-primary" onclick="openModal('add-coupon')">+ Coupon</button>`:''}
+      ${adminState.page==='drivers'?`<button class="btn btn-primary" onclick="openModal('add-driver')">+ Livreur</button>`:''}
+      ${adminState.page==='zones'?`<button class="btn btn-primary" onclick="openModal('add-zone')">+ Zone</button>`:''}
+      ${adminState.page==='notifications'?`<button class="btn btn-primary" onclick="openModal('send-notif')">📤 Envoyer</button>`:''}
+    </div>
+  </div>`;
+}
+
+function renderPage() {
+  switch(adminState.page) {
+    case 'dashboard': return renderDashboard();
+    case 'orders': return renderOrders();
+    case 'products': return renderProducts();
+    case 'categories': return renderCategories();
+    case 'promotions': return renderPromotions();
+    case 'zones': return renderZones();
+    case 'drivers': return renderDrivers();
+    case 'customers': return renderCustomers();
+    case 'coupons': return renderCoupons();
+    case 'notifications': return renderNotifications();
+    case 'analytics': return renderAnalytics();
+    default: return '<div>Page not found</div>';
+  }
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const s = MOCK.stats;
+  return `
+  <div class="stats-grid">
+    ${[
+      {label:"Ventes aujourd'hui",val:`${s.todaySales.toFixed(3)} DT`,change:'+12.4%',up:true,icon:'💰',color:'#e8f5e9'},
+      {label:'Ventes semaine',val:`${s.weekSales.toFixed(2)} DT`,change:'+8.1%',up:true,icon:'📅',color:'#e3f2fd'},
+      {label:'Commandes totales',val:s.totalOrders,change:'+23 ce mois',up:true,icon:'📦',color:'#fff3e0'},
+      {label:'En attente',val:s.pendingOrders,change:'Depuis hier',up:false,icon:'⏳',color:'#ffebee'}
+    ].map(c=>`
+    <div class="stat-card">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-icon" style="background:${c.color}">${c.icon}</div>
+      </div>
+      <div class="stat-value">${c.val}</div>
+      <div class="stat-change ${c.up?'up':'down'}">${c.up?'▲':'▼'} ${c.change}</div>
+    </div>`).join('')}
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">📈 Revenus (7 derniers jours)</div></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="revenue-chart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📦 Commandes récentes</div></div>
+      <div class="card-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>N°</th><th>Client</th><th>Total</th><th>Statut</th></tr></thead>
+            <tbody>${MOCK.orders.slice(0,5).map(o=>`
+            <tr>
+              <td><code style="font-size:11px">${o.id}</code></td>
+              <td>${o.customer}</td>
+              <td style="font-weight:700;color:var(--green)">${o.total.toFixed(3)} DT</td>
+              <td>${renderStatusBadge(o.status)}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">🏆 Top produits</div></div>
+      <div class="card-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Produit</th><th>Ventes</th><th>Revenu</th></tr></thead>
+            <tbody>${MOCK.topProducts.map(p=>`
+            <tr>
+              <td>${p.emoji} ${p.name}</td>
+              <td>${p.sales} unités</td>
+              <td style="font-weight:600;color:var(--green)">${p.revenue.toFixed(3)} DT</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚠️ Stock faible</div></div>
+      <div class="card-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Produit</th><th>Stock</th><th>Statut</th></tr></thead>
+            <tbody>${MOCK.products.filter(p=>p.stock<=5).map(p=>`
+            <tr>
+              <td>${p.emoji} ${p.name}</td>
+              <td>${p.stock > 0 ? p.stock+' '+p.unit : '—'}</td>
+              <td>${p.stock===0?`<span class="badge badge-outofstock">Épuisé</span>`:`<span class="badge badge-lowstock">Faible (${p.stock})</span>`}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function initCharts() {
+  setTimeout(() => {
+    const canvas = document.getElementById('revenue-chart');
+    if (!canvas) return;
+    if (canvas._chart) canvas._chart.destroy();
+    canvas._chart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: MOCK.salesData.labels,
+        datasets: [{
+          label: 'Revenus (DT)',
+          data: MOCK.salesData.revenue,
+          borderColor: '#2d6a4f',
+          backgroundColor: 'rgba(45,106,79,.08)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#2d6a4f'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {legend:{display:false}},
+        scales: {
+          y: {beginAtZero:false, grid:{color:'#f0f0f0'}, ticks:{font:{size:11}}},
+          x: {grid:{display:false}, ticks:{font:{size:10}}}
+        }
+      }
+    });
+  }, 100);
+}
+
+// ── ORDERS ──
+function renderOrders() {
+  const statusFilter = ['all','received','preparing','ready','out_for_delivery','delivered','cancelled'];
+  const labels = {all:'Tous',received:'Reçu',preparing:'En prép.',ready:'Prêt',out_for_delivery:'En route',delivered:'Livré',cancelled:'Annulé'};
+  let orders = MOCK.orders;
+  if (adminState.filterStatus !== 'all') orders = orders.filter(o=>o.status===adminState.filterStatus);
+  if (adminState.searchQ) orders = orders.filter(o=>o.customer.toLowerCase().includes(adminState.searchQ.toLowerCase())||o.id.includes(adminState.searchQ));
+
+  return `
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    ${statusFilter.map(s=>`
+    <button class="btn ${adminState.filterStatus===s?'btn-primary':'btn-outline'} btn-sm"
+      onclick="adminState.filterStatus='${s}';render()">${labels[s]}</button>
+    `).join('')}
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>N° Commande</th><th>Client</th><th>Téléphone</th><th>Total</th><th>Zone</th><th>Statut</th><th>Livreur</th><th>Actions</th></tr></thead>
+        <tbody>${orders.map(o=>`
+        <tr>
+          <td><code style="font-size:11px;color:var(--green)">${o.id}</code></td>
+          <td style="font-weight:600">${o.customer}</td>
+          <td style="color:var(--text-mid)">${o.phone}</td>
+          <td style="font-weight:700;color:var(--green-dark)">${o.total.toFixed(3)} DT</td>
+          <td style="font-size:12px">${o.zone}</td>
+          <td>
+            <select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">
+              <option value="received" ${o.status==='received'?'selected':''}>Reçu</option>
+              <option value="preparing" ${o.status==='preparing'?'selected':''}>En prép.</option>
+              <option value="ready" ${o.status==='ready'?'selected':''}>Prêt</option>
+              <option value="out_for_delivery" ${o.status==='out_for_delivery'?'selected':''}>En route</option>
+              <option value="delivered" ${o.status==='delivered'?'selected':''}>Livré</option>
+              <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Annulé</option>
+            </select>
+          </td>
+          <td style="font-size:12px">${o.driver||`<span style="color:var(--text-mid)">—</span>`}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="viewOrder('${o.id}')">👁️ Voir</button>
+            <button class="btn btn-outline btn-sm" onclick="assignDriver('${o.id}')">🚚</button>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── PRODUCTS ──
+function renderProducts() {
+  let prods = MOCK.products;
+  if (adminState.searchQ) prods = prods.filter(p=>
+    p.name.includes(adminState.searchQ) ||
+    (p.fr||'').toLowerCase().includes(adminState.searchQ.toLowerCase()) ||
+    (p.cat||'').toLowerCase().includes(adminState.searchQ.toLowerCase())
+  );
+  const stockBadge = p => {
+    const s=p.stock||0, u=p.unit||'g';
+    if(s===0) return '<span class="badge badge-outofstock">Épuisé</span>';
+    if(s<=5)  return `<span class="badge badge-lowstock">⚠️ ${s} ${u}</span>`;
+    return `<span class="badge badge-instock">✅ ${s} ${u}</span>`;
+  };
+  return `
+  <div class="card">
+    <div style="padding:10px 14px;font-size:13px;color:var(--text-mid);border-bottom:1px solid var(--border)">
+      ${prods.length} produit(s) —
+      <span style="color:var(--red)">${prods.filter(p=>(p.stock||0)===0).length} épuisé(s)</span>,
+      <span style="color:var(--orange)">${prods.filter(p=>(p.stock||0)>0&&(p.stock||0)<=5).length} stock faible</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Nom</th><th>Cat.</th><th>Prix</th><th>Promo</th><th>Stock</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody>${prods.map(p=>`
+        <tr>
+          <td class="td-emoji">${p.emoji||p.e||'📦'}</td>
+          <td>
+            <div style="font-weight:600">${p.name}</div>
+            <div style="font-size:11px;color:var(--text-mid)">${p.fr||''}</div>
+          </td>
+          <td><span class="badge badge-active" style="font-size:10px">${p.cat}</span></td>
+          <td style="font-weight:700">${(p.price||p.p||0).toFixed(3)} DT</td>
+          <td>${(p.promoPrice||p.pp)?`<span style="color:var(--red);font-weight:700">${(p.promoPrice||p.pp).toFixed(3)} DT</span>`:`<span style="color:var(--text-mid)">—</span>`}</td>
+          <td>${stockBadge(p)}</td>
+          <td>
+            <button onclick="toggleProductActive('${p.id}')"
+              style="padding:4px 10px;border-radius:20px;border:1.5px solid ${p.isActive?'var(--green)':'var(--border)'};
+                background:${p.isActive?'var(--green-pale)':'var(--bg)'};font-size:11px;font-weight:600;cursor:pointer;
+                color:${p.isActive?'var(--green)':'var(--text-mid)'}">
+              ${p.isActive?'● Actif':'○ Inactif'}
+            </button>
+          </td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-outline btn-sm" onclick="editProduct('${p.id}')">✏️</button>
+            <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:1px solid #ffcdd2" onclick="deleteProduct('${p.id}')">🗑️</button>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── CATEGORIES ──
+function renderCategories() {
+  return `
+  <div class="grid-3">
+    ${MOCK.categories.map(c=>`
+    <div class="card" style="margin-bottom:0">
+      <div class="card-body" style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">${c.icon}</span>
+        <div style="flex:1">
+          <div style="font-weight:700">${c.name}</div>
+          <div style="font-size:12px;color:var(--text-mid)">${c.nameAr}</div>
+          <div style="font-size:11px;color:var(--text-mid);margin-top:2px">${c.count} produits</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span class="badge ${c.isActive?'badge-active':'badge-inactive'}">${c.isActive?'Actif':'Inactif'}</span>
+          <button class="btn btn-outline btn-sm">✏️ Edit</button>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── PROMOTIONS ──
+function renderPromotions() {
+  return `
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🔥 Promotions actives</div>
+      <button class="btn btn-primary" onclick="openModal('add-promo')">+ Nouvelle promo</button>
+    </div>
+    <div class="card-body">
+      ${[
+        {type:'Flash',title:'Vente flash — Épices',disc:'25%',valid:'Expire dans 2h',color:'#ffebee',status:'active'},
+        {type:'Hebdo',title:'Promotion semaine',disc:'15%',valid:'Expire dans 5 jours',color:'#e3f2fd',status:'active'},
+        {type:'Saisonnière',title:'Spécial Ramadan',disc:'20%',valid:'En attente',color:'#fff3e0',status:'scheduled'}
+      ].map(p=>`
+      <div style="background:${p.color};border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;margin-bottom:8px">
+        <div style="font-size:32px">🔥</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:var(--text-mid)">${p.type}</div>
+          <div style="font-size:14px;font-weight:700">${p.title}</div>
+          <div style="font-size:12px;color:var(--text-mid)">${p.valid}</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:24px;font-weight:800;color:var(--red)">−${p.disc}</div>
+          <span class="badge ${p.status==='active'?'badge-active':'badge-inactive'}">${p.status}</span>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-outline btn-sm">✏️</button>
+          <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:1px solid #ffcdd2">🗑️</button>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ── ZONES ──
+function renderZones() {
+  return `
+  <div class="grid-3">
+    ${MOCK.zones.map(z=>`
+    <div class="zone-card">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${z.gov} — ${z.city}</div>
+        ${z.area?`<div style="font-size:11px;color:var(--text-mid)">${z.area}</div>`:''}
+        <span class="badge ${z.isActive?'badge-active':'badge-inactive'}" style="margin-top:4px">${z.isActive?'Active':'Inactive'}</span>
+      </div>
+      <div style="text-align:center">
+        <div class="zone-price">${z.price.toFixed(3)}</div>
+        <div style="font-size:10px;color:var(--text-mid)">DT</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-outline btn-sm" onclick="editZone('${z.id}')">✏️</button>
+        <button class="btn btn-sm" style="background:${z.isActive?'#ffebee':'var(--green-pale)'};color:${z.isActive?'var(--red)':'var(--green)'};border:none;cursor:pointer" onclick="toggleZone('${z.id}')">
+          ${z.isActive?'🔴':'🟢'}
+        </button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── DRIVERS ──
+function renderDrivers() {
+  const statusLabel = {available:'Disponible',busy:'En livraison',offline:'Hors ligne'};
+  return `
+  <div class="grid-2">
+    ${MOCK.drivers.map(d=>`
+    <div class="driver-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="driver-avatar">${d.name.slice(0,2).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${d.name}</div>
+          <div style="font-size:12px;color:var(--text-mid)">${d.phone}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <div class="status-dot dot-${d.status}"></div>
+          <span style="font-size:11px;font-weight:600;color:var(--text-mid)">${statusLabel[d.status]}</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-mid);margin-bottom:8px">📍 ${d.zones.join(', ')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px"><strong>${d.orders}</strong> livraisons</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-outline btn-sm">✏️ Edit</button>
+          <button class="btn btn-primary btn-sm" onclick="assignOrderToDriver('${d.name}')">📦 Assigner</button>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── CUSTOMERS ──
+function renderCustomers() {
+  const tierLabel = {starter:'Starter',bronze:'Bronze',silver:'Argent',gold:'Or',vip:'VIP'};
+  let custs = MOCK.customers;
+  if (adminState.searchQ) custs = custs.filter(c=>c.name.toLowerCase().includes(adminState.searchQ.toLowerCase()));
+  return `
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Client</th><th>Téléphone</th><th>Commandes</th><th>Dépenses</th><th>Niveau</th><th>Dernière commande</th><th>Actions</th></tr></thead>
+        <tbody>${custs.map(c=>`
+        <tr>
+          <td style="font-weight:600">${c.name}</td>
+          <td style="color:var(--text-mid)">${c.phone}</td>
+          <td style="text-align:center">${c.orders}</td>
+          <td style="font-weight:700;color:var(--green)">${c.spend.toFixed(3)} DT</td>
+          <td><span class="badge badge-${c.tier}">${MOCK_TIER_ICONS[c.tier]} ${tierLabel[c.tier]||c.tier}</span></td>
+          <td style="font-size:12px;color:var(--text-mid)">${c.lastOrder}</td>
+          <td>
+            <button class="btn btn-outline btn-sm">👁️ Profil</button>
+            <button class="btn btn-outline btn-sm" onclick="toast('📞 ${c.phone}','warning')">📞</button>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+const MOCK_TIER_ICONS = {starter:'🌱',bronze:'🥉',silver:'🥈',gold:'🥇',vip:'💎'};
+
+// ── COUPONS ──
+function renderCoupons() {
+  return `
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Code</th><th>Réduction</th><th>Min. commande</th><th>Utilisations</th><th>Validité</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody>${MOCK.coupons.map(c=>`
+        <tr>
+          <td><code style="font-weight:700;font-size:13px;color:var(--green-dark)">${c.code}</code></td>
+          <td style="font-weight:700;font-size:15px;color:var(--red)">−${c.disc}%</td>
+          <td>${c.min>0?`${c.min.toFixed(3)} DT`:'—'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress-bar" style="width:80px">
+                <div class="progress-fill" style="width:${Math.min(100,c.uses/c.maxUses*100).toFixed(0)}%;background:var(--green)"></div>
+              </div>
+              <span style="font-size:12px;color:var(--text-mid)">${c.uses}/${c.maxUses}</span>
+            </div>
+          </td>
+          <td style="font-size:12px">${c.valid}</td>
+          <td><span class="badge ${c.isActive?'badge-active':'badge-inactive'}">${c.isActive?'Actif':'Inactif'}</span></td>
+          <td>
+            <button class="btn btn-outline btn-sm">✏️</button>
+            <button class="btn btn-sm" style="background:${c.isActive?'#ffebee':'var(--green-pale)'};color:${c.isActive?'var(--red)':'var(--green)'};border:none;cursor:pointer" onclick="toggleCoupon('${c.code}')">
+              ${c.isActive?'Désactiver':'Activer'}
+            </button>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── NOTIFICATIONS ──
+function renderNotifications() {
+  const templates = [
+    {icon:'🔥',title:'Nouvelle promotion',body:'Profitez de nos offres exclusives!'},
+    {icon:'🎁',title:'Proche de votre récompense',body:'Il ne vous manque que X DT pour passer au niveau suivant!'},
+    {icon:'💎',title:'Niveau atteint!',body:'Félicitations! Vous avez atteint le niveau Gold.'},
+    {icon:'📦',title:'Commande en route',body:'Votre commande est en cours de livraison.'}
+  ];
+  return `
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">📤 Envoyer une notification</div></div>
+      <div class="card-body">
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Titre</label>
+          <input class="form-input" placeholder="Titre de la notification" id="notif-title">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Message</label>
+          <textarea class="form-textarea" placeholder="Corps du message..." id="notif-body"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Destinataires</label>
+          <select class="form-select">
+            <option>Tous les clients</option>
+            <option>Starter uniquement</option>
+            <option>Bronze uniquement</option>
+            <option>VIP uniquement</option>
+            <option>Client spécifique</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="sendNotification()">📤 Envoyer maintenant</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚡ Templates rapides</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+        ${templates.map(t=>`
+        <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:8px;padding:10px;cursor:pointer" onclick="fillNotifTemplate('${t.title}','${t.body}')">
+          <span style="font-size:22px">${t.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${t.title}</div>
+            <div style="font-size:11px;color:var(--text-mid)">${t.body.slice(0,50)}...</div>
+          </div>
+          <button class="btn btn-outline btn-sm">Utiliser</button>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── ANALYTICS ──
+function renderAnalytics() {
+  return `
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    ${[
+      {label:'Revenu mensuel',val:`${MOCK.stats.monthSales.toFixed(2)} DT`,icon:'💰',color:'#e8f5e9'},
+      {label:'Commandes livrées',val:MOCK.stats.deliveredOrders,icon:'✅',color:'var(--green-pale)'},
+      {label:'Taux de livraison',val:`${Math.round(MOCK.stats.deliveredOrders/MOCK.stats.totalOrders*100)}%`,icon:'🚚',color:'#e3f2fd'}
+    ].map(c=>`
+    <div class="stat-card">
+      <div style="display:flex;justify-content:space-between">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-icon" style="background:${c.color}">${c.icon}</div>
+      </div>
+      <div class="stat-value">${c.val}</div>
+    </div>`).join('')}
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">🏅 Distribution niveaux fidélité</div></div>
+      <div class="card-body">
+        ${[['🌱 Starter','45%','var(--text-mid)'],['🥉 Bronze','25%','#cd7f32'],['🥈 Argent','15%','#90a4ae'],['🥇 Or','12%','var(--gold)'],['💎 VIP','3%','#9b59b6']].map(([lbl,pct,col])=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;width:90px">${lbl}</span>
+          <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${pct};background:${col}"></div></div>
+          <span style="font-size:12px;font-weight:600;width:36px">${pct}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">📦 Commandes par statut</div></div>
+      <div class="card-body">
+        ${[['Livrées','289','var(--green)'],['En cours','14','var(--orange)'],['Annulées','9','var(--red)']].map(([lbl,val,col])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px">${lbl}</span>
+          <span style="font-size:18px;font-weight:700;color:${col}">${val}</span>
+        </div>`).join('')}
+        <div style="text-align:center;padding:12px 0;font-size:24px;font-weight:800;color:var(--text)">312 <span style="font-size:14px;font-weight:500;color:var(--text-mid)">total</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── MODAL ──
+function renderModal() {
+  const modals = {
+    'add-product': {title:'Nouveau produit', body: renderProductForm({})},
+    'edit-product': {title:'Modifier produit', body: renderProductForm(adminState.editItem||{})},
+    'add-coupon': {title:'Nouveau coupon', body: renderCouponForm()},
+    'add-driver': {title:'Nouveau livreur', body: renderDriverForm()},
+    'add-zone': {title:'Nouvelle zone de livraison', body: renderZoneForm()},
+    'send-notif': {title:'Envoyer une notification', body: renderNotifModal()},
+    'add-promo': {title:'Nouvelle promotion', body: renderPromoForm()}
+  };
+  const m = modals[adminState.modal];
+  if (!m) return '';
+  return `
+  <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${m.title}</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">${m.body}</div>
+    </div>
+  </div>`;
+}
+
+function renderProductForm(p) {
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Nom arabe</label><input class="form-input" value="${p.name||''}" placeholder="اسم المنتج بالعربية"></div>
+    <div class="form-group"><label class="form-label">Nom français</label><input class="form-input" value="${p.fr||''}" placeholder="Nom en français"></div>
+    <div class="form-group"><label class="form-label">Catégorie</label>
+      <select class="form-select"><option>Épices</option><option>Herbes</option><option>Noix</option><option>Huiles</option><option>Traditionnel</option><option>Santé</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Unité</label><input class="form-input" value="${p.unit||'100g'}" placeholder="ex: 100g, 500ml..."></div>
+    <div class="form-group"><label class="form-label">Prix (DT)</label><input class="form-input" type="number" value="${p.price||''}" placeholder="0.000"></div>
+    <div class="form-group"><label class="form-label">Prix promo (DT)</label><input class="form-input" type="number" value="${p.promoPrice||''}" placeholder="0.000 (optionnel)"></div>
+    <div class="form-group"><label class="form-label">Stock</label><input class="form-input" type="number" value="${p.stock||0}"></div>
+    <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" value="${p.emoji||''}" placeholder="🌶️"></div>
+  </div>
+  <div class="form-group" style="margin-top:10px"><label class="form-label">Description arabe</label>
+    <textarea class="form-textarea" placeholder="وصف المنتج بالعربية..."></textarea>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveProduct()">💾 Enregistrer</button>
+  </div>`;
+}
+
+function renderCouponForm() {
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Code</label><input class="form-input" placeholder="WELCOME10" style="text-transform:uppercase" id="new-coupon-code"></div>
+    <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" min="1" max="100" id="new-coupon-disc" placeholder="10"></div>
+    <div class="form-group"><label class="form-label">Commande minimum (DT)</label><input class="form-input" type="number" min="0" id="new-coupon-min" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">Utilisations max</label><input class="form-input" type="number" id="new-coupon-max" placeholder="1000"></div>
+    <div class="form-group"><label class="form-label">Date expiration</label><input class="form-input" type="date" id="new-coupon-date"></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveCoupon()">💾 Créer le coupon</button>
+  </div>`;
+}
+
+function renderDriverForm() {
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Nom complet</label><input class="form-input" placeholder="Nom du livreur"></div>
+    <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" type="tel" placeholder="+216 XX XXX XXX"></div>
+  </div>
+  <div class="form-group" style="margin-top:10px"><label class="form-label">Zones assignées</label>
+    <select class="form-select" multiple style="height:100px">
+      ${MOCK.zones.map(z=>`<option>${z.gov} — ${z.city}${z.area?' ('+z.area+')':''}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveDriver()">💾 Ajouter</button>
+  </div>`;
+}
+
+function renderZoneForm(z) {
+  z = z||{};
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Gouvernorat</label><input class="form-input" value="${z.gov||''}" placeholder="ex: Sousse"></div>
+    <div class="form-group"><label class="form-label">Ville</label><input class="form-input" value="${z.city||''}" placeholder="ex: Akouda"></div>
+    <div class="form-group"><label class="form-label">Zone (optionnel)</label><input class="form-input" value="${z.area||''}" placeholder="ex: Centre"></div>
+    <div class="form-group"><label class="form-label">Prix livraison (DT)</label><input class="form-input" type="number" step="0.001" value="${z.price||''}" placeholder="0.000"></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveZone()">💾 Enregistrer</button>
+  </div>`;
+}
+
+function renderNotifModal() {
+  return `
+  <div class="form-group" style="margin-bottom:10px">
+    <label class="form-label">Titre</label>
+    <input class="form-input" placeholder="Titre de la notification" id="modal-notif-title">
+  </div>
+  <div class="form-group" style="margin-bottom:10px">
+    <label class="form-label">Message</label>
+    <textarea class="form-textarea" placeholder="Corps du message..." id="modal-notif-body"></textarea>
+  </div>
+  <div class="form-group" style="margin-bottom:16px">
+    <label class="form-label">Destinataires</label>
+    <select class="form-select"><option>Tous les clients</option><option>Niveau Gold et VIP</option><option>Nouveaux clients</option></select>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="sendNotifModal()">📤 Envoyer</button>
+  </div>`;
+}
+
+function renderPromoForm() {
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Titre (FR)</label><input class="form-input" placeholder="Titre promotion"></div>
+    <div class="form-group"><label class="form-label">Titre (AR)</label><input class="form-input" placeholder="عنوان الترقية"></div>
+    <div class="form-group"><label class="form-label">Type</label>
+      <select class="form-select"><option>Flash</option><option>Hebdomadaire</option><option>Saisonnière</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" placeholder="20"></div>
+    <div class="form-group"><label class="form-label">Début</label><input class="form-input" type="datetime-local"></div>
+    <div class="form-group"><label class="form-label">Fin</label><input class="form-input" type="datetime-local"></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="closeModal();toast('✅ Promotion créée!')">💾 Créer</button>
+  </div>`;
+}
+
+// ── STATUS BADGE HELPER ──
+function renderStatusBadge(status) {
+  const labels = {received:'Reçu',preparing:'En prép.',ready:'Prêt',out_for_delivery:'En route',delivered:'Livré',cancelled:'Annulé'};
+  return `<span class="badge badge-${status.replace('_','')}">${labels[status]||status}</span>`;
+}
+
+// ═══════════════════════════════════════
+// TOAST SYSTEM
+// ═══════════════════════════════════════
+function toast(msg, type='success') {
+  let t = document.getElementById('admin-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'admin-toast';
+    t.style.cssText = 'position:fixed;top:70px;right:20px;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px';
+    document.body.appendChild(t);
+  }
+  t.style.background = type==='success' ? '#2d6a4f' : type==='error' ? '#e63946' : '#c9971a';
+  t.style.color = '#fff';
+  t.textContent = msg;
+  t.style.opacity = '1'; t.style.transform = 'translateY(0)';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.style.opacity='0'; }, 2500);
+}
+
+// ═══════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════
+function setPage(p) { adminState.page=p; adminState.searchQ=''; adminState.filterStatus='all'; render(); }
+function openModal(m, item) { adminState.modal=m; adminState.editItem=item||null; render(); }
+function closeModal() { adminState.modal=null; adminState.editItem=null; render(); }
+
+function doLogin() {
+  if (!adminState.loginForm.email || !adminState.loginForm.pass) {
+    toast('Veuillez remplir tous les champs','error'); return;
+  }
+  adminState.loggedIn = true; render();
+}
+function demoLogin() {
+  adminState.loginForm = {email:'admin@nakhar.tn', pass:'admin123'};
+  adminState.loggedIn = true; render();
+}
+
+function updateOrderStatus(id, status) {
+  const o = MOCK.orders.find(x => x.id===id);
+  if (o) {
+    o.status = status;
+    // Update pending count in stats
+    MOCK.stats.pendingOrders = MOCK.orders.filter(x=>x.status==='received'||x.status==='preparing').length;
+    if (status==='delivered') MOCK.stats.deliveredOrders++;
+    toast(`Statut mis à jour : ${status}`);
+    render();
+  }
+}
+
+function viewOrder(id) {
+  const o = MOCK.orders.find(x => x.id===id);
+  if (!o) return;
+  adminState.modal = 'view-order';
+  adminState.editItem = o;
+  render();
+}
+
+function assignDriverToOrder(orderId, driverName) {
+  const o = MOCK.orders.find(x => x.id===orderId);
+  if (o) { o.driver=driverName; o.status='out_for_delivery'; toast(`Livreur ${driverName} assigné`); closeModal(); }
+}
+
+function editProduct(id) {
+  const p = MOCK.products.find(x => x.id===id);
+  openModal('edit-product', {...p});
+}
+
+function deleteProduct(id) {
+  const p = MOCK.products.find(x => x.id===id);
+  if (!p) return;
+  if (!confirm(`Supprimer "${p.name}" ?`)) return;
+  MOCK.products = MOCK.products.filter(x => x.id!==id);
+  toast(`${p.name} supprimé`,'warning');
+  render();
+}
+
+function toggleProductActive(id) {
+  const p = MOCK.products.find(x => x.id===id);
+  if (p) { p.isActive=!p.isActive; toast(p.isActive?'Produit activé':'Produit désactivé'); render(); }
+}
+
+function saveProduct() {
+  const isEdit = adminState.modal === 'edit-product';
+  const nameAr = document.getElementById('prod-name-ar')?.value?.trim();
+  const nameFr = document.getElementById('prod-name-fr')?.value?.trim();
+  const price  = parseFloat(document.getElementById('prod-price')?.value);
+  const stock  = parseFloat(document.getElementById('prod-stock')?.value||0);
+  const emoji  = document.getElementById('prod-emoji')?.value?.trim() || '📦';
+  const cat    = document.getElementById('prod-cat')?.value || 'Épices';
+  const promo  = parseFloat(document.getElementById('prod-promo')?.value) || null;
+  const unit   = document.getElementById('prod-unit')?.value || '100g';
+
+  if (!nameAr || !nameFr || isNaN(price)) { toast('Remplissez les champs obligatoires (*)','error'); return; }
+
+  if (isEdit && adminState.editItem) {
+    const p = MOCK.products.find(x => x.id===adminState.editItem.id);
+    if (p) { p.name=nameAr; p.fr=nameFr; p.price=price; p.promoPrice=promo||null; p.stock=stock; p.emoji=emoji; p.cat=cat; p.unit=unit; }
+    toast('✅ Produit modifié avec succès !');
+  } else {
+    const newProd = {
+      id:'p'+Date.now(), emoji, name:nameAr, fr:nameFr, cat, price, promoPrice:promo||null,
+      stock, unit, isActive:true
+    };
+    MOCK.products.unshift(newProd);
+    toast('✅ Produit ajouté avec succès !');
+  }
+  closeModal();
+}
+
+function saveDriver() {
+  const name  = document.getElementById('drv-name')?.value?.trim();
+  const phone = document.getElementById('drv-phone')?.value?.trim();
+  if (!name || !phone) { toast('Nom et téléphone obligatoires','error'); return; }
+  const zones = [...document.querySelectorAll('#drv-zones option:checked')].map(o=>o.value);
+  MOCK.drivers.push({
+    id: 'd'+Date.now(), full_name:name, name, phone,
+    zones: zones.length ? zones : ['Sousse Centre'],
+    status:'available', orders:0, isActive:true
+  });
+  toast('✅ Livreur ajouté avec succès !');
+  closeModal();
+}
+
+function saveZone() {
+  const gov   = document.getElementById('z-gov')?.value?.trim();
+  const city  = document.getElementById('z-city')?.value?.trim();
+  const area  = document.getElementById('z-area')?.value?.trim() || '';
+  const price = parseFloat(document.getElementById('z-price')?.value);
+  if (!gov || !city || isNaN(price)) { toast('Tous les champs sont obligatoires','error'); return; }
+
+  if (adminState.editItem) {
+    const z = MOCK.zones.find(x=>x.id===adminState.editItem.id);
+    if (z) { z.gov=gov; z.city=city; z.area=area; z.price=price; }
+    toast('✅ Zone modifiée !');
+  } else {
+    MOCK.zones.push({id:'z'+Date.now(), gov, city, area, price, isActive:true});
+    toast('✅ Nouvelle zone ajoutée !');
+  }
+  closeModal();
+}
+
+function saveCoupon() {
+  const code = document.getElementById('new-coupon-code')?.value?.toUpperCase()?.trim();
+  const disc = parseInt(document.getElementById('new-coupon-disc')?.value);
+  const min  = parseFloat(document.getElementById('new-coupon-min')?.value||0);
+  const max  = parseInt(document.getElementById('new-coupon-max')?.value||1000);
+  const date = document.getElementById('new-coupon-date')?.value || '2025-12-31';
+  if (!code || isNaN(disc) || disc<1||disc>100) { toast('Code et réduction obligatoires (1-100%)','error'); return; }
+  if (MOCK.coupons.find(c=>c.code===code)) { toast('Ce code existe déjà !','error'); return; }
+  MOCK.coupons.push({code, disc, min, uses:0, maxUses:max, valid:date, isActive:true});
+  toast(`✅ Coupon ${code} créé !`);
+  closeModal();
+}
+
+function toggleZone(id) {
+  const z = MOCK.zones.find(x=>x.id===id);
+  if (z) { z.isActive=!z.isActive; toast(z.isActive?'Zone activée':'Zone désactivée'); render(); }
+}
+
+function editZone(id) {
+  const z = MOCK.zones.find(x=>x.id===id);
+  openModal('add-zone', z);
+}
+
+function toggleCoupon(code) {
+  const c = MOCK.coupons.find(x=>x.code===code);
+  if (c) { c.isActive=!c.isActive; toast(c.isActive?`Coupon ${code} activé`:`Coupon ${code} désactivé`); render(); }
+}
+
+function sendNotification() {
+  const title = document.getElementById('notif-title')?.value?.trim();
+  const body  = document.getElementById('notif-body')?.value?.trim();
+  if (!title || !body) { toast('Titre et message obligatoires','error'); return; }
+  toast(`✅ Notification "${title}" envoyée à tous les clients !`);
+  document.getElementById('notif-title').value='';
+  document.getElementById('notif-body').value='';
+}
+
+function sendNotifModal() {
+  const title = document.getElementById('modal-notif-title')?.value?.trim();
+  const body  = document.getElementById('modal-notif-body')?.value?.trim();
+  if (!title || !body) { toast('Titre et message obligatoires','error'); return; }
+  toast(`✅ Notification envoyée !`);
+  closeModal();
+}
+
+function fillNotifTemplate(title, body) {
+  const t=document.getElementById('notif-title');
+  const b=document.getElementById('notif-body');
+  if (t) t.value=title;
+  if (b) b.value=body;
+  toast('Template appliqué !','warning');
+}
+
+function toggleDriverStatus(id) {
+  const d = MOCK.drivers.find(x=>x.id===id);
+  if (!d) return;
+  const statuses = ['available','busy','offline'];
+  d.status = statuses[(statuses.indexOf(d.status)+1)%statuses.length];
+  toast(`${d.name} → ${d.status}`,'warning'); render();
+}
+
+function assignOrderToDriver(driverName) {
+  const pending = MOCK.orders.filter(o=>!o.driver&&o.status==='ready');
+  if (!pending.length) { toast('Aucune commande prête à assigner','warning'); return; }
+  pending[0].driver = driverName;
+  pending[0].status = 'out_for_delivery';
+  MOCK.stats.pendingOrders = Math.max(0,MOCK.stats.pendingOrders-1);
+  toast(`Commande ${pending[0].id} assignée à ${driverName}`);
+  render();
+}
+
+function bindEvents() {}
+
+// ── OVERRIDE modals that need IDs in forms ──
+const _origRenderProductForm = renderProductForm;
+function renderProductForm(p) {
+  p = p || {};
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Nom arabe *</label>
+      <input class="form-input" id="prod-name-ar" value="${p.name||''}" placeholder="اسم المنتج بالعربية"></div>
+    <div class="form-group"><label class="form-label">Nom français *</label>
+      <input class="form-input" id="prod-name-fr" value="${p.fr||''}" placeholder="Nom en français"></div>
+    <div class="form-group"><label class="form-label">Catégorie</label>
+      <select class="form-select" id="prod-cat">
+        ${['Épices','Herbes','Noix','Fruits secs','Huiles','Traditionnel','Santé'].map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('')}
+      </select></div>
+    <div class="form-group"><label class="form-label">Unité</label>
+      <input class="form-input" id="prod-unit" value="${p.unit||'100g'}" placeholder="100g, 500ml..."></div>
+    <div class="form-group"><label class="form-label">Prix (DT) *</label>
+      <input class="form-input" type="number" step="0.001" id="prod-price" value="${p.price||''}" placeholder="0.000"></div>
+    <div class="form-group"><label class="form-label">Prix promo (DT)</label>
+      <input class="form-input" type="number" step="0.001" id="prod-promo" value="${p.promoPrice||''}" placeholder="optionnel"></div>
+    <div class="form-group"><label class="form-label">Stock</label>
+      <input class="form-input" type="number" id="prod-stock" value="${p.stock||0}"></div>
+    <div class="form-group"><label class="form-label">Emoji</label>
+      <input class="form-input" id="prod-emoji" value="${p.emoji||'📦'}" placeholder="🌶️"></div>
+  </div>
+  <div class="form-group" style="margin-top:10px"><label class="form-label">Description</label>
+    <textarea class="form-textarea" id="prod-desc" placeholder="Description du produit...">${p.description||''}</textarea></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveProduct()">💾 ${adminState.modal==='edit-product'?'Modifier':'Ajouter'}</button>
+  </div>`;}
+
+function renderZoneForm(z) {
+  z = z || {};
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Gouvernorat *</label>
+      <input class="form-input" id="z-gov" value="${z.gov||''}" placeholder="ex: Sousse"></div>
+    <div class="form-group"><label class="form-label">Ville *</label>
+      <input class="form-input" id="z-city" value="${z.city||''}" placeholder="ex: Akouda"></div>
+    <div class="form-group"><label class="form-label">Quartier / Zone</label>
+      <input class="form-input" id="z-area" value="${z.area||''}" placeholder="ex: Centre (optionnel)"></div>
+    <div class="form-group"><label class="form-label">Prix livraison (DT) *</label>
+      <input class="form-input" type="number" step="0.001" id="z-price" value="${z.price||''}" placeholder="0.000"></div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveZone()">💾 ${z.id?'Modifier':'Ajouter'}</button>
+  </div>`;}
+
+function renderDriverForm() {
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Nom complet *</label>
+      <input class="form-input" id="drv-name" placeholder="Prénom Nom"></div>
+    <div class="form-group"><label class="form-label">Téléphone *</label>
+      <input class="form-input" type="tel" id="drv-phone" placeholder="+216 XX XXX XXX"></div>
+  </div>
+  <div class="form-group" style="margin-top:10px"><label class="form-label">Zones assignées</label>
+    <select class="form-select" id="drv-zones" multiple style="height:110px">
+      ${MOCK.zones.map(z=>`<option value="${z.gov} — ${z.city}${z.area?' ('+z.area+')':''}">${z.gov} — ${z.city}${z.area?' · '+z.area:''}</option>`).join('')}
+    </select>
+    <span style="font-size:11px;color:var(--text-mid)">Maintenez Ctrl/Cmd pour sélection multiple</span>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveDriver()">✅ Ajouter le livreur</button>
+  </div>`;}
+
+// Override driver render to use real IDs
+const _origRenderDrivers = renderDrivers;
+function renderDrivers() {
+  const statusLabel = {available:'Disponible',busy:'En livraison',offline:'Hors ligne'};
+  const statusColor = {available:'#28a745',busy:'var(--orange)',offline:'var(--text-mid)'};
+  return `
+  <div class="grid-2">
+    ${MOCK.drivers.map(d=>`
+    <div class="driver-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="driver-avatar">${(d.full_name||d.name||'??').slice(0,2).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${d.full_name||d.name}</div>
+          <div style="font-size:12px;color:var(--text-mid)">${d.phone}</div>
+        </div>
+        <button onclick="toggleDriverStatus('${d.id}')"
+          style="display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:${statusColor[d.status]}">
+          <div class="status-dot dot-${d.status}"></div>${statusLabel[d.status]}
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--text-mid);margin-bottom:10px">📍 ${(d.zones||[]).join(', ')||'—'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;color:var(--text-mid)"><strong style="color:var(--text)">${d.orders||0}</strong> livraisons</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="openModal('add-driver',null)">✏️ Edit</button>
+          <button class="btn btn-primary btn-sm" onclick="assignOrderToDriver('${d.full_name||d.name}')">📦 Assigner</button>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>`;}
+
+// Override orders to include view modal
+function renderModal() {
+  const modals = {
+    'add-product':  {title:'Nouveau produit',            body: renderProductForm({})},
+    'edit-product': {title:'Modifier le produit',        body: renderProductForm(adminState.editItem||{})},
+    'add-coupon':   {title:'Nouveau coupon',             body: renderCouponForm()},
+    'add-driver':   {title:'Nouveau livreur',            body: renderDriverForm()},
+    'add-zone':     {title: adminState.editItem?'Modifier la zone':'Nouvelle zone', body: renderZoneForm(adminState.editItem||{})},
+    'send-notif':   {title:'Envoyer une notification',   body: renderNotifModal()},
+    'add-promo':    {title:'Nouvelle promotion',         body: renderPromoForm()},
+    'view-order':   {title:'Détail commande',            body: renderOrderDetail(adminState.editItem)},
+    'assign-driver':{title:'Assigner un livreur',        body: renderAssignDriverModal(adminState.editItem)}
+  };
+  const m = modals[adminState.modal];
+  if (!m) return '';
+  return `
+  <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${m.title}</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">${m.body}</div>
+    </div>
+  </div>`;}
+
+function renderOrderDetail(o) {
+  if (!o) return '';
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div style="background:var(--bg);border-radius:8px;padding:10px">
+      <div style="font-size:11px;color:var(--text-mid);margin-bottom:2px">N° Commande</div>
+      <div style="font-weight:700;color:var(--green)">${o.id}</div>
+    </div>
+    <div style="background:var(--bg);border-radius:8px;padding:10px">
+      <div style="font-size:11px;color:var(--text-mid);margin-bottom:2px">Total</div>
+      <div style="font-weight:700;font-size:18px;color:var(--green-dark)">${o.total.toFixed(3)} DT</div>
+    </div>
+    <div style="background:var(--bg);border-radius:8px;padding:10px">
+      <div style="font-size:11px;color:var(--text-mid);margin-bottom:2px">Client</div>
+      <div style="font-weight:600">${o.customer}</div>
+      <div style="font-size:11px;color:var(--text-mid)">${o.phone}</div>
+    </div>
+    <div style="background:var(--bg);border-radius:8px;padding:10px">
+      <div style="font-size:11px;color:var(--text-mid);margin-bottom:2px">Zone</div>
+      <div style="font-weight:600">📍 ${o.zone}</div>
+    </div>
+  </div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:12px;font-weight:700;color:var(--text-mid);margin-bottom:6px">Statut</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${['received','preparing','ready','out_for_delivery','delivered','cancelled'].map(s=>`
+      <button onclick="updateOrderStatus('${o.id}','${s}');closeModal()"
+        style="padding:5px 12px;border-radius:20px;border:1.5px solid ${o.status===s?'var(--green)':'var(--border)'};
+          background:${o.status===s?'var(--green-pale)':'var(--white)'};font-size:11px;font-weight:600;cursor:pointer;
+          color:${o.status===s?'var(--green)':'var(--text-mid)'}">
+        ${renderStatusBadge(s).replace(/<[^>]+>/g,'')}
+      </button>`).join('')}
+    </div>
+  </div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:12px;font-weight:700;color:var(--text-mid);margin-bottom:6px">Assigner un livreur</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${MOCK.drivers.filter(d=>d.status!=='offline').map(d=>`
+      <button onclick="assignDriverToOrder('${o.id}','${d.full_name||d.name}')"
+        style="padding:5px 12px;border-radius:20px;border:1.5px solid ${o.driver===(d.full_name||d.name)?'var(--green)':'var(--border)'};
+          background:${o.driver===(d.full_name||d.name)?'var(--green-pale)':'var(--white)'};font-size:11px;font-weight:600;cursor:pointer">
+        🚚 ${d.full_name||d.name}
+      </button>`).join('')}
+    </div>
+  </div>
+  <div style="padding:10px;background:var(--gold-pale);border-radius:8px;font-size:12px;color:var(--green-dark);font-weight:600">
+    💵 Paiement à la livraison (COD)
+  </div>`;}
+
+function renderAssignDriverModal(o) {
+  if (!o) return renderOrderDetail(o);
+  return renderOrderDetail(o);
+}
+
+// Override orders render to use viewOrder function
+function renderOrders() {
+  const statusFilter = ['all','received','preparing','ready','out_for_delivery','delivered','cancelled'];
+  const labels = {all:'Tous',received:'Reçu',preparing:'En prép.',ready:'Prêt',out_for_delivery:'En route',delivered:'Livré',cancelled:'Annulé'};
+  let orders = MOCK.orders;
+  if (adminState.filterStatus !== 'all') orders = orders.filter(o=>o.status===adminState.filterStatus);
+  if (adminState.searchQ) orders = orders.filter(o=>
+    o.customer.toLowerCase().includes(adminState.searchQ.toLowerCase()) ||
+    o.id.toLowerCase().includes(adminState.searchQ.toLowerCase()) ||
+    o.zone.toLowerCase().includes(adminState.searchQ.toLowerCase())
+  );
+  return `
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    ${statusFilter.map(s=>`
+    <button class="btn ${adminState.filterStatus===s?'btn-primary':'btn-outline'} btn-sm"
+      onclick="adminState.filterStatus='${s}';render()">${labels[s]}
+      ${s!=='all'?`<span style="margin-right:4px;opacity:.7">(${MOCK.orders.filter(o=>o.status===s).length})</span>`:''}
+    </button>`).join('')}
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>N° Commande</th><th>Client</th><th>Téléphone</th><th>Total</th><th>Zone</th><th>Statut</th><th>Livreur</th><th>Actions</th></tr></thead>
+        <tbody>${orders.length===0?`<tr><td colspan="8" style="text-align:center;color:var(--text-mid);padding:30px">Aucune commande trouvée</td></tr>`:orders.map(o=>`
+        <tr>
+          <td><code style="font-size:11px;color:var(--green);font-weight:700">${o.id}</code></td>
+          <td style="font-weight:600">${o.customer}</td>
+          <td style="color:var(--text-mid)">${o.phone}</td>
+          <td style="font-weight:800;color:var(--green-dark)">${o.total.toFixed(3)} DT</td>
+          <td style="font-size:12px">📍 ${o.zone}</td>
+          <td>
+            <select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">
+              <option value="received"        ${o.status==='received'?'selected':''}>📥 Reçu</option>
+              <option value="preparing"       ${o.status==='preparing'?'selected':''}>👨‍🍳 Prép.</option>
+              <option value="ready"           ${o.status==='ready'?'selected':''}>📦 Prêt</option>
+              <option value="out_for_delivery"${o.status==='out_for_delivery'?'selected':''}>🚚 En route</option>
+              <option value="delivered"       ${o.status==='delivered'?'selected':''}>✅ Livré</option>
+              <option value="cancelled"       ${o.status==='cancelled'?'selected':''}>❌ Annulé</option>
+            </select>
+          </td>
+          <td style="font-size:12px">${o.driver||`<span style="color:var(--text-mid)">—</span>`}</td>
+          <td style="display:flex;gap:4px;align-items:center">
+            <button class="btn btn-outline btn-sm" onclick="viewOrder('${o.id}')">👁️ Voir</button>
+          </td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;}
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>
