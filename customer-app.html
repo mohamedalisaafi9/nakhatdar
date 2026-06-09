@@ -954,9 +954,96 @@ function demoLogin(){
   S.user={name:L('أحمد بن علي','Ahmed Ben Ali','Ahmed Ben Ali'),phone:'55 123 456'};
   render();
 }
-/* ═══════════════ CLAUDE AI API ═══════════════ */
-const CLAUDE_API_KEY = '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';
+/* ═══════════════ CLAUDE AI — via Supabase Edge Function ═══════════════ */
 const MAX_MSGS_PER_DAY = 100;
+// La clé API est cachée dans Supabase — jamais dans le code !
+const AI_FUNCTION_URL = 'https://ahneptqrbbtraysfjjk.supabase.co/functions/v1/ai-chat';
+const AI_FUNCTION_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobmVwdHFyYmJ0cmF5c2ZzamprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE5ODEsImV4cCI6MjA5NjU2Nzk4MX0.iUbGqgfe_j9I5_X4eXsFVKd9Whl0Y7ktJ1McvG9kzWc';
+
+function getAIUsage() {
+  const today = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem('ai_usage') || '{"date":"","count":0}');
+  if (stored.date !== today) return { date: today, count: 0 };
+  return stored;
+}
+function incrementAIUsage() {
+  const usage = getAIUsage(); usage.count++;
+  localStorage.setItem('ai_usage', JSON.stringify(usage));
+  return usage.count;
+}
+function getRemainingMsgs() {
+  return Math.max(0, MAX_MSGS_PER_DAY - getAIUsage().count);
+}
+
+async function sendAI(msg) {
+  if (!msg || !msg.trim()) return;
+
+  // Vérifier limite journalière
+  const remaining = getRemainingMsgs();
+  if (remaining === 0) {
+    showToast(L('وصلت للحد اليومي 100 رسالة. حاول غداً!','Limite 100 messages/jour atteinte!','Daily limit of 100 messages reached!'), '⚠️');
+    return;
+  }
+  if (remaining <= 10) {
+    showToast(L(`تبقى ${remaining} رسائل اليوم`, `${remaining} messages restants`, `${remaining} messages left`), '⚠️');
+  }
+
+  S.msgs.push({ r: 'usr', t: msg });
+  S.msgs.push({ r: 'bot', t: '⏳ ' + L('جاري التفكير...','En réflexion...','Thinking...'), typing: true });
+  render();
+
+  // Historique conversation (8 derniers messages)
+  const history = S.msgs
+    .filter(m => !m.typing && m !== S.msgs[S.msgs.length-1])
+    .slice(-8)
+    .map(m => ({ role: m.r === 'usr' ? 'user' : 'assistant', content: m.t }));
+
+  try {
+    // Appel sécurisé via Supabase Edge Function (clé cachée côté serveur)
+    const response = await fetch(AI_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AI_FUNCTION_KEY}`
+      },
+      body: JSON.stringify({
+        message: msg,
+        history: history.slice(0, -1),
+        lang: S.lang,
+        user_id: S.user?.id || 'guest'
+      })
+    });
+
+    const data = await response.json();
+    S.msgs.pop(); // Supprimer "typing..."
+
+    if (data.reply) {
+      incrementAIUsage();
+      // Détecter produits mentionnés
+      const mentionedProds = PRODS.filter(p =>
+        data.reply.includes(p.ar) || data.reply.toLowerCase().includes(p.fr.toLowerCase())
+      ).map(p => p.id).slice(0, 5);
+
+      S.msgs.push({ r: 'bot', t: data.reply, prods: mentionedProds });
+
+      const used = getAIUsage().count;
+      if (used % 20 === 0) showToast(L(`${MAX_MSGS_PER_DAY-used} رسالة متبقية`,`${MAX_MSGS_PER_DAY-used} messages restants`,`${MAX_MSGS_PER_DAY-used} messages left`));
+    } else {
+      throw new Error('No reply');
+    }
+  } catch (e) {
+    // Fallback local si Edge Function pas encore déployée
+    S.msgs.pop();
+    const lo = msg.toLowerCase();
+    let resp = AI.default;
+    if (lo.includes('كسكسي') || lo.includes('couscous')) resp = AI.couscous;
+    else if (lo.includes('طاجين') || lo.includes('tagine')) resp = AI.tagine;
+    else if (lo.includes('هريسة') || lo.includes('harissa')) resp = AI.harissa;
+    else if (lo.includes('ولاء') || lo.includes('fidélité') || lo.includes('loyalty')) resp = AI.loyalty;
+    S.msgs.push({ r: 'bot', t: resp[S.lang] || resp.ar, prods: resp.prods || [] });
+  }
+  render();
+}
 
 function getAIUsage() {
   const today = new Date().toDateString();
