@@ -368,13 +368,13 @@ const AI={
     prods:['p11','p1','p10']
   },
   loyalty:{
-    ar:'🎁 برنامج الولاء لنكهة الدار:\n\n🌱 مبتدئ (0-99 دت): خصم 3%\n🥉 برونز (100-199 دت): خصم 5%\n🥈 فضي (200-399 دت): خصم 7%\n🥇 ذهبي (400-999 دت): خصم 10%\n💎 VIP (1000+ دت): خصم 15%\n\n🎀 هدية مجانية على كل طلب ≥200 دت!',
+    ar:'🎁 برنامج المكافآت لنكهة الدار:\n\n🌱 مبتدئ (0-99 دت): خصم 3%\n🥉 برونز (100-199 دت): خصم 5%\n🥈 فضي (200-399 دت): خصم 7%\n🥇 ذهبي (400-999 دت): خصم 10%\n💎 VIP (1000+ دت): خصم 15%\n\n🎀 هدية مجانية على كل طلب ≥200 دت!',
     fr:"🎁 Programme fidélité نكهة الدار:\n\n🌱 Starter (0-99 DT): -3%\n🥉 Bronze (100-199 DT): -5%\n🥈 Argent (200-399 DT): -7%\n🥇 Or (400-999 DT): -10%\n💎 VIP (1000+ DT): -15%\n\n🎀 Cadeau gratuit sur chaque commande ≥200 DT!",
     en:'🎁 Nakhat Eddar loyalty program:\n\n🌱 Starter (0-99 DT): -3%\n🥉 Bronze (100-199 DT): -5%\n🥈 Silver (200-399 DT): -7%\n🥇 Gold (400-999 DT): -10%\n💎 VIP (1000+ DT): -15%\n\n🎀 Free gift on every order ≥200 DT!',
     prods:[]
   },
   default:{
-    ar:'👋 مرحباً! أنا مساعد نكهة الدار الذكي.\n\nيمكنني مساعدتك في:\n• اقتراح وصفات تونسية شهية\n• اختيار التوابل المناسبة\n• شرح فوائد المنتجات\n• برنامج الولاء والخصومات\n\nجرب: "أريد عمل كسكسي" أو "ما فوائد الكركم؟"',
+    ar:'👋 مرحباً! أنا مساعد نكهة الدار الذكي.\n\nيمكنني مساعدتك في:\n• اقتراح وصفات تونسية شهية\n• اختيار التوابل المناسبة\n• شرح فوائد المنتجات\n• برنامج المكافآت والخصومات\n\nجرب: "أريد عمل كسكسي" أو "ما فوائد الكركم؟"',
     fr:"👋 Bonjour! Je suis l'assistant intelligent de نكهة الدار.\n\nJe peux vous aider avec:\n• Suggestions de recettes tunisiennes\n• Choix des épices\n• Bienfaits des produits\n• Programme fidélité\n\nEssayez: 'Je veux faire un couscous'",
     en:"👋 Hello! I'm the smart assistant of نكهة الدار.\n\nI can help with:\n• Tunisian recipe suggestions\n• Choosing the right spices\n• Product benefits\n• Loyalty program\n\nTry: 'I want to make couscous'",
     prods:[]
@@ -429,7 +429,7 @@ function T(k){
     empty:L('سلتك فارغة','Votre panier est vide','Your cart is empty'),
     emptysub:L('ابدأ التسوق الآن!','Commencez à magasiner!','Start shopping!'),
     sub:L('المجموع الجزئي','Sous-total','Subtotal'),
-    loydisc:L('خصم الولاء','Remise fidélité','Loyalty discount'),
+    loydisc:L('خصم المكافآت','Remise récompenses','Rewards discount'),
     cupdisc:L('خصم الكوبون','Remise coupon','Coupon discount'),
     delfee:L('رسوم التوصيل','Frais livraison','Delivery fee'),
     total:L('الإجمالي','Total','Total'),
@@ -585,7 +585,7 @@ function renderHome(){
         <button class="bct" onclick="S.tab='promos';render()">${L('اكتشف العروض','Voir les offres','See offers')} ←</button>
       </div>
       <div class="bc gold">
-        <div class="bbg">💎 ${L('برنامج الولاء','Programme fidélité','Loyalty Program')}</div>
+        <div class="bbg">💎 ${L('برنامج المكافآت','Programme récompenses','Rewards Program')}</div>
         <div class="btt">${L('وفّر حتى 15%','Économisez 15%','Save up to 15%')}</div>
         <div class="bst">${L('كلما اشتريت أكثر، وفّرت أكثر','Plus vous achetez, plus vous économisez','The more you buy, the more you save')}</div>
         <button class="bct" onclick="S.tab='loyalty';render()">${L('اعرف أكثر','En savoir plus','Learn more')} ←</button>
@@ -666,7 +666,7 @@ function renderLoyalty(){
     <div><div style="font-weight:700;font-size:13px;color:var(--gd)">${L('🎁 هدية مجانية لكل طلب يتجاوز 200 دت (هدية واحدة لكل طلب)','🎁 Cadeau offert pour toute commande ≥200 DT (un cadeau par commande)','🎁 Free gift for orders ≥200 DT (one gift per order)')}</div>
     <div style="font-size:11px;color:var(--tm);margin-top:2px">${L('سلة هدايا حرفية قيمة 25 دت','Panier artisanal valeur 25 DT','Artisanal basket worth 25 DT')}</div></div>
   </div>
-  <div class="sec"><div class="set">📊 ${L('مستويات الولاء','Niveaux fidélité','Loyalty Levels')}</div></div>
+  <div class="sec"><div class="set">📊 ${L('مستويات المكافآت','Niveaux récompenses','Rewards Levels')}</div></div>
   <div class="tl">${TIERS.map(t=>`
     <div class="tr2 ${t.id===tier.id?'cur':''}">
       <div class="tri">${t.icon}</div>
@@ -904,7 +904,7 @@ function renderAI(){
         <button class="csg" onclick="sendAI('${L('أريد عمل كسكسي','Je veux faire un couscous','I want to make couscous')}')">${L('كسكسي','Couscous','Couscous')}</button>
         <button class="csg" onclick="sendAI('${L('وصفة طاجين','Recette tagine','Tagine recipe')}')">${L('طاجين','Tagine','Tagine')}</button>
         <button class="csg" onclick="sendAI('${L('فوائد الهريسة','Harissa tunisienne','Tunisian harissa')}')">${L('الهريسة','Harissa','Harissa')}</button>
-        <button class="csg" onclick="sendAI('${L('برنامج الولاء','Programme fidélité','Loyalty program')}')">${L('الولاء','Fidélité','Loyalty')}</button>
+        <button class="csg" onclick="sendAI('${L('برنامج المكافآت','Programme récompenses','Rewards program')}')">${L('المكافآت','Récompenses','Rewards')}</button>
       </div>`:
       S.msgs.map(m=>`<div class="cbub ${m.r}" style="white-space:pre-line">${m.t}
         ${m.prods&&m.prods.length?`<button class="aab" onclick="addAll(${JSON.stringify(m.prods)})">🛒 ${L('أضف الكل للسلة','Tout ajouter','Add all to cart')}</button>`:''}
@@ -1108,7 +1108,7 @@ async function sendAI(msg) {
   // System prompt — contexte نكهة الدار
   const systemPrompt = `أنت مساعد ذكي لمتجر "نكهة الدار" التونسي للتوابل والبهارات.
 المنتجات: فلفل أحمر، كركم، قرفة سيلانية، زعتر، نعناع، لوز، جوز، زبيب، مشمش مجفف، زيت زيتون بكر، هريسة تونسية، بذور الشيا.
-برنامج الولاء: مبتدئ(3%)، برونز(5%)، فضي(7%)، ذهبي(10%)، VIP(15%). هدية مجانية عند 200 دينار.
+برنامج المكافآت: مبتدئ(3%)، برونز(5%)، فضي(7%)، ذهبي(10%)، VIP(15%). هدية مجانية عند 200 دينار.
 الدفع: نقداً عند الاستلام فقط. التوصيل: 3-10 دينار حسب المنطقة.
 أجب باللغة التي يكتب بها المستخدم (عربي/فرنسي/إنجليزي).
 كن مفيداً، ودوداً، ومختصراً. اقترح المنتجات المناسبة عند الطلب.`;
