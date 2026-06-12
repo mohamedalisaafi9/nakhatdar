@@ -1049,21 +1049,22 @@ async function demoLogin(){
   if(db){
     try{
       const{data,error}=await db.auth.signInWithPassword({
-        email:'test@nakhat.tn',
-        password:'Test123456!'
+        email:'mohamedalisaafi9@gmail.com',
+        password:'Nakhat2024!'
       });
       if(!error&&data.user){
-        S.user={id:data.user.id,name:'Ahmed Test',phone:'55123456'};
-        S.df.phone='55123456';
+        S.user={id:data.user.id,name:'Mohamed Ali Saafi',phone:'56161509'};
+        S.df.phone='56161509';
         await loadCart();
         render();
         return;
+      }else{
+        console.log('Auth error:',error?.message);
       }
     }catch(e){console.log('Demo login error:',e);}
   }
-  // Fallback local
-  S.user={name:'Ahmed Test',phone:'55123456'};
-  S.df.phone='55123456';
+  S.user={name:'Mohamed Ali Saafi',phone:'56161509'};
+  S.df.phone='56161509';
   render();
 }
 function addAll(ids){
