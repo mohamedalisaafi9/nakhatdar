@@ -1155,16 +1155,116 @@ async function syncCart(id,qty){
 async function initDB(){
   try{
     db=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+    // ── Charger produits depuis Supabase ──
+    const{data:prods}=await db
+      .from('products')
+      .select('*,categories(slug,name_ar,name_fr)')
+      .eq('is_active',true)
+      .order('is_featured',{ascending:false});
+
+    if(prods&&prods.length>0){
+      // Remplacer les données locales par Supabase
+      PRODS.length=0;
+      prods.forEach(p=>{
+        PRODS.push({
+          id:    p.id,
+          cat:   p.categories?.slug||'spices',
+          e:     p.images?.[0]||'📦',
+          ar:    p.name_ar,
+          fr:    p.name_fr,
+          u:     p.unit||'100g',
+          p:     parseFloat(p.price),
+          pp:    p.promo_price?parseFloat(p.promo_price):null,
+          s:     parseFloat(p.stock_qty||0),
+          new:   p.is_new,
+          feat:  p.is_featured,
+          dar:   p.description_ar||'',
+          dfr:   p.description_fr||'',
+          ben:   p.benefits_ar?p.benefits_ar.split('\n'):[]
+        });
+      });
+      console.log('✅ Produits chargés depuis Supabase:',PRODS.length);
+    }
+
+    // ── Charger zones de livraison ──
+    const{data:zones}=await db
+      .from('delivery_zones')
+      .select('*')
+      .eq('is_active',true);
+
+    if(zones&&zones.length>0){
+      ZONES.length=0;
+      zones.forEach(z=>{
+        ZONES.push({
+          id:   z.id,
+          gov:  z.governorate,
+          city: z.city,
+          area: z.area||'',
+          price:parseFloat(z.price)
+        });
+      });
+      console.log('✅ Zones chargées:',ZONES.length);
+    }
+
+    // ── Charger coupons ──
+    const{data:coupons}=await db
+      .from('coupons')
+      .select('*')
+      .eq('is_active',true);
+
+    if(coupons&&coupons.length>0){
+      coupons.forEach(c=>{
+        COUPONS[c.code]={disc:parseFloat(c.discount_pct),min:parseFloat(c.min_order||0)};
+      });
+      console.log('✅ Coupons chargés:',coupons.length);
+    }
+
+    // ── Vérifier session existante ──
     const{data:{session}}=await db.auth.getSession();
     if(session){
-      S.user={id:session.user.id,name:session.user.user_metadata?.full_name||S.user?.name||'مستخدم',phone:session.user.user_metadata?.phone||S.user?.phone||''};
+      S.user={
+        id:    session.user.id,
+        name:  session.user.user_metadata?.full_name||'مستخدم',
+        phone: session.user.user_metadata?.phone||''
+      };
+      await loadCart();
     }
-    db.auth.onAuthStateChange((event,session)=>{
-      if(event==='SIGNED_IN'&&session){S.user={id:session.user.id,name:session.user.user_metadata?.full_name||'مستخدم',phone:session.user.user_metadata?.phone||''};render();}
-      else if(event==='SIGNED_OUT'){S.user=null;render();}
+
+    // ── Écouter changements auth ──
+    db.auth.onAuthStateChange(async(event,session)=>{
+      if(event==='SIGNED_IN'&&session){
+        S.user={
+          id:    session.user.id,
+          name:  session.user.user_metadata?.full_name||'مستخدم',
+          phone: session.user.user_metadata?.phone||''
+        };
+        await loadCart();
+        render();
+      }else if(event==='SIGNED_OUT'){
+        S.user=null;S.cart={};render();
+      }
     });
-  }catch(e){console.log('DB offline, using local mode');}
+
+  }catch(e){
+    console.log('DB offline, using local mode:',e.message);
+  }
   render();
+}
+
+async function loadCart(){
+  if(!db||!S.user?.id)return;
+  try{
+    const{data}=await db
+      .from('cart_items')
+      .select('product_id,quantity')
+      .eq('user_id',S.user.id);
+    if(data&&data.length>0){
+      S.cart={};
+      data.forEach(item=>{S.cart[item.product_id]=item.quantity;});
+      console.log('✅ Panier chargé:',Object.keys(S.cart).length,'articles');
+    }
+  }catch(e){console.log('Cart load error:',e);}
 }
 
 /* ═══════ INIT ═══════ */
