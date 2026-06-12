@@ -1598,23 +1598,47 @@ async function loadAdminData() {
 function listenOrders() {
   if (!db) return;
   try {
+    // Realtime subscription for new orders
     db.channel('admin-orders')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'orders'
+      }, async payload => {
         const o = payload.new;
-        MOCK.orders.unshift({
-          id: o.order_number || o.id,
-          customer: 'Nouveau client', phone: o.customer_phone || '—',
-          total: parseFloat(o.total), status: o.status,
-          date: new Date().toISOString().split('T')[0],
-          zone: o.city || '—', driver: null, items: 0
-        });
-        MOCK.stats.pendingOrders++;
-        MOCK.stats.totalOrders++;
-        toast('🔔 Nouvelle commande reçue !');
+        // Reload all data to get fresh state
+        await loadAdminData();
+        toast('🔔 Nouvelle commande reçue ! ' + (o.order_number || ''));
         render();
       })
-      .subscribe();
-  } catch(e) { console.log('Realtime not available'); }
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders'
+      }, async payload => {
+        // Update order status in local data
+        const o = payload.new;
+        const existing = MOCK.orders.find(x => x.real_id === o.id || x.id === o.order_number);
+        if (existing) {
+          existing.status = o.status;
+          MOCK.stats.pendingOrders = MOCK.orders.filter(x=>x.status==='received'||x.status==='preparing').length;
+          render();
+        }
+      })
+      .subscribe(status => {
+        console.log('Realtime status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Realtime connecté — écoute des nouvelles commandes');
+        }
+      });
+
+    // Also poll every 30 seconds as fallback
+    setInterval(async () => {
+      await loadAdminData();
+      render();
+    }, 30000);
+
+  } catch(e) { console.log('Realtime not available:', e.message); }
 }
 
 // ── OVERRIDE updateOrderStatus to sync Supabase ──
