@@ -1478,7 +1478,7 @@ function renderOrders() {
   </div>`;}
 
 /* ═══════════════ SUPABASE ADMIN ═══════════════ */
-const SUPA_URL = 'https://ahneptqrbbtraysfjjk.supabase.co';
+const SUPA_URL = 'https://ahneptqrbbtraysfsjjk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobmVwdHFyYmJ0cmF5c2ZzamprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE5ODEsImV4cCI6MjA5NjU2Nzk4MX0.iUbGqgfe_j9I5_X4eXsFVKd9Whl0Y7ktJ1McvG9kzWc';
 let db = null;
 
@@ -1494,38 +1494,64 @@ async function initAdminSupabase() {
 async function loadAdminData() {
   if (!db) return;
   try {
-    // Load orders
-    const { data: orders } = await db.from('orders')
+    // Load orders with profiles
+    const { data: orders, error: ordErr } = await db
+      .from('orders')
       .select('*, profiles(full_name, phone)')
       .order('created_at', { ascending: false });
+
+    if (ordErr) console.log('Orders error:', ordErr.message);
+
     if (orders && orders.length > 0) {
       MOCK.orders = orders.map(o => ({
         id: o.order_number || o.id,
-        customer: o.profiles?.full_name || 'Client',
+        real_id: o.id,
+        customer: o.profiles?.full_name || o.customer_phone || 'Client',
         phone: o.customer_phone || o.profiles?.phone || '—',
         total: parseFloat(o.total),
         status: o.status,
         date: o.created_at?.split('T')[0],
-        zone: o.city || '—',
+        zone: `${o.city||'—'}${o.area?' - '+o.area:''}`,
         driver: o.driver_id || null,
-        items: 0
+        items: 0,
+        has_gift: o.has_gift,
+        governorate: o.governorate,
+        city: o.city,
+        area: o.area,
+        street: o.street,
+        house: o.house_number
       }));
       MOCK.stats.totalOrders = orders.length;
       MOCK.stats.pendingOrders = orders.filter(o => o.status==='received'||o.status==='preparing').length;
       MOCK.stats.deliveredOrders = orders.filter(o => o.status==='delivered').length;
       const todayStr = new Date().toISOString().split('T')[0];
-      MOCK.stats.todaySales = orders.filter(o => o.created_at?.startsWith(todayStr)).reduce((s,o) => s + parseFloat(o.total||0), 0);
+      const todayOrders = orders.filter(o => o.created_at?.startsWith(todayStr));
+      MOCK.stats.todaySales = todayOrders.reduce((s,o) => s + parseFloat(o.total||0), 0);
+      const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+      MOCK.stats.weekSales = orders.filter(o=>o.created_at>=weekAgo).reduce((s,o)=>s+parseFloat(o.total||0),0);
+      console.log('✅ Orders loaded:', orders.length);
     }
 
     // Load products
-    const { data: prods } = await db.from('products').select('*, categories(name_fr)');
+    const { data: prods } = await db
+      .from('products')
+      .select('*, categories(name_fr)')
+      .order('created_at', { ascending: false });
+
     if (prods && prods.length > 0) {
       MOCK.products = prods.map(p => ({
-        id: p.id, emoji: p.images?.[0] || '📦', name: p.name_ar, fr: p.name_fr,
-        cat: p.categories?.name_fr || 'Épices', price: parseFloat(p.price),
+        id: p.id,
+        emoji: p.images?.[0] || '📦',
+        name: p.name_ar,
+        fr: p.name_fr,
+        cat: p.categories?.name_fr || 'Épices',
+        price: parseFloat(p.price),
         promoPrice: p.promo_price ? parseFloat(p.promo_price) : null,
-        stock: parseFloat(p.stock_qty||0), unit: p.unit || '100g', isActive: p.is_active
+        stock: parseFloat(p.stock_qty||0),
+        unit: p.unit || '100g',
+        isActive: p.is_active
       }));
+      console.log('✅ Products loaded:', prods.length);
     }
 
     // Load zones
@@ -1546,7 +1572,26 @@ async function loadAdminData() {
         valid: c.valid_until?.split('T')[0]||'—', isActive: c.is_active
       }));
     }
-  } catch(e) { console.log('Using mock data:', e.message); }
+
+    // Load customers
+    const { data: profiles } = await db
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (profiles && profiles.length > 0) {
+      MOCK.customers = profiles.map(p => ({
+        id: p.id,
+        name: p.full_name || 'Client',
+        phone: p.phone || '—',
+        orders: MOCK.orders.filter(o=>o.customer===p.full_name).length,
+        spend: parseFloat(p.total_spend||0),
+        tier: p.loyalty_tier || 'starter',
+        lastOrder: MOCK.orders.find(o=>o.customer===p.full_name)?.date || '—'
+      }));
+    }
+
+  } catch(e) { console.log('Admin data error:', e.message); }
 }
 
 // ── REALTIME — nouvelles commandes ──
@@ -1576,13 +1621,20 @@ function listenOrders() {
 const _localUpdateStatus = updateOrderStatus;
 window.updateOrderStatus = async function(id, status) {
   const o = MOCK.orders.find(x => x.id===id);
-  if (o) { o.status = status; MOCK.stats.pendingOrders = MOCK.orders.filter(x=>x.status==='received'||x.status==='preparing').length; toast(`Statut mis à jour : ${status}`); render(); }
+  if (o) {
+    o.status = status;
+    MOCK.stats.pendingOrders = MOCK.orders.filter(x=>x.status==='received'||x.status==='preparing').length;
+    toast(`Statut mis à jour : ${status}`);
+    render();
+  }
   if (!db) return;
   try {
-    // Find real UUID from order_number
-    const { data } = await db.from('orders').select('id').eq('order_number', id).single();
-    if (data) await db.from('orders').update({ status }).eq('id', data.id);
-  } catch(e) { console.log('Status sync failed'); }
+    // Use real UUID if available
+    const realId = o?.real_id || id;
+    const { error } = await db.from('orders').update({ status }).eq('id', realId);
+    if (error) console.log('Update error:', error.message);
+    else console.log('✅ Order status updated in Supabase');
+  } catch(e) { console.log('Status sync failed:', e); }
 };
 
 // ── OVERRIDE saveZone to sync Supabase ──
