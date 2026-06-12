@@ -1100,44 +1100,148 @@ function editProduct(id) {
   openModal('edit-product', {...p});
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
   const p = MOCK.products.find(x => x.id===id);
   if (!p) return;
   if (!confirm(`Supprimer "${p.name}" ?`)) return;
-  MOCK.products = MOCK.products.filter(x => x.id!==id);
-  toast(`${p.name} supprimé`,'warning');
-  render();
+  if (db) {
+    try {
+      const { error } = await db.from('products').delete().eq('id', id);
+      if (error) { toast('Erreur: ' + error.message, 'error'); return; }
+      toast(`✅ ${p.name} supprimé`, 'warning');
+      await loadAdminData();
+    } catch(e) { toast('Erreur: ' + e.message, 'error'); }
+  } else {
+    MOCK.products = MOCK.products.filter(x => x.id!==id);
+    toast(`${p.name} supprimé`,'warning');
+    render();
+  }
 }
 
-function toggleProductActive(id) {
+async function toggleProductActive(id) {
   const p = MOCK.products.find(x => x.id===id);
-  if (p) { p.isActive=!p.isActive; toast(p.isActive?'Produit activé':'Produit désactivé'); render(); }
+  if (!p) return;
+  const newState = !p.isActive;
+  if (db) {
+    try {
+      const { error } = await db.from('products').update({ is_active: newState }).eq('id', id);
+      if (error) { toast('Erreur: ' + error.message, 'error'); return; }
+      p.isActive = newState;
+      toast(newState ? '✅ Produit activé' : '⚠️ Produit désactivé');
+      render();
+    } catch(e) { toast('Erreur: ' + e.message, 'error'); }
+  } else {
+    p.isActive = newState;
+    toast(newState ? 'Produit activé' : 'Produit désactivé');
+    render();
+  }
 }
 
-function saveProduct() {
+async function saveProduct() {
   const isEdit = adminState.modal === 'edit-product';
   const nameAr = document.getElementById('prod-name-ar')?.value?.trim();
   const nameFr = document.getElementById('prod-name-fr')?.value?.trim();
   const price  = parseFloat(document.getElementById('prod-price')?.value);
   const stock  = parseFloat(document.getElementById('prod-stock')?.value||0);
   const emoji  = document.getElementById('prod-emoji')?.value?.trim() || '📦';
-  const cat    = document.getElementById('prod-cat')?.value || 'Épices';
+  const catFr  = document.getElementById('prod-cat')?.value || 'Épices';
   const promo  = parseFloat(document.getElementById('prod-promo')?.value) || null;
   const unit   = document.getElementById('prod-unit')?.value || '100g';
+  const desc   = document.getElementById('prod-desc')?.value?.trim() || '';
 
-  if (!nameAr || !nameFr || isNaN(price)) { toast('Remplissez les champs obligatoires (*)','error'); return; }
+  if (!nameAr || !nameFr || isNaN(price)) {
+    toast('Remplissez les champs obligatoires (*)','error'); return;
+  }
 
-  if (isEdit && adminState.editItem) {
-    const p = MOCK.products.find(x => x.id===adminState.editItem.id);
-    if (p) { p.name=nameAr; p.fr=nameFr; p.price=price; p.promoPrice=promo||null; p.stock=stock; p.emoji=emoji; p.cat=cat; p.unit=unit; }
-    toast('✅ Produit modifié avec succès !');
+  // Find category_id from name
+  let categoryId = null;
+  if (db) {
+    try {
+      const { data: cats } = await db
+        .from('categories')
+        .select('id, name_fr')
+        .eq('name_fr', catFr)
+        .single();
+      if (cats) categoryId = cats.id;
+    } catch(e) {}
+  }
+
+  if (db) {
+    try {
+      if (isEdit && adminState.editItem) {
+        // Update in Supabase
+        const { error } = await db
+          .from('products')
+          .update({
+            name_ar:      nameAr,
+            name_fr:      nameFr,
+            name_en:      nameFr,
+            description_ar: desc,
+            description_fr: desc,
+            price:        price,
+            promo_price:  promo || null,
+            unit:         unit,
+            stock_qty:    stock,
+            images:       [emoji],
+            category_id:  categoryId,
+            updated_at:   new Date().toISOString()
+          })
+          .eq('id', adminState.editItem.id);
+
+        if (error) { toast('Erreur: ' + error.message, 'error'); return; }
+        toast('✅ Produit modifié dans Supabase !');
+
+      } else {
+        // Insert new product in Supabase
+        const { data, error } = await db
+          .from('products')
+          .insert({
+            name_ar:       nameAr,
+            name_fr:       nameFr,
+            name_en:       nameFr,
+            description_ar: desc,
+            description_fr: desc,
+            price:         price,
+            promo_price:   promo || null,
+            unit:          unit,
+            stock_qty:     stock,
+            stock_unit:    'kg',
+            images:        [emoji],
+            category_id:   categoryId,
+            is_active:     true,
+            is_featured:   false,
+            is_new:        true
+          })
+          .select()
+          .single();
+
+        if (error) { toast('Erreur: ' + error.message, 'error'); return; }
+
+        // Add to local MOCK
+        MOCK.products.unshift({
+          id: data.id, emoji, name: nameAr, fr: nameFr,
+          cat: catFr, price, promoPrice: promo||null,
+          stock, unit, isActive: true
+        });
+        toast('✅ Produit ajouté dans Supabase !');
+      }
+
+      // Reload products from Supabase
+      await loadAdminData();
+
+    } catch(e) {
+      toast('Erreur Supabase: ' + e.message, 'error');
+      return;
+    }
   } else {
-    const newProd = {
-      id:'p'+Date.now(), emoji, name:nameAr, fr:nameFr, cat, price, promoPrice:promo||null,
-      stock, unit, isActive:true
-    };
-    MOCK.products.unshift(newProd);
-    toast('✅ Produit ajouté avec succès !');
+    // Fallback local
+    if (isEdit && adminState.editItem) {
+      const p = MOCK.products.find(x => x.id===adminState.editItem.id);
+      if (p) { p.name=nameAr; p.fr=nameFr; p.price=price; p.promoPrice=promo||null; p.stock=stock; p.emoji=emoji; p.cat=catFr; p.unit=unit; }
+    } else {
+      MOCK.products.unshift({id:'p'+Date.now(), emoji, name:nameAr, fr:nameFr, cat:catFr, price, promoPrice:promo||null, stock, unit, isActive:true});
+    }
+    toast('✅ Produit sauvegardé (mode local)');
   }
   closeModal();
 }
