@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#1a4731">
 <meta name="mobile-web-app-capable" content="yes">
+<!-- Cache version - change this number to force update -->
+<meta name="app-version" content="2.1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="نكهة الدار">
 <link rel="manifest" href="/manifest.json">
@@ -1273,17 +1275,46 @@ loadS();
 if(typeof supabase!=='undefined'){initDB();}else{render();}
 
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').then(reg=>{
-    setInterval(()=>reg.update(),60000);
+  // Unregister old service workers to force fresh load
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(reg=>reg.unregister());
+  });
+  
+  navigator.serviceWorker.register('/sw.js?v='+Date.now()).then(reg=>{
+    // Check for updates every 5 minutes
+    setInterval(()=>reg.update(),5*60*1000);
+    
     reg.addEventListener('updatefound',()=>{
       const w=reg.installing;
       w.addEventListener('statechange',()=>{
-        if(w.state==='installed'&&navigator.serviceWorker.controller){w.postMessage('skipWaiting');}
+        if(w.state==='installed'){
+          w.postMessage('skipWaiting');
+        }
       });
     });
+  }).catch(e=>console.log('SW error:',e));
+  
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    window.location.reload(true);
   });
-  navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
 }
+
+// Auto-check for new version every 10 minutes
+setInterval(async()=>{
+  try{
+    const res=await fetch('/customer-app.html?nocache='+Date.now(),{cache:'no-store'});
+    const text=await res.text();
+    const match=text.match(/app-version.*?content="([^"]+)"/);
+    if(match){
+      const newVersion=match[1];
+      const currentVersion=document.querySelector('meta[name="app-version"]')?.content;
+      if(newVersion&&currentVersion&&newVersion!==currentVersion){
+        toast(L('يوجد تحديث جديد! جاري التحديث...','Nouvelle mise à jour! Actualisation...','New update! Refreshing...'),'🔄');
+        setTimeout(()=>window.location.reload(true),2000);
+      }
+    }
+  }catch(e){}
+},10*60*1000);
 </script>
 </body>
 </html>
