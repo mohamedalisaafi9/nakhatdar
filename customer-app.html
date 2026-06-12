@@ -978,13 +978,63 @@ function applyCoupon(){
   render();
 }
 
-function placeOrder(){
-  if(!S.df.phone||S.df.phone.length!==8){toast(L('أدخل رقم هاتف صحيح (8 أرقام)','Entrez un numéro valide (8 chiffres)','Enter a valid phone (8 digits)'),'⚠️');return;}
+async function placeOrder(){
+  if(!S.df.phone||S.df.phone.length!==8){
+    toast(L('أدخل رقم هاتف صحيح (8 أرقام)','Entrez un numéro valide (8 chiffres)','Enter a valid phone (8 digits)'),'⚠️');
+    return;
+  }
   const sub=cartSub(), ids=Object.keys(S.cart);
+
+  // ── Essayer Supabase checkout ──
+  if(db && S.user?.id){
+    try{
+      // 1. Sync cart to Supabase first
+      for(const id of ids){
+        await db.rpc('upsert_cart_item',{
+          p_user_id:S.user.id,
+          p_product_id:id,
+          p_quantity:S.cart[id]
+        });
+      }
+      // 2. Call checkout function
+      const{data,error}=await db.rpc('checkout',{
+        p_user_id:    S.user.id,
+        p_governorate:S.df.gov,
+        p_city:       S.df.city,
+        p_area:       S.df.area||'',
+        p_street:     S.df.street||'',
+        p_house:      S.df.house||'',
+        p_phone:      S.df.phone,
+        p_coupon_code:S.coupon||null
+      });
+      if(error){
+        console.log('Checkout error:',error);
+        toast(L('خطأ في تأكيد الطلب','Erreur lors de la commande','Order error'),'⚠️');
+        return;
+      }
+      // 3. Get order number
+      const{data:orderData}=await db
+        .from('orders')
+        .select('order_number, total, has_gift')
+        .eq('id', data)
+        .single();
+
+      const num = orderData?.order_number || 'ND-'+Date.now().toString().slice(-6);
+      S.lastOrder={id:num, num, total:sub, hasGift:sub>=200, date:new Date().toISOString(), items:ids};
+      S.orderHistory.unshift(S.lastOrder);
+      S.spend+=sub; S.modal=null; S.orderDone=true; S.cart={};
+      render();
+      return;
+    }catch(e){
+      console.log('Supabase checkout failed, using local:',e);
+    }
+  }
+
+  // ── Fallback local si pas connecté ──
   const num='ND-'+Date.now().toString().slice(-6);
-  S.lastOrder={id:num,num,total:sub,hasGift:sub>=200,date:new Date().toISOString(),items:ids};
+  S.lastOrder={id:num, num, total:sub, hasGift:sub>=200, date:new Date().toISOString(), items:ids};
   S.orderHistory.unshift(S.lastOrder);
-  S.spend+=sub; S.modal=null; S.orderDone=true;
+  S.spend+=sub; S.modal=null; S.orderDone=true; S.cart={};
   render();
 }
 
@@ -995,8 +1045,24 @@ function doAuth(){
   S.df.phone=S.authF.phone;
   render();
 }
-function demoLogin(){
-  S.user={name:L('أحمد بن علي','Ahmed Ben Ali','Ahmed Ben Ali'),phone:'55123456'};
+async function demoLogin(){
+  if(db){
+    try{
+      const{data,error}=await db.auth.signInWithPassword({
+        email:'test@nakhat.tn',
+        password:'Test123456!'
+      });
+      if(!error&&data.user){
+        S.user={id:data.user.id,name:'Ahmed Test',phone:'55123456'};
+        S.df.phone='55123456';
+        await loadCart();
+        render();
+        return;
+      }
+    }catch(e){console.log('Demo login error:',e);}
+  }
+  // Fallback local
+  S.user={name:'Ahmed Test',phone:'55123456'};
   S.df.phone='55123456';
   render();
 }
