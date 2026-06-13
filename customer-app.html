@@ -476,7 +476,7 @@ function renderNav(){
     {id:'cart',e:'🛒',l:T('cart')},
     {id:'account',e:'👤',l:T('account')}
   ].map(t=>`
-  <button class="ni ${S.tab===t.id?'active':''}" onclick="S.tab='${t.id}';S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;render()">
+  <button class="ni ${S.tab===t.id?'active':''}" onclick="setTab('${t.id}')">
     <span class="ni-ic">${t.e}</span>
     <span class="ni-lb">${t.l}</span>
     ${t.id==='cart'&&c>0?`<span class="ni-bd">${c}</span>`:''}
@@ -689,7 +689,7 @@ function renderSuccess(){
       <div style="font-size:13px;color:var(--tm)">${L('الدفع','Paiement','Payment')}: <strong>${L('نقداً عند الاستلام','À la livraison','Cash on delivery')}</strong></div>
     </div>
     <div class="cod-badge" style="justify-content:center">${T('cod')}</div>
-    <button class="ck-btn" style="margin-top:12px" onclick="S.orderDone=false;S.cart={};render()">${T('neworder')}</button>
+    <button class="ck-btn" style="margin-top:12px" onclick="S.orderDone=false;S.lastOrder=null;S.cart={};setTab('home')">${T('neworder')}</button>
   </div>`;}
 
 /* ── DELIVERY MODAL ── */
@@ -1075,11 +1075,10 @@ async function logout(){
   render();
 }
 function setTab(t){
-  if(S.tab==='cart'&&t!=='cart'){
-    S.orderDone=false;
-    S.lastOrder=null;
-  }
-  S.tab=t;S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;
+  // Always clear order success when switching ANY tab
+  S.orderDone=false;
+  S.lastOrder=null;
+  S.tab=t;S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;S._ordersLoaded=false;
   render();
 }
 
