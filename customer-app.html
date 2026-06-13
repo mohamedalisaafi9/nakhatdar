@@ -39,7 +39,7 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .auth-inp{width:100%;padding:12px 14px;border:1.5px solid var(--bm);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;color:var(--td);background:var(--wh);margin-bottom:10px;transition:.2s}
 .auth-inp:focus{border-color:var(--gm)}
 .auth-btn{width:100%;background:var(--gd);color:#fff;border:none;border-radius:var(--r22);padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin-top:4px}
-.auth-demo{width:100%;background:var(--bei);color:var(--gd);border:1.5px solid var(--bm);border-radius:var(--r22);padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+/* auth-demo removed */
 .auth-switch{text-align:center;font-size:13px;color:var(--ts);margin-top:14px}
 .auth-switch span{color:var(--g);font-weight:700;cursor:pointer}
 .phone-wrap{position:relative;margin-bottom:10px}
@@ -305,7 +305,7 @@ const COUPONS={WELCOME10:{disc:10,min:0},RAMADAN15:{disc:15,min:50},AID20:{disc:
 let S={
   lang:'ar', tab:'home', catF:'all', search:'',
   cart:{}, favs:new Set(),
-  user:null, authMode:'login', authF:{name:'',phone:'',pass:''},
+  user:null, authMode:'login', authF:{name:'',phone:'',email:'',pass:''},
   promoType:'daily', modal:null,
   detailId:null, showAI:false, showNotif:false, subPage:null,
   orderDone:false, lastOrder:null, orderHistory:[],
@@ -1015,16 +1015,24 @@ function renderAuth(){
     </div>
     <div class="auth-form">
       <div class="auth-title">${S.authMode==='login'?T('login'):T('register')}</div>
-      <div class="auth-sub2">${S.authMode==='login'?L('أدخل بياناتك للمتابعة','Entrez vos informations','Enter your details'):L('أنشئ حساباً للاستفادة من العروض','Créez un compte pour profiter des offres','Create an account')}</div>
-      ${S.authMode==='register'?`<input class="auth-inp" placeholder="${T('name')}" oninput="S.authF.name=this.value">`:''}
+      <div class="auth-sub2">${S.authMode==='login'?
+        L('أدخل بريدك الإلكتروني أو رقم هاتفك','Connectez-vous avec email ou téléphone','Sign in with email or phone'):
+        L('أنشئ حساباً للاستفادة من العروض','Créez un compte','Create an account')}</div>
+
+      ${S.authMode==='register'?`
+      <input class="auth-inp" placeholder="${T('name')}" oninput="S.authF.name=this.value">
+      <input class="auth-inp" type="email" placeholder="${L('البريد الإلكتروني','Email','Email')}" oninput="S.authF.email=this.value">
       <div class="phone-wrap">
         <span class="phone-prefix">+216</span>
         <input class="phone-inp" type="tel" placeholder="XX XXX XXX" maxlength="8"
           oninput="S.authF.phone=this.value.replace(/[^0-9]/g,'').slice(0,8)">
       </div>
+      `:`
+      <input class="auth-inp" placeholder="${L('البريد الإلكتروني أو رقم الهاتف','Email ou numéro de téléphone','Email or phone number')}" oninput="S.authF.email=this.value">
+      `}
+
       <input class="auth-inp" type="password" placeholder="${T('pass')}" oninput="S.authF.pass=this.value">
       <button class="auth-btn" onclick="doAuth()">${S.authMode==='login'?T('login'):T('register')}</button>
-      <button class="auth-demo" onclick="demoLogin()">🎮 ${T('demo')}</button>
       <div class="auth-switch">${S.authMode==='login'?L('ليس لديك حساب؟ ','Pas de compte? ','No account? '):L('لديك حساب؟ ','Déjà un compte? ','Have an account? ')}
         <span onclick="S.authMode=S.authMode==='login'?'register':'login';render()">${S.authMode==='login'?T('register'):T('login')}</span>
       </div>
@@ -1066,7 +1074,14 @@ async function logout(){
   saveS();
   render();
 }
-function setTab(t){S.tab=t;S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;render();}
+function setTab(t){
+  if(S.tab==='cart'&&t!=='cart'){
+    S.orderDone=false;
+    S.lastOrder=null;
+  }
+  S.tab=t;S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;
+  render();
+}
 
 function applyCoupon(){
   const c=S.coupon.trim().toUpperCase(), sub=cartSub();
@@ -1136,55 +1151,54 @@ async function placeOrder(){
 }
 
 async function doAuth(){
-  if(!S.authF.phone||S.authF.phone.length!==8){
-    toast(L('أدخل رقم هاتف صحيح (8 أرقام)','Numéro invalide (8 chiffres)','Invalid phone (8 digits)'),'⚠️');
-    return;
-  }
   if(!S.authF.pass||S.authF.pass.length<6){
-    toast(L('كلمة المرور 6 أحرف على الأقل','Mot de passe 6 caractères minimum','Password 6 characters minimum'),'⚠️');
+    toast(L('كلمة المرور 6 أحرف على الأقل','Mot de passe min 6 caractères','Password min 6 characters'),'⚠️');
     return;
   }
-
   if(!db){
     toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');
     return;
   }
 
-  const email = S.authF.phone + '@nakhat.tn';
-  const name = S.authF.name || L('عميل','Client','Customer');
-
   if(S.authMode==='register'){
     // ── INSCRIPTION ──
     if(!S.authF.name||S.authF.name.length<3){
-      toast(L('أدخل اسمك الكامل','Entrez votre nom','Enter your name'),'⚠️');
+      toast(L('أدخل اسمك الكامل','Entrez votre nom complet','Enter your full name'),'⚠️');
+      return;
+    }
+    if(!S.authF.email||!S.authF.email.includes('@')){
+      toast(L('أدخل بريداً إلكترونياً صحيحاً','Entrez un email valide','Enter a valid email'),'⚠️');
+      return;
+    }
+    if(!S.authF.phone||S.authF.phone.length!==8){
+      toast(L('أدخل رقم هاتف صحيح (8 أرقام)','Numéro invalide (8 chiffres)','Invalid phone (8 digits)'),'⚠️');
       return;
     }
 
     toast(L('جاري إنشاء الحساب...','Création du compte...','Creating account...'),'⏳');
 
     const{data,error}=await db.auth.signUp({
-      email: email,
+      email: S.authF.email,
       password: S.authF.pass,
       options:{
-        data:{ full_name: name, phone: S.authF.phone }
+        data:{ full_name: S.authF.name, phone: S.authF.phone }
       }
     });
 
     if(error){
       if(error.message.includes('already registered')){
-        toast(L('هذا الرقم مسجل مسبقاً! سجّل دخولك','Ce numéro existe déjà! Connectez-vous','This number is already registered! Sign in'),'⚠️');
+        toast(L('هذا البريد مسجل مسبقاً! سجّل دخولك','Cet email existe déjà!','This email is already registered!'),'⚠️');
         S.authMode='login'; render();
       } else {
-        toast(L('خطأ في التسجيل: ','Erreur: ','Error: ')+error.message,'⚠️');
+        toast(L('خطأ: ','Erreur: ','Error: ')+error.message,'⚠️');
       }
       return;
     }
 
-    // Créer le profil dans profiles
     if(data.user){
       await db.from('profiles').insert({
         id: data.user.id,
-        full_name: name,
+        full_name: S.authF.name,
         phone: S.authF.phone,
         preferred_lang: S.lang,
         loyalty_tier: 'starter',
@@ -1192,32 +1206,37 @@ async function doAuth(){
         total_spend: 0
       });
 
-      S.user={id:data.user.id, name:name, phone:S.authF.phone};
+      S.user={id:data.user.id, name:S.authF.name, phone:S.authF.phone};
       S.df.phone=S.authF.phone;
-      toast(L('🎉 تم إنشاء حسابك بنجاح!','🎉 Compte créé avec succès!','🎉 Account created successfully!'));
+      toast(L('🎉 تم إنشاء حسابك بنجاح!','🎉 Compte créé!','🎉 Account created!'));
       render();
     }
 
   } else {
-    // ── CONNEXION ──
+    // ── CONNEXION (email ou téléphone) ──
+    const input = S.authF.email?.trim();
+    if(!input){
+      toast(L('أدخل بريدك الإلكتروني أو رقم هاتفك','Entrez votre email ou téléphone','Enter your email or phone'),'⚠️');
+      return;
+    }
+
+    // Détecter si c'est un email ou un téléphone
+    const isEmail = input.includes('@');
+    const loginEmail = isEmail ? input : input.replace(/[^0-9]/g,'') + '@nakhat.tn';
+
     toast(L('جاري تسجيل الدخول...','Connexion...','Signing in...'),'⏳');
 
     const{data,error}=await db.auth.signInWithPassword({
-      email: email,
+      email: loginEmail,
       password: S.authF.pass
     });
 
     if(error){
-      if(error.message.includes('Invalid login')){
-        toast(L('رقم الهاتف أو كلمة المرور خاطئة','Numéro ou mot de passe incorrect','Wrong phone or password'),'⚠️');
-      } else {
-        toast(L('خطأ في الدخول: ','Erreur: ','Error: ')+error.message,'⚠️');
-      }
+      toast(L('البريد/الهاتف أو كلمة المرور خاطئة','Email/téléphone ou mot de passe incorrect','Wrong email/phone or password'),'⚠️');
       return;
     }
 
     if(data.user){
-      // Charger le profil depuis Supabase
       const{data:profile}=await db
         .from('profiles')
         .select('full_name, phone, loyalty_tier, monthly_spend')
@@ -1226,8 +1245,8 @@ async function doAuth(){
 
       S.user={
         id:    data.user.id,
-        name:  profile?.full_name || data.user.user_metadata?.full_name || name,
-        phone: profile?.phone || S.authF.phone
+        name:  profile?.full_name || data.user.user_metadata?.full_name || 'Client',
+        phone: profile?.phone || ''
       };
       S.df.phone = S.user.phone;
       S.spend = parseFloat(profile?.monthly_spend || 0);
@@ -1236,41 +1255,6 @@ async function doAuth(){
       toast(L('👋 مرحباً بعودتك!','👋 Bon retour!','👋 Welcome back!'));
       render();
     }
-  }
-}
-
-async function demoLogin(){
-  if(!db){
-    toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion','No connection'),'⚠️');
-    return;
-  }
-  toast(L('جاري الدخول...','Connexion...','Signing in...'),'⏳');
-
-  const{data,error}=await db.auth.signInWithPassword({
-    email:'mohamedalisaafi9@gmail.com',
-    password:'Nakhat2024!'
-  });
-
-  if(!error&&data.user){
-    const{data:profile}=await db
-      .from('profiles')
-      .select('full_name, phone, monthly_spend')
-      .eq('id', data.user.id)
-      .single();
-
-    S.user={
-      id:    data.user.id,
-      name:  profile?.full_name || 'Mohamed Ali Saafi',
-      phone: profile?.phone || '56161509'
-    };
-    S.df.phone = S.user.phone;
-    S.spend = parseFloat(profile?.monthly_spend || 0);
-    await loadCart();
-    toast(L('👋 مرحباً بعودتك!','👋 Bon retour!','👋 Welcome back!'));
-    render();
-  } else {
-    toast(L('خطأ في الدخول التجريبي','Erreur connexion démo','Demo login error'),'⚠️');
-    console.log('Demo error:', error?.message);
   }
 }
 function addAll(ids){
