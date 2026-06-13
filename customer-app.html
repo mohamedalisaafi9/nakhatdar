@@ -970,7 +970,14 @@ function setLang(l){S.lang=l;render();}
 function addCart(id){S.cart[id]=(S.cart[id]||0)+1;if(db&&S.user?.id)syncCart(id,S.cart[id]);render();}
 function rmCart(id){if(S.cart[id]>1)S.cart[id]--;else delete S.cart[id];if(db&&S.user?.id)syncCart(id,S.cart[id]||0);render();}
 function toggleFav(id){S.favs.has(id)?S.favs.delete(id):S.favs.add(id);render();}
-function logout(){if(db)db.auth.signOut();S.user=null;S.cart={};saveS();render();}
+async function logout(){
+  if(db) await db.auth.signOut();
+  S.user=null; S.cart={}; S.spend=0; S.orderHistory=[];
+  S.favs=new Set(); S.msgs=[];
+  localStorage.removeItem('nd_v2');
+  saveS();
+  render();
+}
 function setTab(t){S.tab=t;S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;render();}
 
 function applyCoupon(){
@@ -1040,34 +1047,143 @@ async function placeOrder(){
   render();
 }
 
-function doAuth(){
-  if(!S.authF.phone||S.authF.phone.length<8){toast(L('أدخل رقم هاتف صحيح','Numéro invalide','Invalid phone'),'⚠️');return;}
-  if(!S.authF.pass||S.authF.pass.length<4){toast(L('كلمة المرور قصيرة جداً','Mot de passe trop court','Password too short'),'⚠️');return;}
-  S.user={name:S.authF.name||L('مستخدم','Utilisateur','User'),phone:S.authF.phone};
-  S.df.phone=S.authF.phone;
-  render();
-}
-async function demoLogin(){
-  if(db){
-    try{
-      const{data,error}=await db.auth.signInWithPassword({
-        email:'mohamedalisaafi9@gmail.com',
-        password:'Nakhat2024!'
-      });
-      if(!error&&data.user){
-        S.user={id:data.user.id,name:'Mohamed Ali Saafi',phone:'56161509'};
-        S.df.phone='56161509';
-        await loadCart();
-        render();
-        return;
-      }else{
-        console.log('Auth error:',error?.message);
-      }
-    }catch(e){console.log('Demo login error:',e);}
+async function doAuth(){
+  if(!S.authF.phone||S.authF.phone.length!==8){
+    toast(L('أدخل رقم هاتف صحيح (8 أرقام)','Numéro invalide (8 chiffres)','Invalid phone (8 digits)'),'⚠️');
+    return;
   }
-  S.user={name:'Mohamed Ali Saafi',phone:'56161509'};
-  S.df.phone='56161509';
-  render();
+  if(!S.authF.pass||S.authF.pass.length<6){
+    toast(L('كلمة المرور 6 أحرف على الأقل','Mot de passe 6 caractères minimum','Password 6 characters minimum'),'⚠️');
+    return;
+  }
+
+  if(!db){
+    toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');
+    return;
+  }
+
+  const email = S.authF.phone + '@nakhat.tn';
+  const name = S.authF.name || L('عميل','Client','Customer');
+
+  if(S.authMode==='register'){
+    // ── INSCRIPTION ──
+    if(!S.authF.name||S.authF.name.length<3){
+      toast(L('أدخل اسمك الكامل','Entrez votre nom','Enter your name'),'⚠️');
+      return;
+    }
+
+    toast(L('جاري إنشاء الحساب...','Création du compte...','Creating account...'),'⏳');
+
+    const{data,error}=await db.auth.signUp({
+      email: email,
+      password: S.authF.pass,
+      options:{
+        data:{ full_name: name, phone: S.authF.phone }
+      }
+    });
+
+    if(error){
+      if(error.message.includes('already registered')){
+        toast(L('هذا الرقم مسجل مسبقاً! سجّل دخولك','Ce numéro existe déjà! Connectez-vous','This number is already registered! Sign in'),'⚠️');
+        S.authMode='login'; render();
+      } else {
+        toast(L('خطأ في التسجيل: ','Erreur: ','Error: ')+error.message,'⚠️');
+      }
+      return;
+    }
+
+    // Créer le profil dans profiles
+    if(data.user){
+      await db.from('profiles').insert({
+        id: data.user.id,
+        full_name: name,
+        phone: S.authF.phone,
+        preferred_lang: S.lang,
+        loyalty_tier: 'starter',
+        monthly_spend: 0,
+        total_spend: 0
+      });
+
+      S.user={id:data.user.id, name:name, phone:S.authF.phone};
+      S.df.phone=S.authF.phone;
+      toast(L('🎉 تم إنشاء حسابك بنجاح!','🎉 Compte créé avec succès!','🎉 Account created successfully!'));
+      render();
+    }
+
+  } else {
+    // ── CONNEXION ──
+    toast(L('جاري تسجيل الدخول...','Connexion...','Signing in...'),'⏳');
+
+    const{data,error}=await db.auth.signInWithPassword({
+      email: email,
+      password: S.authF.pass
+    });
+
+    if(error){
+      if(error.message.includes('Invalid login')){
+        toast(L('رقم الهاتف أو كلمة المرور خاطئة','Numéro ou mot de passe incorrect','Wrong phone or password'),'⚠️');
+      } else {
+        toast(L('خطأ في الدخول: ','Erreur: ','Error: ')+error.message,'⚠️');
+      }
+      return;
+    }
+
+    if(data.user){
+      // Charger le profil depuis Supabase
+      const{data:profile}=await db
+        .from('profiles')
+        .select('full_name, phone, loyalty_tier, monthly_spend')
+        .eq('id', data.user.id)
+        .single();
+
+      S.user={
+        id:    data.user.id,
+        name:  profile?.full_name || data.user.user_metadata?.full_name || name,
+        phone: profile?.phone || S.authF.phone
+      };
+      S.df.phone = S.user.phone;
+      S.spend = parseFloat(profile?.monthly_spend || 0);
+
+      await loadCart();
+      toast(L('👋 مرحباً بعودتك!','👋 Bon retour!','👋 Welcome back!'));
+      render();
+    }
+  }
+}
+
+async function demoLogin(){
+  if(!db){
+    toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion','No connection'),'⚠️');
+    return;
+  }
+  toast(L('جاري الدخول...','Connexion...','Signing in...'),'⏳');
+
+  const{data,error}=await db.auth.signInWithPassword({
+    email:'mohamedalisaafi9@gmail.com',
+    password:'Nakhat2024!'
+  });
+
+  if(!error&&data.user){
+    const{data:profile}=await db
+      .from('profiles')
+      .select('full_name, phone, monthly_spend')
+      .eq('id', data.user.id)
+      .single();
+
+    S.user={
+      id:    data.user.id,
+      name:  profile?.full_name || 'Mohamed Ali Saafi',
+      phone: profile?.phone || '56161509'
+    };
+    S.df.phone = S.user.phone;
+    S.spend = parseFloat(profile?.monthly_spend || 0);
+    await loadCart();
+    toast(L('👋 مرحباً بعودتك!','👋 Bon retour!','👋 Welcome back!'));
+    render();
+  } else {
+    toast(L('خطأ في الدخول التجريبي','Erreur connexion démo','Demo login error'),'⚠️');
+    console.log('Demo error:', error?.message);
+  }
 }
 function addAll(ids){
   if(!ids||!ids.length)return;
