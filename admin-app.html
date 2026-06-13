@@ -299,7 +299,7 @@ function renderLoginPage() {
   <div class="admin-auth">
     <div class="auth-card">
       <div class="auth-logo">
-        <div class="auth-logo-ar">نكهة الدار</div>
+        <div class="auth-logo-ar"><img src="/icon-512.png" style="width:80px;height:80px;border-radius:14px;margin-bottom:8px"><br>نكهة الدار</div>
         <div class="auth-logo-sub">Administration — لوحة الإدارة</div>
       </div>
       <div class="auth-title">Connexion Admin</div>
@@ -344,8 +344,13 @@ function renderSidebar() {
   return `
   <div class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-ar">نكهة الدار</div>
-      <div class="logo-en">ADMIN PANEL v2.0</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="/icon-192.png" alt="نكهة الدار" style="width:36px;height:36px;border-radius:8px">
+        <div>
+          <div class="logo-ar">نكهة الدار</div>
+          <div class="logo-en">ADMIN PANEL v2.0</div>
+        </div>
+      </div>
     </div>
     <nav class="sidebar-nav">
       ${pages.map(s=>`
