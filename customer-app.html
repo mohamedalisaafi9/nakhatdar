@@ -1107,7 +1107,15 @@ async function placeOrder(){
           p_quantity:S.cart[id]
         });
       }
-      // 2. Call checkout function
+
+      // 2. Sync monthly_spend to profiles BEFORE checkout
+      // So checkout() reads the correct loyalty tier
+      await db.from('profiles')
+        .update({ monthly_spend: S.spend })
+        .eq('id', S.user.id);
+
+      // 3. Call checkout function with loyalty percentage from frontend
+      const loyaltyPct = getDisc();
       const{data,error}=await db.rpc('checkout',{
         p_user_id:    S.user.id,
         p_governorate:S.df.gov,
@@ -1116,7 +1124,8 @@ async function placeOrder(){
         p_street:     S.df.street||'',
         p_house:      S.df.house||'',
         p_phone:      S.df.phone,
-        p_coupon_code:S.coupon||null
+        p_coupon_code:S.coupon||null,
+        p_loyalty_pct:loyaltyPct
       });
       if(error){
         console.log('Checkout error:',error);
