@@ -6,18 +6,9 @@
 <title>نكهة الدار</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1a4731">
+<meta http-equiv="refresh" content="0; url=/customer-app.html">
 </head>
 <body>
-<script>
-  // Force reload with version timestamp to bypass cache
-  const VERSION = '20260609_001';
-  const stored = localStorage.getItem('app_version');
-  if (stored !== VERSION) {
-    localStorage.setItem('app_version', VERSION);
-    window.location.href = '/customer-app.html?v=' + VERSION;
-  } else {
-    window.location.href = '/customer-app.html?v=' + VERSION;
-  }
-</script>
+<script>window.location.href='/customer-app.html';</script>
 </body>
 </html>
