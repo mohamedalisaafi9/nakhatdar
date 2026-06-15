@@ -1311,20 +1311,58 @@ function toggleCoupon(code) {
   if (c) { c.isActive=!c.isActive; toast(c.isActive?`Coupon ${code} activé`:`Coupon ${code} désactivé`); render(); }
 }
 
-function sendNotification() {
+async function sendNotification() {
   const title = document.getElementById('notif-title')?.value?.trim();
   const body  = document.getElementById('notif-body')?.value?.trim();
+  const target = document.querySelector('#notif-dest')?.value || 'all';
   if (!title || !body) { toast('Titre et message obligatoires','error'); return; }
-  toast(`✅ Notification "${title}" envoyée à tous les clients !`);
+
+  if (db) {
+    try {
+      // Send to all users (user_id = NULL means broadcast)
+      const { error } = await db.from('notifications').insert({
+        user_id: null,
+        title_ar: title,
+        title_fr: title,
+        title_en: title,
+        body_ar: body,
+        body_fr: body,
+        body_en: body,
+        type: 'admin_push',
+        is_read: false
+      });
+      if (error) { toast('Erreur: ' + error.message, 'error'); return; }
+      toast(`✅ Notification "${title}" envoyée à tous les clients !`);
+      playOrderSound();
+    } catch(e) {
+      toast('Erreur: ' + e.message, 'error');
+      return;
+    }
+  } else {
+    toast(`✅ Notification "${title}" envoyée (mode local)`);
+  }
   document.getElementById('notif-title').value='';
   document.getElementById('notif-body').value='';
 }
 
-function sendNotifModal() {
+async function sendNotifModal() {
   const title = document.getElementById('modal-notif-title')?.value?.trim();
   const body  = document.getElementById('modal-notif-body')?.value?.trim();
   if (!title || !body) { toast('Titre et message obligatoires','error'); return; }
-  toast(`✅ Notification envoyée !`);
+
+  if (db) {
+    try {
+      await db.from('notifications').insert({
+        user_id: null,
+        title_fr: title, title_ar: title, title_en: title,
+        body_fr: body, body_ar: body, body_en: body,
+        type: 'admin_push', is_read: false
+      });
+      toast(`✅ Notification envoyée !`);
+    } catch(e) { toast('Erreur: ' + e.message, 'error'); }
+  } else {
+    toast(`✅ Notification envoyée (mode local)`);
+  }
   closeModal();
 }
 
@@ -1749,6 +1787,33 @@ async function loadAdminData() {
 }
 
 // ── REALTIME — nouvelles commandes ──
+// ── SON NOTIFICATION COMMANDE ──
+function playOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Mélodie : 3 bips rapides puis 1 long
+    const notes = [
+      {freq: 880, start: 0, dur: 0.12},
+      {freq: 880, start: 0.15, dur: 0.12},
+      {freq: 880, start: 0.30, dur: 0.12},
+      {freq: 1174, start: 0.50, dur: 0.35}
+    ];
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = n.freq;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + n.start);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + n.start + n.dur);
+      osc.start(ctx.currentTime + n.start);
+      osc.stop(ctx.currentTime + n.start + n.dur + 0.05);
+    });
+  } catch(e) { console.log('Sound not available'); }
+}
+
+// ── REALTIME — nouvelles commandes ──
 function listenOrders() {
   if (!db) return;
   try {
@@ -1762,6 +1827,8 @@ function listenOrders() {
         const o = payload.new;
         // Reload all data to get fresh state
         await loadAdminData();
+        // Sound notification
+        playOrderSound();
         toast('🔔 Nouvelle commande reçue ! ' + (o.order_number || ''));
         render();
       })

@@ -392,7 +392,7 @@ function saveS(){
       cart:S.cart, favs:[...S.favs], user:S.user,
       lang:S.lang, spend:S.spend,
       history:S.orderHistory, addrs:S.savedAddresses,
-      df:S.df
+      df:S.df, msgs:S.msgs
     }));
   }catch(e){}
 }
@@ -407,6 +407,7 @@ function loadS(){
     if(d.history)S.orderHistory=d.history;
     if(d.addrs)S.savedAddresses=d.addrs;
     if(d.df)S.df=d.df;
+    if(d.msgs)S.msgs=d.msgs;
   }catch(e){}
 }
 
@@ -1335,7 +1336,7 @@ function startTimer(){
 /* ═══════ AI CLAUDE ═══════ */
 const AI_URL='https://ahneptqrbbtraysfsjjk.supabase.co/functions/v1/ai-chat';
 const AI_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobmVwdHFyYmJ0cmF5c2ZzamprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE5ODEsImV4cCI6MjA5NjU2Nzk4MX0.iUbGqgfe_j9I5_X4eXsFVKd9Whl0Y7ktJ1McvG9kzWc';
-const MAX_MSGS_PER_DAY=100;
+const MAX_MSGS_PER_DAY=20;
 function getAIUsage(){const today=new Date().toDateString();const d=JSON.parse(localStorage.getItem('ai_usage')||'{"date":"","count":0}');if(d.date!==today)return{date:today,count:0};return d;}
 function incAI(){const u=getAIUsage();u.count++;localStorage.setItem('ai_usage',JSON.stringify(u));return u.count;}
 function getRemainingMsgs(){return Math.max(0,MAX_MSGS_PER_DAY-getAIUsage().count);}
@@ -1484,6 +1485,23 @@ async function initDB(){
           }
         })
         .subscribe();
+
+      // ── Écouter les notifications admin ──
+      db.channel('my-notifs')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications'
+        }, payload => {
+          const n = payload.new;
+          // Afficher si notification broadcast (user_id = null) ou pour cet utilisateur
+          if (!n.user_id || n.user_id === S.user.id) {
+            const title = S.lang==='ar' ? n.title_ar : S.lang==='fr' ? n.title_fr : n.title_en;
+            const body = S.lang==='ar' ? n.body_ar : S.lang==='fr' ? n.body_fr : n.body_en;
+            toast(`🔔 ${title}: ${body}`);
+          }
+        })
+        .subscribe();
     }
 
     // ── Écouter changements auth ──
@@ -1559,23 +1577,6 @@ if('serviceWorker' in navigator){
     window.location.reload(true);
   });
 }
-
-// Auto-check for new version every 10 minutes
-setInterval(async()=>{
-  try{
-    const res=await fetch('/customer-app.html?nocache='+Date.now(),{cache:'no-store'});
-    const text=await res.text();
-    const match=text.match(/app-version.*?content="([^"]+)"/);
-    if(match){
-      const newVersion=match[1];
-      const currentVersion=document.querySelector('meta[name="app-version"]')?.content;
-      if(newVersion&&currentVersion&&newVersion!==currentVersion){
-        toast(L('يوجد تحديث جديد! جاري التحديث...','Nouvelle mise à jour! Actualisation...','New update! Refreshing...'),'🔄');
-        setTimeout(()=>window.location.reload(true),2000);
-      }
-    }
-  }catch(e){}
-},10*60*1000);
 </script>
 </body>
 </html>
