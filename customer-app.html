@@ -1554,28 +1554,9 @@ loadS();
 if(typeof supabase!=='undefined'){initDB();}else{render();}
 
 if('serviceWorker' in navigator){
-  // Unregister old service workers to force fresh load
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(reg=>reg.unregister());
-  });
-  
-  navigator.serviceWorker.register('/sw.js?v='+Date.now()).then(reg=>{
-    // Check for updates every 5 minutes
-    setInterval(()=>reg.update(),5*60*1000);
-    
-    reg.addEventListener('updatefound',()=>{
-      const w=reg.installing;
-      w.addEventListener('statechange',()=>{
-        if(w.state==='installed'){
-          w.postMessage('skipWaiting');
-        }
-      });
-    });
+  navigator.serviceWorker.register('/sw.js').then(reg=>{
+    console.log('SW registered');
   }).catch(e=>console.log('SW error:',e));
-  
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    window.location.reload(true);
-  });
 }
 </script>
 </body>
