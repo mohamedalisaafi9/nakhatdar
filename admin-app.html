@@ -703,7 +703,7 @@ function renderProducts() {
         <thead><tr><th></th><th>Nom</th><th>Cat.</th><th>Prix</th><th>Promo</th><th>Stock</th><th>Statut</th><th>Actions</th></tr></thead>
         <tbody>${prods.map(p=>`
         <tr>
-          <td class="td-emoji">${p.emoji||p.e||'📦'}</td>
+          <td class="td-emoji">${(function(s){if(!s||s.length<=4)return s||'📦';return '<img src="'+s+'" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px">';})(p.emoji||p.e)}</td>
           <td>
             <div style="font-weight:600">${p.name}</div>
             <div style="font-size:11px;color:var(--text-mid)">${p.fr||''}</div>
@@ -1253,26 +1253,14 @@ async function saveProduct() {
   const price  = parseFloat(document.getElementById('prod-price')?.value);
   const stock  = parseFloat(document.getElementById('prod-stock')?.value||0);
   const emoji  = document.getElementById('prod-emoji')?.value?.trim() || '📦';
-  const catFr  = document.getElementById('prod-cat')?.value || 'Épices';
+  const categoryId = document.getElementById('prod-cat')?.value || null;
+  const catFr  = document.getElementById('prod-cat')?.selectedOptions?.[0]?.text || 'Épices';
   const promo  = parseFloat(document.getElementById('prod-promo')?.value) || null;
   const unit   = document.getElementById('prod-unit')?.value || '100g';
   const desc   = document.getElementById('prod-desc')?.value?.trim() || '';
 
   if (!nameAr || !nameFr || isNaN(price)) {
     toast('Remplissez les champs obligatoires (*)','error'); return;
-  }
-
-  // Find category_id from name
-  let categoryId = null;
-  if (db) {
-    try {
-      const { data: cats } = await db
-        .from('categories')
-        .select('id, name_fr')
-        .eq('name_fr', catFr)
-        .single();
-      if (cats) categoryId = cats.id;
-    } catch(e) {}
   }
 
   if (db) {
@@ -1510,7 +1498,7 @@ function renderProductForm(p) {
       <input class="form-input" id="prod-name-fr" value="${p.fr||''}" placeholder="Nom en français"></div>
     <div class="form-group"><label class="form-label">Catégorie</label>
       <select class="form-select" id="prod-cat">
-        ${['Fruits séchés','Fruits secs','Pâtes Si twebli','Épices','Herbes','Légumineuses','Traditionnels','Bien être'].map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('')}
+        ${MOCK.categories.map(c=>`<option value="${c.id}" ${c.id===p.category_id?'selected':''}>${c.name}</option>`).join('')}
       </select></div>
     <div class="form-group"><label class="form-label">Unité</label>
       <input class="form-input" id="prod-unit" value="${p.unit||'100g'}" placeholder="100g, 500ml..."></div>
@@ -1524,7 +1512,7 @@ function renderProductForm(p) {
       <input class="form-input" id="prod-emoji" value="${p.emoji||'📦'}" placeholder="🌶️"></div>
   </div>
   <div class="form-group" style="margin-top:10px"><label class="form-label">Description</label>
-    <textarea class="form-textarea" id="prod-desc" placeholder="Description du produit...">${p.description||''}</textarea></div>
+    <textarea class="form-textarea" id="prod-desc" placeholder="Description du produit...">${p.description||p.desc||''}</textarea></div>
   <div class="form-actions">
     <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
     <button class="btn btn-primary" onclick="saveProduct()">💾 ${adminState.modal==='edit-product'?'Modifier':'Ajouter'}</button>
@@ -1840,14 +1828,32 @@ async function loadAdminData() {
         emoji: p.images?.[0] || '📦',
         name: p.name_ar,
         fr: p.name_fr,
+        en: p.name_en || '',
         cat: p.categories?.name_fr || 'Épices',
+        category_id: p.category_id,
         price: parseFloat(p.price),
         promoPrice: p.promo_price ? parseFloat(p.promo_price) : null,
         stock: parseFloat(p.stock_qty||0),
         unit: p.unit || '100g',
-        isActive: p.is_active
+        isActive: p.is_active,
+        description: p.description_ar || ''
       }));
       console.log('✅ Products loaded:', prods.length);
+    }
+
+    // Load categories from Supabase
+    const { data: cats } = await db.from('categories').select('*').order('sort_order');
+    if (cats && cats.length > 0) {
+      MOCK.categories = cats.map(c => ({
+        id: c.id, name: c.name_fr, nameAr: c.name_ar, nameEn: c.name_en,
+        icon: c.icon_url || '🏷️', count: 0, isActive: c.is_active
+      }));
+      // Count products per category
+      MOCK.products.forEach(p => {
+        const cat = MOCK.categories.find(c => c.id === p.category_id);
+        if (cat) cat.count++;
+      });
+      console.log('✅ Categories loaded:', cats.length);
     }
 
     // Load zones

@@ -485,11 +485,17 @@ function renderNav(){
     ${t.id==='cart'&&c>0?`<span class="ni-bd">${c}</span>`:''}
   </button>`).join('')}</div>`;}
 
+/* ── IMAGE HELPER ── */
+function pimg(src){
+  if(!src || src.length<=4) return src||'📦';
+  return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`;
+}
+
 /* ── PRODUCT CARD ── */
 function pc(p){
   const price=p.pp||p.p, inc=S.cart[p.id]||0, fav=S.favs.has(p.id);
   return `<div class="pc" onclick="S.detailId='${p.id}';render()">
-    <div class="pc-img">${p.e}
+    <div class="pc-img">${pimg(p.e)}
       ${p.pp?`<span class="pc-disc">−${Math.round((1-p.pp/p.p)*100)}%</span>`:''}
       ${p.new&&!p.pp?`<span class="pc-new">${L('جديد','Nouveau','New')}</span>`:''}
       <button class="pc-fav" onclick="event.stopPropagation();toggleFav('${p.id}')">${fav?'❤️':'🤍'}</button>
@@ -641,7 +647,7 @@ function renderCart(){
       🎁 ${fp(Math.max(0,200-sub))} ${L('متبقي للهدية المجانية!','restants pour le cadeau!','left for free gift!')}</div>`}
     ${items.map(p=>`
     <div class="ci">
-      <div class="ci-img">${p.e}</div>
+      <div class="ci-img">${pimg(p.e)}</div>
       <div class="ci-body">
         <div class="ci-name">${S.lang==='ar'?p.ar:p.fr}</div>
         <div class="ci-unit">${p.u} · ${fp(p.pp||p.p)}</div>
@@ -787,7 +793,7 @@ function renderDetail(){
   const p=PRODS.find(x=>x.id===S.detailId); if(!p)return '';
   const price=p.pp||p.p, qty=S.cart[p.id]||0;
   return `<div>
-    <div class="pd-img">${p.e}</div>
+    <div class="pd-img">${pimg(p.e)}</div>
     <div class="pd-body">
       <div class="pd-name">${S.lang==='ar'?p.ar:p.fr}</div>
       <div class="pd-unit">${p.u}</div>
