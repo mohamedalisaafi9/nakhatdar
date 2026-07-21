@@ -384,7 +384,8 @@ const MOCK = {
     {name:'لوز طبيعي',sales:62,revenue:620,emoji:'🥜'},
     {name:'هريسة تونسية',sales:91,revenue:382,emoji:'🏺'},
     {name:'كركم أصلي',sales:44,revenue:260,emoji:'🟡'}
-  ]
+  ],
+  promotions: []
 };
 
 // ═══════════════════════════════════════
@@ -756,43 +757,93 @@ function renderCategories() {
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
           <span class="badge ${c.isActive?'badge-active':'badge-inactive'}">${c.isActive?'Actif':'Inactif'}</span>
-          <button class="btn btn-outline btn-sm">✏️ Edit</button>
+          <button class="btn btn-outline btn-sm" onclick="openModal('edit-category',MOCK.categories.find(x=>x.id==='${c.id}'))">✏️ Edit</button>
         </div>
       </div>
     </div>`).join('')}
   </div>`;
 }
 
+function renderCategoryForm(cat) {
+  cat = cat || {};
+  return `
+  <div class="form-grid">
+    <div class="form-group"><label class="form-label">Nom français *</label><input class="form-input" id="cat-name-fr" value="${cat.name||''}" placeholder="Épices"></div>
+    <div class="form-group"><label class="form-label">Nom arabe *</label><input class="form-input" id="cat-name-ar" value="${cat.nameAr||''}" placeholder="التوابل"></div>
+    <div class="form-group"><label class="form-label">Nom anglais</label><input class="form-input" id="cat-name-en" value="${cat.nameEn||''}" placeholder="Spices"></div>
+    <div class="form-group"><label class="form-label">Icône (emoji ou URL)</label><input class="form-input" id="cat-icon" value="${cat.icon||''}" placeholder="🌿"></div>
+    <div class="form-group"><label class="form-label">Ordre d'affichage</label><input class="form-input" type="number" id="cat-sort" value="${cat.sortOrder||0}"></div>
+    <div class="form-group"><label class="form-label">Statut</label>
+      <select class="form-select" id="cat-active"><option value="true" ${cat.isActive!==false?'selected':''}>Actif</option><option value="false" ${cat.isActive===false?'selected':''}>Inactif</option></select>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+    <button class="btn btn-primary" onclick="saveCategory('${cat.id||''}')">💾 Enregistrer</button>
+  </div>`;
+}
+
+async function saveCategory(catId) {
+  if (!db) { toast('Connexion Supabase requise','error'); return; }
+  const nameFr = document.getElementById('cat-name-fr').value.trim();
+  const nameAr = document.getElementById('cat-name-ar').value.trim();
+  const nameEn = document.getElementById('cat-name-en').value.trim();
+  const icon = document.getElementById('cat-icon').value.trim();
+  const sortOrder = parseInt(document.getElementById('cat-sort').value) || 0;
+  const isActive = document.getElementById('cat-active').value === 'true';
+  if (!nameFr || !nameAr) { toast('Nom FR et AR obligatoires','error'); return; }
+  const slug = nameFr.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+$/,'');
+  const payload = { name_fr: nameFr, name_ar: nameAr, name_en: nameEn || nameFr, icon_url: icon, sort_order: sortOrder, is_active: isActive, slug };
+  try {
+    if (catId) {
+      const { error } = await db.from('categories').update(payload).eq('id', catId);
+      if (error) throw error;
+      toast('✅ Catégorie modifiée !');
+    } else {
+      const { error } = await db.from('categories').insert(payload);
+      if (error) throw error;
+      toast('✅ Catégorie créée !');
+    }
+    closeModal();
+    await loadAdminData();
+    render();
+  } catch(e) { toast('Erreur: ' + e.message, 'error'); }
+}
+
 // ── PROMOTIONS ──
 function renderPromotions() {
+  const promos = MOCK.promotions || [];
+  const colorMap = {flash:'#ffebee', weekly:'#e3f2fd', seasonal:'#fff3e0', banner:'#e8f5e9'};
+  const typeLabel = {flash:'Flash', weekly:'Hebdomadaire', seasonal:'Saisonnière', banner:'Bannière'};
   return `
   <div class="card">
     <div class="card-header">
-      <div class="card-title">🔥 Promotions actives</div>
+      <div class="card-title">🔥 Promotions (${promos.length})</div>
       <button class="btn btn-primary" onclick="openModal('add-promo')">+ Nouvelle promo</button>
     </div>
     <div class="card-body">
-      ${[
-        {type:'Flash',title:'Vente flash — Épices',disc:'25%',valid:'Expire dans 2h',color:'#ffebee',status:'active'},
-        {type:'Hebdo',title:'Promotion semaine',disc:'15%',valid:'Expire dans 5 jours',color:'#e3f2fd',status:'active'},
-        {type:'Saisonnière',title:'Spécial Ramadan',disc:'20%',valid:'En attente',color:'#fff3e0',status:'scheduled'}
-      ].map(p=>`
-      <div style="background:${p.color};border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;margin-bottom:8px">
+      ${promos.length===0?'<p style="color:var(--text-mid);text-align:center;padding:20px">Aucune promotion. Créez-en une !</p>':''}
+      ${promos.map(p=>{
+        const color = colorMap[p.promoType]||'#f5f5f5';
+        const status = p.isActive ? 'active' : 'inactive';
+        const validText = p.validUntil ? (new Date(p.validUntil) > new Date() ? 'Expire le '+new Date(p.validUntil).toLocaleDateString('fr') : 'Expiré') : 'Pas de date limite';
+        return `
+      <div style="background:${color};border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;margin-bottom:8px">
         <div style="font-size:32px">🔥</div>
         <div style="flex:1">
-          <div style="font-size:12px;font-weight:600;color:var(--text-mid)">${p.type}</div>
-          <div style="font-size:14px;font-weight:700">${p.title}</div>
-          <div style="font-size:12px;color:var(--text-mid)">${p.valid}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-mid)">${typeLabel[p.promoType]||p.promoType}</div>
+          <div style="font-size:14px;font-weight:700">${p.titleFr||p.titleAr||'Sans titre'}</div>
+          <div style="font-size:12px;color:var(--text-mid)">${validText}</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:24px;font-weight:800;color:var(--red)">−${p.disc}</div>
-          <span class="badge ${p.status==='active'?'badge-active':'badge-inactive'}">${p.status}</span>
+          <div style="font-size:24px;font-weight:800;color:var(--red)">−${p.discountPct||0}%</div>
+          <span class="badge ${status==='active'?'badge-active':'badge-inactive'}">${status}</span>
         </div>
         <div style="display:flex;gap:4px">
-          <button class="btn btn-outline btn-sm">✏️</button>
-          <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:1px solid #ffcdd2">🗑️</button>
+          <button class="btn btn-outline btn-sm" onclick="openModal('edit-promo',MOCK.promotions.find(x=>x.id==='${p.id}'))">✏️</button>
+          <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:1px solid #ffcdd2" onclick="deletePromotion('${p.id}')">🗑️</button>
         </div>
-      </div>`).join('')}
+      </div>`;}).join('')}
     </div>
   </div>`;
 }
@@ -1128,22 +1179,71 @@ function renderNotifModal() {
   </div>`;
 }
 
-function renderPromoForm() {
+function renderPromoForm(promo) {
+  promo = promo || {};
+  const fmtDate = d => d ? new Date(d).toISOString().slice(0,16) : '';
   return `
   <div class="form-grid">
-    <div class="form-group"><label class="form-label">Titre (FR)</label><input class="form-input" placeholder="Titre promotion"></div>
-    <div class="form-group"><label class="form-label">Titre (AR)</label><input class="form-input" placeholder="عنوان الترقية"></div>
+    <div class="form-group"><label class="form-label">Titre (FR) *</label><input class="form-input" id="promo-title-fr" value="${promo.titleFr||''}" placeholder="Titre promotion"></div>
+    <div class="form-group"><label class="form-label">Titre (AR)</label><input class="form-input" id="promo-title-ar" value="${promo.titleAr||''}" placeholder="عنوان الترقية"></div>
     <div class="form-group"><label class="form-label">Type</label>
-      <select class="form-select"><option>Flash</option><option>Hebdomadaire</option><option>Saisonnière</option></select>
+      <select class="form-select" id="promo-type">
+        <option value="flash" ${promo.promoType==='flash'?'selected':''}>Flash</option>
+        <option value="weekly" ${promo.promoType==='weekly'?'selected':''}>Hebdomadaire</option>
+        <option value="seasonal" ${promo.promoType==='seasonal'?'selected':''}>Saisonnière</option>
+        <option value="banner" ${promo.promoType==='banner'?'selected':''}>Bannière</option>
+      </select>
     </div>
-    <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" placeholder="20"></div>
-    <div class="form-group"><label class="form-label">Début</label><input class="form-input" type="datetime-local"></div>
-    <div class="form-group"><label class="form-label">Fin</label><input class="form-input" type="datetime-local"></div>
+    <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" id="promo-discount" value="${promo.discountPct||''}" placeholder="20"></div>
+    <div class="form-group"><label class="form-label">Début</label><input class="form-input" type="datetime-local" id="promo-start" value="${fmtDate(promo.validFrom)}"></div>
+    <div class="form-group"><label class="form-label">Fin</label><input class="form-input" type="datetime-local" id="promo-end" value="${fmtDate(promo.validUntil)}"></div>
+    <div class="form-group"><label class="form-label">Statut</label>
+      <select class="form-select" id="promo-active"><option value="true" ${promo.isActive!==false?'selected':''}>Actif</option><option value="false" ${promo.isActive===false?'selected':''}>Inactif</option></select>
+    </div>
   </div>
   <div class="form-actions">
     <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
-    <button class="btn btn-primary" onclick="closeModal();toast('✅ Promotion créée!')">💾 Créer</button>
+    <button class="btn btn-primary" onclick="savePromotion('${promo.id||''}')">💾 ${promo.id?'Modifier':'Créer'}</button>
   </div>`;
+}
+
+async function savePromotion(promoId) {
+  if (!db) { toast('Connexion Supabase requise','error'); return; }
+  const titleFr = document.getElementById('promo-title-fr').value.trim();
+  const titleAr = document.getElementById('promo-title-ar').value.trim();
+  const promoType = document.getElementById('promo-type').value;
+  const discount = parseFloat(document.getElementById('promo-discount').value) || 0;
+  const start = document.getElementById('promo-start').value;
+  const end = document.getElementById('promo-end').value;
+  const isActive = document.getElementById('promo-active').value === 'true';
+  if (!titleFr) { toast('Titre FR obligatoire','error'); return; }
+  const payload = { title_fr: titleFr, title_ar: titleAr, promo_type: promoType, discount_pct: discount, valid_from: start||null, valid_until: end||null, is_active: isActive };
+  try {
+    if (promoId) {
+      const { error } = await db.from('promotions').update(payload).eq('id', promoId);
+      if (error) throw error;
+      toast('✅ Promotion modifiée !');
+    } else {
+      const { error } = await db.from('promotions').insert(payload);
+      if (error) throw error;
+      toast('✅ Promotion créée !');
+    }
+    closeModal();
+    await loadAdminData();
+    render();
+  } catch(e) { toast('Erreur: ' + e.message, 'error'); }
+}
+
+async function deletePromotion(promoId) {
+  if (!confirm('Supprimer cette promotion ?')) return;
+  if (!db) { toast('Connexion Supabase requise','error'); return; }
+  try {
+    const { error } = await db.from('promotions').delete().eq('id', promoId);
+    if (error) throw error;
+    toast('✅ Promotion supprimée !');
+    await loadAdminData();
+    render();
+  } catch(e) { toast('Erreur: ' + e.message, 'error'); }
 }
 
 // ── STATUS BADGE HELPER ──
@@ -1636,6 +1736,8 @@ function renderModal() {
     case 'add-zone':     title=adminState.editItem?'Modifier la zone':'Nouvelle zone'; body=renderZoneForm(adminState.editItem||{}); break;
     case 'send-notif':   title='Envoyer une notification';  body=renderNotifModal(); break;
     case 'add-promo':    title='Nouvelle promotion';        body=renderPromoForm(); break;
+    case 'edit-category':title=adminState.editItem?'Modifier la catégorie':'Nouvelle catégorie'; body=renderCategoryForm(adminState.editItem||{}); break;
+    case 'edit-promo':   title='Modifier la promotion';    body=renderPromoForm(adminState.editItem); break;
     case 'view-order':   title='Détail commande';           body=renderOrderDetail(adminState.editItem); break;
     case 'assign-driver':title='Assigner un livreur';       body=renderAssignDriverModal(adminState.editItem); break;
     default: return '';
@@ -1955,8 +2057,9 @@ async function loadAdminData() {
     const { data: cats } = await db.from('categories').select('*').order('sort_order');
     if (cats && cats.length > 0) {
       MOCK.categories = cats.map(c => ({
-        id: c.id, name: c.name_fr, nameAr: c.name_ar, nameEn: c.name_en,
-        icon: c.icon_url || '🏷️', count: 0, isActive: c.is_active
+        id: c.id, name: c.name_fr, nameAr: c.name_ar, nameEn: c.name_en || '',
+        icon: c.icon_url || '🏷️', count: 0, isActive: c.is_active,
+        sortOrder: c.sort_order || 0
       }));
       // Count products per category
       MOCK.products.forEach(p => {
@@ -2001,6 +2104,17 @@ async function loadAdminData() {
         tier: p.loyalty_tier || 'starter',
         lastOrder: MOCK.orders.find(o=>o.customer===p.full_name)?.date || '—'
       }));
+    }
+
+    // Load promotions
+    const { data: promosData } = await db.from('promotions').select('*').order('created_at', { ascending: false });
+    if (promosData) {
+      MOCK.promotions = promosData.map(p => ({
+        id: p.id, titleFr: p.title_fr, titleAr: p.title_ar, titleEn: p.title_en,
+        promoType: p.promo_type, discountPct: parseFloat(p.discount_pct||0),
+        validFrom: p.valid_from, validUntil: p.valid_until, isActive: p.is_active
+      }));
+      console.log('✅ Promotions loaded:', promosData.length);
     }
 
   } catch(e) { console.log('Admin data error:', e.message); }
