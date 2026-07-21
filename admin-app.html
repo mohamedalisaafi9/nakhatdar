@@ -142,6 +142,16 @@ tbody tr:last-child td{border-bottom:none}
 /* ── CHART WRAP ── */
 .chart-wrap{height:220px;position:relative}
 
+/* ── IMAGE UPLOAD ── */
+.img-upload-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);position:relative}
+.img-upload-zone:hover{border-color:var(--green);background:var(--green-pale)}
+.img-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.img-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.img-preview-item{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid var(--border)}
+.img-preview-item img{width:100%;height:100%;object-fit:cover}
+.img-preview-item .img-remove{position:absolute;top:2px;right:2px;width:20px;height:20px;background:var(--red);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.img-uploading{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gold-pale);border-radius:8px;font-size:12px;color:var(--green-dark);margin-top:8px}
+
 /* ── STATUS SELECT ── */
 .status-select{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;background:var(--white)}
 
@@ -1166,7 +1176,7 @@ function toast(msg, type='success') {
 // ═══════════════════════════════════════
 function setPage(p) { adminState.page=p; adminState.searchQ=''; adminState.filterStatus='all'; render(); }
 function openModal(m, item) { adminState.modal=m; adminState.editItem=item||null; render(); }
-function closeModal() { adminState.modal=null; adminState.editItem=null; render(); }
+function closeModal() { adminState.modal=null; adminState.editItem=null; pendingImages=[]; render(); }
 
 function doLogin() {
   if (!adminState.loginForm.email || !adminState.loginForm.pass) {
@@ -1263,10 +1273,12 @@ async function saveProduct() {
     toast('Remplissez les champs obligatoires (*)','error'); return;
   }
 
+  // Build images array: uploaded images first, emoji as fallback
+  const imagesList = pendingImages.length > 0 ? [...pendingImages] : [emoji];
+
   if (db) {
     try {
       if (isEdit && adminState.editItem) {
-        // Update in Supabase
         const { error } = await db
           .from('products')
           .update({
@@ -1279,7 +1291,7 @@ async function saveProduct() {
             promo_price:  promo || null,
             unit:         unit,
             stock_qty:    stock,
-            images:       [emoji],
+            images:       imagesList,
             category_id:  categoryId,
             updated_at:   new Date().toISOString()
           })
@@ -1289,7 +1301,6 @@ async function saveProduct() {
         toast('✅ Produit modifié dans Supabase !');
 
       } else {
-        // Insert new product in Supabase
         const { data, error } = await db
           .from('products')
           .insert({
@@ -1303,7 +1314,7 @@ async function saveProduct() {
             unit:          unit,
             stock_qty:     stock,
             stock_unit:    'kg',
-            images:        [emoji],
+            images:        imagesList,
             category_id:   categoryId,
             is_active:     true,
             is_featured:   false,
@@ -1314,16 +1325,15 @@ async function saveProduct() {
 
         if (error) { toast('Erreur: ' + error.message, 'error'); return; }
 
-        // Add to local MOCK
         MOCK.products.unshift({
-          id: data.id, emoji, name: nameAr, fr: nameFr,
-          cat: catFr, price, promoPrice: promo||null,
-          stock, unit, isActive: true
+          id: data.id, emoji: imagesList[0], images: imagesList,
+          name: nameAr, fr: nameFr, cat: catFr, price,
+          promoPrice: promo||null, stock, unit, isActive: true
         });
         toast('✅ Produit ajouté dans Supabase !');
       }
 
-      // Reload products from Supabase
+      pendingImages = [];
       await loadAdminData();
 
     } catch(e) {
@@ -1331,12 +1341,11 @@ async function saveProduct() {
       return;
     }
   } else {
-    // Fallback local
     if (isEdit && adminState.editItem) {
       const p = MOCK.products.find(x => x.id===adminState.editItem.id);
-      if (p) { p.name=nameAr; p.fr=nameFr; p.price=price; p.promoPrice=promo||null; p.stock=stock; p.emoji=emoji; p.cat=catFr; p.unit=unit; }
+      if (p) { p.name=nameAr; p.fr=nameFr; p.price=price; p.promoPrice=promo||null; p.stock=stock; p.emoji=imagesList[0]; p.images=imagesList; p.cat=catFr; p.unit=unit; }
     } else {
-      MOCK.products.unshift({id:'p'+Date.now(), emoji, name:nameAr, fr:nameFr, cat:catFr, price, promoPrice:promo||null, stock, unit, isActive:true});
+      MOCK.products.unshift({id:'p'+Date.now(), emoji:imagesList[0], images:imagesList, name:nameAr, fr:nameFr, cat:catFr, price, promoPrice:promo||null, stock, unit, isActive:true});
     }
     toast('✅ Produit sauvegardé (mode local)');
   }
@@ -1490,6 +1499,16 @@ function bindEvents() {}
 const _origRenderProductForm = renderProductForm;
 function renderProductForm(p) {
   p = p || {};
+  // Initialize pendingImages with existing product images
+  const existingImages = p.images || [];
+  // If editing, check if emoji is a URL (image) or actual emoji
+  if (adminState.modal === 'edit-product' && p.emoji && p.emoji.startsWith('http')) {
+    pendingImages = [p.emoji, ...existingImages.filter(u => u !== p.emoji)];
+  } else if (existingImages.length > 0 && existingImages[0].startsWith('http')) {
+    pendingImages = [...existingImages];
+  } else {
+    pendingImages = [];
+  }
   return `
   <div class="form-grid">
     <div class="form-group"><label class="form-label">Nom arabe *</label>
@@ -1508,8 +1527,26 @@ function renderProductForm(p) {
       <input class="form-input" type="number" step="0.001" id="prod-promo" value="${p.promoPrice||''}" placeholder="optionnel"></div>
     <div class="form-group"><label class="form-label">Stock</label>
       <input class="form-input" type="number" id="prod-stock" value="${p.stock||0}"></div>
-    <div class="form-group"><label class="form-label">Emoji</label>
-      <input class="form-input" id="prod-emoji" value="${p.emoji||'📦'}" placeholder="🌶️"></div>
+    <div class="form-group"><label class="form-label">Emoji (fallback)</label>
+      <input class="form-input" id="prod-emoji" value="${p.emoji && !p.emoji.startsWith('http') ? p.emoji : '📦'}" placeholder="🌶️"></div>
+  </div>
+  <!-- IMAGE UPLOAD -->
+  <div class="form-group" style="margin-top:12px">
+    <label class="form-label">📷 Images du produit</label>
+    <div class="img-upload-zone" onclick="document.getElementById('prod-img-input').click()">
+      <input type="file" id="prod-img-input" accept="image/*" multiple onchange="handleImageUpload(event)" style="display:none">
+      <div style="font-size:28px;margin-bottom:4px">📷</div>
+      <div style="font-size:13px;color:var(--text-mid)">Cliquez ou glissez vos images ici</div>
+      <div style="font-size:11px;color:var(--text-mid);margin-top:2px">JPG, PNG, WebP — max 5 MB par image</div>
+    </div>
+    <div class="img-preview" id="img-preview-container">
+      ${pendingImages.map((url, i) => `
+        <div class="img-preview-item">
+          <img src="${url}" alt="produit">
+          <button class="img-remove" onclick="removeImage(${i})">✕</button>
+        </div>
+      `).join('')}
+    </div>
   </div>
   <div class="form-group" style="margin-top:10px"><label class="form-label">Description</label>
     <textarea class="form-textarea" id="prod-desc" placeholder="Description du produit...">${p.description||p.desc||''}</textarea></div>
@@ -1586,29 +1623,31 @@ function renderDrivers() {
     </div>`).join('')}
   </div>`;}
 
-// Override orders to include view modal
+// Override orders to include view modal — LAZY evaluation to avoid crashes
 function renderModal() {
-  const modals = {
-    'add-product':  {title:'Nouveau produit',            body: renderProductForm({})},
-    'edit-product': {title:'Modifier le produit',        body: renderProductForm(adminState.editItem||{})},
-    'add-coupon':   {title:'Nouveau coupon',             body: renderCouponForm()},
-    'add-driver':   {title:'Nouveau livreur',            body: renderDriverForm()},
-    'add-zone':     {title: adminState.editItem?'Modifier la zone':'Nouvelle zone', body: renderZoneForm(adminState.editItem||{})},
-    'send-notif':   {title:'Envoyer une notification',   body: renderNotifModal()},
-    'add-promo':    {title:'Nouvelle promotion',         body: renderPromoForm()},
-    'view-order':   {title:'Détail commande',            body: renderOrderDetail(adminState.editItem)},
-    'assign-driver':{title:'Assigner un livreur',        body: renderAssignDriverModal(adminState.editItem)}
-  };
-  const m = modals[adminState.modal];
-  if (!m) return '';
+  const type = adminState.modal;
+  if (!type) return '';
+  let title = '', body = '';
+  switch(type) {
+    case 'add-product':  title='Nouveau produit';           body=renderProductForm({}); break;
+    case 'edit-product': title='Modifier le produit';       body=renderProductForm(adminState.editItem||{}); break;
+    case 'add-coupon':   title='Nouveau coupon';            body=renderCouponForm(); break;
+    case 'add-driver':   title='Nouveau livreur';           body=renderDriverForm(); break;
+    case 'add-zone':     title=adminState.editItem?'Modifier la zone':'Nouvelle zone'; body=renderZoneForm(adminState.editItem||{}); break;
+    case 'send-notif':   title='Envoyer une notification';  body=renderNotifModal(); break;
+    case 'add-promo':    title='Nouvelle promotion';        body=renderPromoForm(); break;
+    case 'view-order':   title='Détail commande';           body=renderOrderDetail(adminState.editItem); break;
+    case 'assign-driver':title='Assigner un livreur';       body=renderAssignDriverModal(adminState.editItem); break;
+    default: return '';
+  }
   return `
   <div class="modal-bg" onclick="if(event.target===this)closeModal()">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">${m.title}</div>
+        <div class="modal-title">${title}</div>
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
-      <div class="modal-body">${m.body}</div>
+      <div class="modal-body">${body}</div>
     </div>
   </div>`;}
 
@@ -1760,6 +1799,76 @@ function renderOrders() {
     </div>
   </div>`;}
 
+/* ═══════════════ IMAGE UPLOAD ═══════════════ */
+let pendingImages = []; // URLs of images pending for current product form
+let isUploading = false;
+
+async function handleImageUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  if (!db) { toast('Connexion Supabase requise pour uploader','error'); return; }
+
+  isUploading = true;
+  updateImagePreview();
+
+  for (const file of files) {
+    // Validate
+    if (!file.type.startsWith('image/')) { toast('Fichier non image ignoré','warning'); continue; }
+    if (file.size > 5 * 1024 * 1024) { toast('Image trop grande (max 5 MB)','error'); continue; }
+
+    // Generate unique filename
+    const ext = file.name.split('.').pop().toLowerCase();
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const path = `products/${filename}`;
+
+    try {
+      const { data, error } = await db.storage
+        .from('product-images')
+        .upload(path, file, { cacheControl: '3600', upsert: false });
+
+      if (error) { toast('Erreur upload: ' + error.message, 'error'); continue; }
+
+      // Get public URL
+      const { data: urlData } = db.storage
+        .from('product-images')
+        .getPublicUrl(path);
+
+      pendingImages.push(urlData.publicUrl);
+      toast('Image uploadée !');
+    } catch(e) {
+      toast('Erreur: ' + e.message, 'error');
+    }
+  }
+
+  isUploading = false;
+  updateImagePreview();
+  event.target.value = ''; // reset input
+}
+
+function removeImage(index) {
+  const removed = pendingImages.splice(index, 1)[0];
+  // Optionally delete from storage
+  if (db && removed) {
+    const path = removed.split('/product-images/')[1];
+    if (path) db.storage.from('product-images').remove([path]).catch(()=>{});
+  }
+  updateImagePreview();
+}
+
+function updateImagePreview() {
+  const container = document.getElementById('img-preview-container');
+  if (!container) return;
+  container.innerHTML = `
+    ${pendingImages.map((url, i) => `
+      <div class="img-preview-item">
+        <img src="${url}" alt="produit">
+        <button class="img-remove" onclick="removeImage(${i})">✕</button>
+      </div>
+    `).join('')}
+    ${isUploading ? '<div class="img-uploading">⏳ Upload en cours...</div>' : ''}
+  `;
+}
+
 /* ═══════════════ SUPABASE ADMIN ═══════════════ */
 const SUPA_URL = 'https://ahneptqrbbtraysfsjjk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobmVwdHFyYmJ0cmF5c2ZzamprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE5ODEsImV4cCI6MjA5NjU2Nzk4MX0.iUbGqgfe_j9I5_X4eXsFVKd9Whl0Y7ktJ1McvG9kzWc';
@@ -1826,6 +1935,7 @@ async function loadAdminData() {
       MOCK.products = prods.map(p => ({
         id: p.id,
         emoji: p.images?.[0] || '📦',
+        images: p.images || [],
         name: p.name_ar,
         fr: p.name_fr,
         en: p.name_en || '',
