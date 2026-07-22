@@ -580,7 +580,7 @@ function renderDashboard() {
             <thead><tr><th>Produit</th><th>Ventes</th><th>Revenu</th></tr></thead>
             <tbody>${MOCK.topProducts.map(p=>`
             <tr>
-              <td>${p.emoji} ${p.name}</td>
+              <td>${adminPimg(p.emoji)} ${p.name}</td>
               <td>${p.sales} unités</td>
               <td style="font-weight:600;color:var(--green)">${p.revenue.toFixed(3)} DT</td>
             </tr>`).join('')}</tbody>
@@ -596,7 +596,7 @@ function renderDashboard() {
             <thead><tr><th>Produit</th><th>Stock</th><th>Statut</th></tr></thead>
             <tbody>${MOCK.products.filter(p=>p.stock<=5).map(p=>`
             <tr>
-              <td>${p.emoji} ${p.name}</td>
+              <td>${adminPimg(p.emoji)} ${p.name}</td>
               <td>${p.stock > 0 ? p.stock+' '+p.unit : '—'}</td>
               <td>${p.stock===0?`<span class="badge badge-outofstock">Épuisé</span>`:`<span class="badge badge-lowstock">Faible (${p.stock})</span>`}</td>
             </tr>`).join('')}</tbody>
@@ -1250,6 +1250,15 @@ async function deletePromotion(promoId) {
 function renderStatusBadge(status) {
   const labels = {received:'Reçu',preparing:'En prép.',ready:'Prêt',out_for_delivery:'En route',delivered:'Livré',cancelled:'Annulé'};
   return `<span class="badge badge-${status.replace('_','')}">${labels[status]||status}</span>`;
+}
+
+// ═══════════════════════════════════════
+// IMAGE HELPER — emoji vs URL
+// ═══════════════════════════════════════
+function adminPimg(src, size) {
+  size = size || 28;
+  if (!src || src.length <= 4) return src || '📦';
+  return `<img src="${src}" alt="" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;vertical-align:middle">`;
 }
 
 // ═══════════════════════════════════════

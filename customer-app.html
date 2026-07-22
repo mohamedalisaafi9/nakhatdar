@@ -107,10 +107,10 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .pg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
 .psc{display:flex;gap:10px;overflow-x:auto;padding:0 16px 16px}
 .psc::-webkit-scrollbar{display:none}
-.psc .pc{min-width:140px;flex-shrink:0}
+.psc .pc{min-width:140px;max-width:160px;flex-shrink:0}
 .pc{background:var(--wh);border-radius:var(--r14);box-shadow:var(--sh);overflow:hidden;cursor:pointer;border:1px solid var(--bm)}
 .pc:active{transform:scale(.97)}
-.pc-img{width:100%;aspect-ratio:1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative}
+.pc-img{width:100%;aspect-ratio:1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden}
 .pc-disc{position:absolute;top:6px;right:6px;background:var(--rd);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
 .pc-new{position:absolute;top:6px;right:6px;background:var(--gm);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
 .pc-fav{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
@@ -152,7 +152,7 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .cart-wrap{padding:12px 16px 80px}
 .cart-empty{text-align:center;padding:60px 20px}
 .ci{background:var(--wh);border-radius:var(--r14);border:1px solid var(--bm);padding:10px;display:flex;gap:10px;margin-bottom:8px;box-shadow:var(--sh)}
-.ci-img{width:56px;height:56px;background:var(--bei);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.ci-img{width:56px;height:56px;background:var(--bei);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden}
 .ci-body{flex:1}
 .ci-name{font-size:13px;font-weight:700}
 .ci-unit{font-size:10px;color:var(--ts)}
@@ -203,7 +203,7 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .lang-opt.active{background:var(--g);color:#fff;border-color:var(--g)}
 
 /* PRODUCT DETAIL */
-.pd-img{width:100%;aspect-ratio:1.1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:90px}
+.pd-img{width:100%;max-height:300px;aspect-ratio:1.1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:90px;overflow:hidden}
 .pd-body{padding:16px 16px 80px}
 .pd-name{font-size:18px;font-weight:900;margin-bottom:4px}
 .pd-unit{font-size:12px;color:var(--ts);margin-bottom:10px}
@@ -248,6 +248,46 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 
 /* TOAST */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gd);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:700;font-family:Cairo,sans-serif;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center}
+
+/* PWA INSTALL BANNER */
+.pwa-bar{position:fixed;bottom:0;left:0;right:0;background:var(--gd);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:1000;font-family:Cairo,sans-serif;box-shadow:0 -2px 12px rgba(0,0,0,.25);max-width:430px;margin:0 auto}
+.pwa-bar-icon{width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0}
+.pwa-bar-icon img{width:100%;height:100%;object-fit:cover}
+.pwa-bar-txt{flex:1}
+.pwa-bar-txt div:first-child{font-size:13px;font-weight:700}
+.pwa-bar-txt div:last-child{font-size:10px;opacity:.7}
+.pwa-bar-btn{background:var(--go);color:var(--gd);border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;flex-shrink:0}
+.pwa-bar-close{background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px}
+
+/* ONBOARDING */
+.onb-overlay{position:fixed;inset:0;z-index:2000;background:var(--gd);display:flex;flex-direction:column;font-family:Cairo,sans-serif}
+.onb-slides{flex:1;position:relative;overflow:hidden}
+.onb-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px;text-align:center;transition:transform .4s ease,opacity .4s ease}
+.onb-slide .onb-emoji{font-size:80px;margin-bottom:24px}
+.onb-slide .onb-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:10px}
+.onb-slide .onb-desc{font-size:14px;color:rgba(255,255,255,.8);line-height:1.7}
+.onb-dots{display:flex;justify-content:center;gap:8px;padding:16px}
+.onb-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);transition:.3s}
+.onb-dot.active{width:24px;border-radius:4px;background:var(--go)}
+.onb-footer{padding:16px 30px 40px;display:flex;gap:12px}
+.onb-skip{flex:1;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:var(--r22);padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.onb-next{flex:2;background:var(--go);color:var(--gd);border:none;border-radius:var(--r22);padding:14px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit}
+
+/* GUIDED TOUR TOOLTIP */
+.tour-overlay{position:fixed;inset:0;z-index:3000;pointer-events:none}
+.tour-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;pointer-events:auto}
+.tour-highlight{position:absolute;z-index:3001;border-radius:12px;box-shadow:0 0 0 4px var(--go),0 0 0 9999px rgba(0,0,0,.55);pointer-events:none;transition:all .3s ease}
+.tour-tip{position:absolute;z-index:3002;background:var(--wh);border-radius:var(--r14);padding:14px 16px;max-width:280px;box-shadow:var(--shm);pointer-events:auto}
+.tour-tip::before{content:'';position:absolute;width:12px;height:12px;background:var(--wh);transform:rotate(45deg)}
+.tour-tip.above::before{bottom:-6px;left:50%;margin-left:-6px}
+.tour-tip.below::before{top:-6px;left:50%;margin-left:-6px}
+.tour-tip-title{font-size:13px;font-weight:900;color:var(--gd);margin-bottom:4px}
+.tour-tip-desc{font-size:12px;color:var(--tm);line-height:1.5;margin-bottom:10px}
+.tour-tip-row{display:flex;align-items:center;gap:8px}
+.tour-tip-dots{display:flex;gap:4px;flex:1}
+.tour-tip-dots span{width:6px;height:6px;border-radius:50%;background:var(--bm)}
+.tour-tip-dots span.active{background:var(--go)}
+.tour-tip-btn{background:var(--gd);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
 
 /* PILL */
 .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -1564,6 +1604,260 @@ if('serviceWorker' in navigator){
     console.log('SW registered');
   }).catch(e=>console.log('SW error:',e));
 }
+
+/* ═══════ PWA INSTALL BANNER ═══════ */
+let deferredPrompt=null;
+const isPWA=window.matchMedia('(display-mode:standalone)').matches||window.navigator.standalone;
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  if(!isPWA&&!localStorage.getItem('nd_pwa_dismissed')){
+    showInstallBanner();
+  }
+});
+
+function showInstallBanner(){
+  if(document.getElementById('pwa-bar'))return;
+  const bar=document.createElement('div');
+  bar.id='pwa-bar';
+  bar.className='pwa-bar';
+  bar.innerHTML=`
+    <div class="pwa-bar-icon"><img src="/icon-192.png" alt=""></div>
+    <div class="pwa-bar-txt">
+      <div>${L('ثبّت التطبيق','Installer l\'appli','Install the app')}</div>
+      <div>${L('تجربة أسرع بدون شريط العنوان','Plus rapide, sans barre d\'URL','Faster, no URL bar')}</div>
+    </div>
+    <button class="pwa-bar-btn" onclick="installPWA()">${L('تثبيت','Installer','Install')}</button>
+    <button class="pwa-bar-close" onclick="dismissInstall()">✕</button>`;
+  document.body.appendChild(bar);
+}
+
+function installPWA(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(r=>{
+      if(r.outcome==='accepted')toast(L('تم التثبيت!','Installée!','Installed!'),'🎉');
+      deferredPrompt=null;
+      dismissInstall();
+    });
+  }
+}
+
+function dismissInstall(){
+  const bar=document.getElementById('pwa-bar');
+  if(bar)bar.remove();
+  localStorage.setItem('nd_pwa_dismissed','1');
+}
+
+// Fallback: if no beforeinstallprompt (iOS), show manual instructions
+if(!isPWA&&/iPhone|iPad/.test(navigator.userAgent)&&!localStorage.getItem('nd_pwa_dismissed')){
+  setTimeout(()=>{
+    if(!document.getElementById('pwa-bar')){
+      const bar=document.createElement('div');
+      bar.id='pwa-bar';
+      bar.className='pwa-bar';
+      bar.innerHTML=`
+        <div class="pwa-bar-icon"><img src="/icon-192.png" alt=""></div>
+        <div class="pwa-bar-txt">
+          <div>${L('ثبّت التطبيق','Installer l\'appli','Install the app')}</div>
+          <div>${L('اضغط ⬆️ ثم "أضف للشاشة الرئيسية"','Appuyez ⬆️ puis "Sur l\'écran d\'accueil"','Tap ⬆️ then "Add to Home Screen"')}</div>
+        </div>
+        <button class="pwa-bar-close" onclick="dismissInstall()">✕</button>`;
+      document.body.appendChild(bar);
+    }
+  },3000);
+}
+
+/* ═══════ ONBOARDING ═══════ */
+const ONBOARDING_SLIDES=[
+  {emoji:'🏪',
+   ar:{t:'مرحباً بك في نكهة الدار',d:'متجرك الرقمي للتوابل والمنتجات التقليدية التونسية بجودة عالية'},
+   fr:{t:'Bienvenue chez نكهة الدار',d:'Votre épicerie en ligne d\'épices et produits traditionnels tunisiens de qualité'},
+   en:{t:'Welcome to نكهة الدار',d:'Your online shop for quality Tunisian spices and traditional products'}},
+  {emoji:'🔍',
+   ar:{t:'تصفح واطلب بسهولة',d:'ابحث عن منتجاتك المفضلة، أضفها للسلة واطلب بضغطة واحدة'},
+   fr:{t:'Parcourez et commandez facilement',d:'Trouvez vos produits, ajoutez-les au panier et commandez en un clic'},
+   en:{t:'Browse & order easily',d:'Find your products, add to cart and order in one click'}},
+  {emoji:'🎁',
+   ar:{t:'اربح مكافآت على كل طلب',d:'كلما اشتريت أكثر ارتفع مستواك وزاد خصمك — حتى 15%!'},
+   fr:{t:'Gagnez des récompenses',d:'Plus vous achetez, plus votre niveau monte et votre remise augmente — jusqu\'à 15% !'},
+   en:{t:'Earn rewards on every order',d:'The more you buy, the higher your level and discount — up to 15%!'}},
+  {emoji:'🚚',
+   ar:{t:'توصيل سريع لباب بيتك',d:'اختر منطقتك ونحن نوصّلك طلبك — الدفع عند الاستلام'},
+   fr:{t:'Livraison rapide à domicile',d:'Choisissez votre zone, on vous livre — paiement à la livraison'},
+   en:{t:'Fast home delivery',d:'Choose your area, we deliver — cash on delivery'}}
+];
+
+let onbSlide=0;
+
+function shouldShowOnboarding(){
+  return !localStorage.getItem('nd_onboarding_done');
+}
+
+function showOnboarding(){
+  onbSlide=0;
+  const overlay=document.createElement('div');
+  overlay.id='onb-overlay';
+  overlay.className='onb-overlay';
+  renderOnboarding(overlay);
+  document.body.appendChild(overlay);
+}
+
+function renderOnboarding(el){
+  if(!el)el=document.getElementById('onb-overlay');
+  if(!el)return;
+  const lang=S.lang;
+  el.innerHTML=`
+    <div class="onb-slides">
+      ${ONBOARDING_SLIDES.map((s,i)=>{
+        const d=lang==='ar'?s.ar:lang==='fr'?s.fr:s.en;
+        const offset=i-onbSlide;
+        return `<div class="onb-slide" style="transform:translateX(${offset*-100}%);opacity:${i===onbSlide?1:0}">
+          <div class="onb-emoji">${s.emoji}</div>
+          <div class="onb-title">${d.t}</div>
+          <div class="onb-desc">${d.d}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="onb-dots">
+      ${ONBOARDING_SLIDES.map((_,i)=>`<div class="onb-dot ${i===onbSlide?'active':''}"></div>`).join('')}
+    </div>
+    <div class="onb-footer">
+      <button class="onb-skip" onclick="finishOnboarding()">${L('تخطي','Passer','Skip')}</button>
+      <button class="onb-next" onclick="nextOnbSlide()">
+        ${onbSlide===ONBOARDING_SLIDES.length-1?L('ابدأ التسوق 🛒','Commencer 🛒','Start shopping 🛒'):L('التالي ←','Suivant ←','Next ←')}
+      </button>
+    </div>`;
+}
+
+function nextOnbSlide(){
+  if(onbSlide<ONBOARDING_SLIDES.length-1){
+    onbSlide++;
+    renderOnboarding();
+  }else{
+    finishOnboarding();
+  }
+}
+
+function finishOnboarding(){
+  localStorage.setItem('nd_onboarding_done','1');
+  const el=document.getElementById('onb-overlay');
+  if(el)el.remove();
+  // Start guided tour after a short delay
+  setTimeout(startGuidedTour,600);
+}
+
+/* ═══════ GUIDED TOUR ═══════ */
+const TOUR_STEPS=[
+  {sel:'.srch-inner',
+   ar:{t:'🔍 البحث',d:'ابحث عن أي منتج بالاسم — جرّب "كركم" أو "زيت زيتون"'},
+   fr:{t:'🔍 Recherche',d:'Cherchez un produit par nom — essayez "curcuma" ou "huile d\'olive"'},
+   en:{t:'🔍 Search',d:'Search any product by name — try "turmeric" or "olive oil"'}},
+  {sel:'.cats',
+   ar:{t:'📂 التصنيفات',d:'تصفح المنتجات حسب الفئة: توابل، أعشاب، مكسرات...'},
+   fr:{t:'📂 Catégories',d:'Parcourez par catégorie : épices, herbes, noix...'},
+   en:{t:'📂 Categories',d:'Browse by category: spices, herbs, nuts...'}},
+  {sel:'.pc',
+   ar:{t:'🛒 إضافة للسلة',d:'اضغط + لإضافة المنتج أو اضغط على البطاقة للتفاصيل'},
+   fr:{t:'🛒 Ajouter au panier',d:'Appuyez sur + pour ajouter, ou sur la carte pour les détails'},
+   en:{t:'🛒 Add to cart',d:'Tap + to add, or tap the card for details'}},
+  {sel:'.ni:nth-child(3)',
+   ar:{t:'🎁 المكافآت',d:'تابع مستواك واربح خصومات تصل حتى 15%!'},
+   fr:{t:'🎁 Récompenses',d:'Suivez votre niveau et gagnez jusqu\'à 15% de remise !'},
+   en:{t:'🎁 Rewards',d:'Track your level and earn up to 15% discount!'}},
+  {sel:'.hd-btn:first-child',
+   ar:{t:'🤖 المساعد الذكي',d:'اسأل المساعد الذكي عن أي منتج أو وصفة!'},
+   fr:{t:'🤖 Assistant IA',d:'Demandez à l\'assistant IA pour un produit ou une recette !'},
+   en:{t:'🤖 AI Assistant',d:'Ask the AI assistant about any product or recipe!'}}
+];
+
+let tourStep=0;
+
+function startGuidedTour(){
+  if(localStorage.getItem('nd_tour_done'))return;
+  tourStep=0;
+  showTourStep();
+}
+
+function showTourStep(){
+  // Clean previous
+  document.querySelectorAll('.tour-backdrop,.tour-highlight,.tour-tip').forEach(e=>e.remove());
+
+  if(tourStep>=TOUR_STEPS.length){
+    localStorage.setItem('nd_tour_done','1');
+    toast(L('مستعد للتسوق! 🎉','Prêt à magasiner ! 🎉','Ready to shop! 🎉'));
+    return;
+  }
+
+  const step=TOUR_STEPS[tourStep];
+  const el=document.querySelector(step.sel);
+  if(!el){tourStep++;showTourStep();return;}
+
+  const rect=el.getBoundingClientRect();
+  const lang=S.lang;
+  const d=lang==='ar'?step.ar:lang==='fr'?step.fr:step.en;
+
+  // Backdrop
+  const backdrop=document.createElement('div');
+  backdrop.className='tour-backdrop';
+  backdrop.onclick=()=>{};
+  document.body.appendChild(backdrop);
+
+  // Highlight
+  const hl=document.createElement('div');
+  hl.className='tour-highlight';
+  hl.style.cssText=`top:${rect.top-4}px;left:${rect.left-4}px;width:${rect.width+8}px;height:${rect.height+8}px`;
+  document.body.appendChild(hl);
+
+  // Tooltip
+  const tip=document.createElement('div');
+  const isAbove=rect.top>200;
+  tip.className=`tour-tip ${isAbove?'above':'below'}`;
+  tip.innerHTML=`
+    <div class="tour-tip-title">${d.t}</div>
+    <div class="tour-tip-desc">${d.d}</div>
+    <div class="tour-tip-row">
+      <div class="tour-tip-dots">${TOUR_STEPS.map((_,i)=>`<span class="${i===tourStep?'active':''}"></span>`).join('')}</div>
+      <button class="tour-tip-btn" onclick="nextTourStep()">
+        ${tourStep===TOUR_STEPS.length-1?L('انتهى!','Terminé !','Done!'):L('التالي','Suivant','Next')}
+      </button>
+    </div>`;
+
+  // Position tooltip
+  const tipW=260;
+  let tipLeft=Math.max(10,rect.left+(rect.width-tipW)/2);
+  tipLeft=Math.min(tipLeft,window.innerWidth-tipW-10);
+
+  if(isAbove){
+    tip.style.cssText=`top:${rect.top-130}px;left:${tipLeft}px;width:${tipW}px`;
+  }else{
+    tip.style.cssText=`top:${rect.bottom+12}px;left:${tipLeft}px;width:${tipW}px`;
+  }
+  document.body.appendChild(tip);
+}
+
+function nextTourStep(){
+  tourStep++;
+  showTourStep();
+}
+
+function skipTour(){
+  document.querySelectorAll('.tour-backdrop,.tour-highlight,.tour-tip').forEach(e=>e.remove());
+  localStorage.setItem('nd_tour_done','1');
+}
+
+/* ═══════ TRIGGER ONBOARDING ═══════ */
+let _onbShown=false;
+const _origRender=render;
+render=function(){
+  _origRender();
+  if(S.user&&shouldShowOnboarding()&&!_onbShown){
+    _onbShown=true;
+    setTimeout(showOnboarding,400);
+  }
+};
+
 </script>
 </body>
 </html>
