@@ -73,6 +73,20 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .ni-lb{font-size:9px;font-weight:600}
 .ni-bd{position:absolute;top:6px;right:calc(50% - 16px);background:var(--rd);color:#fff;font-size:8px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 
+/* REFERRAL TOP BAR */
+.ref-topbar{background:linear-gradient(90deg,var(--go),#e6a817);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;cursor:pointer;position:relative;overflow:hidden}
+.ref-topbar::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.06) 10px,rgba(255,255,255,.06) 20px)}
+.ref-topbar-txt{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--gd);position:relative;z-index:1}
+.ref-topbar-code{background:var(--gd);color:var(--go);font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;letter-spacing:1px}
+.ref-topbar-close{background:none;border:none;color:var(--gd);font-size:14px;cursor:pointer;opacity:.5;position:relative;z-index:1;padding:4px}
+.ref-topbar-close:hover{opacity:1}
+
+/* REFERRAL BANNER (carousel) */
+.ref-bnr{background:linear-gradient(135deg,#1a4731 0%,#2d6a4f 50%,#1e5a3a 100%)!important;position:relative}
+.ref-bnr .bnr-badge,.ref-bnr .bnr-title,.ref-bnr .bnr-sub,.ref-bnr>div:last-child{position:relative;z-index:1}
+.ref-bnr-bg{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.ref-bnr-code{background:rgba(240,180,41,.2);border:2px dashed rgba(240,180,41,.5);border-radius:12px;padding:8px 16px;text-align:center;font-size:20px;font-weight:900;letter-spacing:3px;color:var(--go);margin-top:8px;position:relative;z-index:1}
+
 /* REFERRAL */
 .ref-card{background:linear-gradient(135deg,var(--gd),#1e5a3a);border-radius:var(--r22);padding:20px;margin:12px 16px;color:#fff;position:relative;overflow:hidden}
 .ref-card::after{content:'🎁';position:absolute;top:-10px;left:-10px;font-size:80px;opacity:.08}
@@ -499,6 +513,7 @@ function render(){
   const isBack=S.showAI||S.showNotif||S.detailId||S.subPage;
   root.innerHTML=`
     ${renderHeader(isBack)}
+    ${!isBack&&S.tab==='home'?renderRefTopBar():''}
     <div class="ps" id="ps">
       ${S.showAI?renderAI():
         S.showNotif?renderNotif():
@@ -539,6 +554,27 @@ function renderHeader(isBack){
       </button>`}
     </div>
   </div>`;}
+
+/* ── REFERRAL TOP BAR ── */
+function renderRefTopBar(){
+  const dismissed=localStorage.getItem('nd_ref_bar_dismissed');
+  if(dismissed){
+    const daysAgo=(Date.now()-parseInt(dismissed))/(1000*60*60*24);
+    if(daysAgo<7)return '';
+  }
+  return `<div class="ref-topbar" onclick="S.tab='rewards';render()">
+    <div class="ref-topbar-txt">
+      <span>🎁</span>
+      <span>${T('referralinvite')}</span>
+      ${S.referralCode?`<span class="ref-topbar-code">${S.referralCode}</span>`:''}
+    </div>
+    <button class="ref-topbar-close" onclick="event.stopPropagation();dismissRefBar()">✕</button>
+  </div>`;
+}
+function dismissRefBar(){
+  localStorage.setItem('nd_ref_bar_dismissed',Date.now().toString());
+  render();
+}
 
 /* ── NAV ── */
 function renderNav(){
@@ -608,6 +644,17 @@ function renderHome(){
       <div class="bnr-title">${L('وفّر حتى 15%','Économisez 15%','Save up to 15%')}</div>
       <div class="bnr-sub">${L('كلما اشتريت أكثر وفّرت أكثر','Plus vous achetez plus vous économisez','More you buy more you save')}</div>
       <button class="bnr-btn" onclick="S.tab='rewards';render()">${L('اعرف أكثر','En savoir plus','Learn more')} ←</button>
+    </div>
+    <div class="bnr ref-bnr">
+      <div class="ref-bnr-bg"></div>
+      <div class="bnr-badge" style="background:rgba(240,180,41,.3);color:#fff">🤝 ${L('برنامج الدعوة','Parrainage','Referral')}</div>
+      <div class="bnr-title">${T('referralinvite')}</div>
+      <div class="bnr-sub">${L('شارك رمزك واربح مكافآت على كل صديق','Partagez et gagnez des récompenses','Share and earn rewards')}</div>
+      ${S.referralCode?`<div class="ref-bnr-code">${S.referralCode}</div>`:''}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="bnr-btn" style="background:var(--go);color:var(--gd);border:none;font-weight:900" onclick="shareReferral()">📤 ${T('referralshare')}</button>
+        <button class="bnr-btn" onclick="S.tab='rewards';render()">${L('التفاصيل','Détails','Details')} ←</button>
+      </div>
     </div>
   </div>
   <div class="sec"><div class="sec-h"><span class="sec-t">${L('التصنيفات','Catégories','Categories')}</span></div></div>
