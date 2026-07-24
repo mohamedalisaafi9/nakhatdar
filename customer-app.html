@@ -1374,15 +1374,21 @@ async function sendResetEmail(){
   }
   if(!db){toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');return;}
   toast(L('جاري الإرسال...','Envoi en cours...','Sending...'),'⏳');
-  const{error}=await db.auth.resetPasswordForEmail(email,{
-    redirectTo:window.location.origin+'/customer-app.html'
-  });
-  if(error){
-    toast(L('خطأ: ','Erreur: ','Error: ')+error.message,'⚠️');
-  }else{
-    toast(L('📧 تم إرسال رابط التعيين! تحقق من بريدك','📧 Lien envoyé! Vérifiez votre email','📧 Reset link sent! Check your email'));
-    S.authMode='login';
-    render();
+  try{
+    const{error}=await db.auth.resetPasswordForEmail(email,{
+      redirectTo:window.location.origin+'/customer-app.html'
+    });
+    if(error){
+      console.error('Reset email error:',JSON.stringify(error));
+      toast(L('خطأ: ','Erreur: ','Error: ')+(error.message||JSON.stringify(error)),'⚠️');
+    }else{
+      toast(L('📧 تم إرسال رابط التعيين! تحقق من بريدك','📧 Lien envoyé! Vérifiez votre email','📧 Reset link sent! Check your email'));
+      S.authMode='login';
+      render();
+    }
+  }catch(e){
+    console.error('Reset email exception:',e);
+    toast(L('خطأ: ','Erreur: ','Error: ')+e.message,'⚠️');
   }
 }
 
