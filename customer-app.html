@@ -73,6 +73,25 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .ni-lb{font-size:9px;font-weight:600}
 .ni-bd{position:absolute;top:6px;right:calc(50% - 16px);background:var(--rd);color:#fff;font-size:8px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 
+/* REFERRAL */
+.ref-card{background:linear-gradient(135deg,var(--gd),#1e5a3a);border-radius:var(--r22);padding:20px;margin:12px 16px;color:#fff;position:relative;overflow:hidden}
+.ref-card::after{content:'🎁';position:absolute;top:-10px;left:-10px;font-size:80px;opacity:.08}
+.ref-code-box{background:rgba(255,255,255,.15);border:2px dashed rgba(255,255,255,.4);border-radius:var(--r14);padding:12px;text-align:center;margin:12px 0}
+.ref-code{font-size:24px;font-weight:900;letter-spacing:3px;color:var(--go)}
+.ref-share-btn{background:var(--go);color:var(--gd);border:none;border-radius:20px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;margin:0 auto}
+.ref-stats{display:flex;gap:12px;margin-top:14px}
+.ref-stat{flex:1;background:rgba(255,255,255,.1);border-radius:var(--r14);padding:10px;text-align:center}
+.ref-stat-v{font-size:18px;font-weight:900;color:var(--go)}
+.ref-stat-l{font-size:10px;opacity:.7;margin-top:2px}
+.ref-input-wrap{padding:12px 16px}
+.ref-input-row{display:flex;gap:8px}
+.ref-input{flex:1;padding:10px 14px;border:1.5px solid var(--bm);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;text-transform:uppercase;letter-spacing:1px}
+.ref-input:focus{border-color:var(--gm)}
+.ref-apply-btn{background:var(--gd);color:#fff;border:none;border-radius:var(--r14);padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ref-credit-badge{background:var(--gop);border:1.5px solid var(--go);border-radius:var(--r14);padding:10px 14px;margin:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.ref-history{padding:0 16px 16px}
+.ref-h-item{background:var(--wh);border-radius:var(--r14);padding:10px 14px;margin-bottom:8px;box-shadow:var(--sh);display:flex;align-items:center;gap:10px}
+
 /* SEARCH */
 .srch{padding:12px 16px;background:var(--bei);border-bottom:1px solid var(--bm)}
 .srch-inner{background:var(--wh);border-radius:var(--r22);display:flex;align-items:center;gap:8px;padding:10px 14px;box-shadow:var(--sh)}
@@ -347,14 +366,17 @@ const COUPONS={WELCOME10:{disc:10,min:0},RAMADAN15:{disc:15,min:50},AID20:{disc:
 let S={
   lang:'ar', tab:'home', catF:'all', search:'',
   cart:{}, favs:new Set(),
-  user:null, authMode:'login', authF:{name:'',phone:'',email:'',pass:''},
+  user:null, authMode:'login', authF:{name:'',phone:'',email:'',pass:'',refCode:''},
   promoType:'daily', modal:null,
   detailId:null, showAI:false, showNotif:false, subPage:null,
   orderDone:false, lastOrder:null, orderHistory:[],
   df:{gov:'Sousse',city:'Sousse',area:'Sousse Centre',street:'',house:'',phone:''},
   savedAddresses:[],
   coupon:'', couponApplied:null,
-  msgs:[], timerSecs:5400, spend:0
+  msgs:[], timerSecs:5400, spend:0,
+  referralCode:'', referralCredit:0, referralCreditExpires:null,
+  referredBy:null, referralInput:'', useRefCredit:false,
+  myReferrals:[], hasPendingReferee:false
 };
 
 /* ═══════ HELPERS ═══════ */
@@ -421,7 +443,16 @@ function T(k){
     phone:L('الهاتف','Téléphone','Phone'),
     name:L('الاسم الكامل','Nom complet','Full name'),
     pass:L('كلمة المرور','Mot de passe','Password'),
-    type:L('اكتب رسالة...','Votre message...','Type a message...')
+    type:L('اكتب رسالة...','Votre message...','Type a message...'),
+    referral:L('الدعوة','Parrainage','Referral'),
+    referralcode:L('رمز الدعوة','Code parrainage','Referral code'),
+    referralshare:L('شارك الرمز','Partager le code','Share code'),
+    referralcredit:L('رصيد الدعوة','Crédit parrainage','Referral credit'),
+    referraldiscref:L('خصم دعوة','Réduction parrainage','Referral discount'),
+    referralcreditdisc:L('رصيد دعوة','Crédit parrainage','Referral credit'),
+    referralph:L('رمز صديقك','Code d\'un ami','Friend\'s code'),
+    referralinvite:L('ادعُ صديقك: يربح 5 دت وأنت تربح 3 دت!','Invite un ami : il gagne 5 DT, tu gagnes 3 DT !','Invite a friend: they get 5 DT, you get 3 DT!'),
+    usecredit:L('استخدام الرصيد','Utiliser le crédit','Use credit')
   })[k]||k;
 }
 
@@ -666,7 +697,132 @@ function renderRewards(){
       <div style="font-size:14px;font-weight:900;color:var(--g)">−${t.disc}%</div>
       ${t.id===tier.id?`<span class="pill pill-g">✓ ${L('مستواك','Votre niveau','Your level')}</span>`:''}
     </div>`).join('')}
+  ${renderReferralSection()}
   </div>`;}
+
+function renderReferralSection(){
+  const hasCredit=S.referralCredit>0 && (!S.referralCreditExpires || new Date(S.referralCreditExpires)>new Date());
+  const daysLeft=S.referralCreditExpires?Math.max(0,Math.ceil((new Date(S.referralCreditExpires)-new Date())/(1000*60*60*24))):0;
+  return `
+  <div class="sec" style="margin-top:8px"><span class="sec-t">🤝 ${T('referral')}</span></div>
+  <div class="ref-card">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">${T('referralinvite')}</div>
+    <div style="font-size:11px;opacity:.8;margin-bottom:4px">${L(
+      'شارك رمزك مع أصدقائك واربح 3 دت عن كل صديق!',
+      'Partagez votre code et gagnez 3 DT par ami!',
+      'Share your code and earn 3 DT per friend!')}</div>
+    <div class="ref-code-box">
+      <div style="font-size:10px;opacity:.6;margin-bottom:4px">${T('referralcode')}</div>
+      <div class="ref-code">${S.referralCode||'...'}</div>
+    </div>
+    <button class="ref-share-btn" onclick="shareReferral()">📤 ${T('referralshare')}</button>
+    <div class="ref-stats">
+      <div class="ref-stat">
+        <div class="ref-stat-v">${S.myReferrals.filter(r=>r.status==='completed').length}</div>
+        <div class="ref-stat-l">${L('أصدقاء دعوتهم','Amis invités','Friends invited')}</div>
+      </div>
+      <div class="ref-stat">
+        <div class="ref-stat-v">${fp(S.myReferrals.filter(r=>r.status==='completed').reduce((a,r)=>a+(r.sponsor_credit||0),0))}</div>
+        <div class="ref-stat-l">${L('مجموع الأرباح','Total gagné','Total earned')}</div>
+      </div>
+    </div>
+  </div>
+  ${hasCredit?`
+  <div class="ref-credit-badge">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--gd)">💰 ${T('referralcredit')}: <strong>${fp(S.referralCredit)}</strong></div>
+      <div style="font-size:10px;color:var(--tm)">${L('صالح لمدة','Valide','Valid')} ${daysLeft} ${L('يوم','jours','days')}</div>
+    </div>
+    <span style="font-size:24px">🎉</span>
+  </div>`:''}
+  ${!S.referredBy?`
+  <div class="ref-input-wrap">
+    <div style="font-size:12px;font-weight:600;color:var(--tm);margin-bottom:6px">${L('هل لديك رمز دعوة من صديق؟','Vous avez un code d\'un ami?','Have a friend\'s code?')}</div>
+    <div class="ref-input-row">
+      <input class="ref-input" placeholder="${T('referralph')}" value="${S.referralInput}" oninput="S.referralInput=this.value.toUpperCase()">
+      <button class="ref-apply-btn" onclick="applyReferralCode()">${T('apply')}</button>
+    </div>
+  </div>`:
+  `<div style="padding:4px 16px;font-size:11px;color:var(--gm);font-weight:600">✅ ${L('تم تطبيق رمز الدعوة','Code parrainage appliqué','Referral code applied')}</div>`}
+  ${S.myReferrals.length?`
+  <div style="padding:8px 16px 4px;font-size:12px;font-weight:700;color:var(--tm)">${L('سجل الدعوات','Historique','History')}</div>
+  <div class="ref-history">
+    ${S.myReferrals.slice(0,5).map(r=>`
+    <div class="ref-h-item">
+      <span style="font-size:20px">${r.status==='completed'?'✅':'⏳'}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${r.status==='completed'?L('مكتمل','Complété','Completed'):L('في الانتظار','En attente','Pending')}</div>
+        <div style="font-size:10px;color:var(--ts)">${new Date(r.created_at).toLocaleDateString()}</div>
+      </div>
+      ${r.sponsor_credit>0?`<span style="font-size:12px;font-weight:700;color:var(--g)">+${fp(r.sponsor_credit)}</span>`:''}
+    </div>`).join('')}
+  </div>`:''}`;
+}
+
+async function shareReferral(){
+  const code=S.referralCode;
+  if(!code){toast(L('لا يوجد رمز','Pas de code','No code'),'⚠️');return;}
+  const msg=T('referralinvite')+'\n'+L(
+    'استخدم رمزي: ','Utilise mon code : ','Use my code: ')+code+'\n'+'https://nakhatdar.vercel.app/customer-app.html?ref='+code;
+  if(navigator.share){
+    try{await navigator.share({title:'نكهة الدار',text:msg});return;}catch(e){}
+  }
+  try{await navigator.clipboard.writeText(msg);toast(L('تم النسخ!','Copié!','Copied!'));}catch(e){
+    toast(L('رمزك: ','Votre code: ','Your code: ')+code);
+  }
+}
+
+async function applyReferralCode(){
+  const code=S.referralInput.trim();
+  if(!code||code.length<5){toast(L('أدخل رمزاً صحيحاً','Entrez un code valide','Enter a valid code'),'⚠️');return;}
+  if(code===S.referralCode){toast(L('لا يمكنك استخدام رمزك!','Vous ne pouvez pas utiliser votre propre code!','You can\'t use your own code!'),'⚠️');return;}
+  if(!db||!S.user?.id){toast(L('سجّل دخولك أولاً','Connectez-vous d\'abord','Sign in first'),'⚠️');return;}
+
+  toast(L('جاري التحقق...','Vérification...','Checking...'),'⏳');
+  try{
+    const{data,error}=await db.rpc('apply_referral_code',{p_referee_id:S.user.id,p_referral_code:code});
+    if(error)throw error;
+    if(data?.success){
+      S.referredBy=data.sponsor_id;
+      S.referralInput='';
+      toast(L('🎉 رمز مقبول! ستحصل على 5 دت خصم في أول طلب','🎉 Code accepté! 5 DT de réduction sur votre 1ère commande','🎉 Code accepted! 5 DT off your 1st order'));
+      render();
+    }else{
+      toast(data?.message||L('رمز غير صالح','Code invalide','Invalid code'),'⚠️');
+    }
+  }catch(e){console.log('Referral error:',e);toast(L('خطأ','Erreur','Error'),'⚠️');}
+}
+
+async function loadReferralData(){
+  if(!db||!S.user?.id)return;
+  try{
+    // Load profile referral data
+    const{data:profile}=await db.from('profiles')
+      .select('referral_code,referral_credit,referral_credit_expires,referred_by')
+      .eq('id',S.user.id).single();
+    if(profile){
+      S.referralCode=profile.referral_code||'';
+      S.referralCredit=parseFloat(profile.referral_credit||0);
+      S.referralCreditExpires=profile.referral_credit_expires;
+      S.referredBy=profile.referred_by;
+    }
+    // Load my referrals (as sponsor)
+    const{data:refs}=await db.from('referrals')
+      .select('*')
+      .eq('sponsor_id',S.user.id)
+      .order('created_at',{ascending:false});
+    if(refs)S.myReferrals=refs;
+    // Check if I have a pending referral (as referee — for 5 DT discount)
+    if(S.referredBy){
+      const{data:myRef}=await db.from('referrals')
+        .select('status')
+        .eq('referee_id',S.user.id)
+        .eq('status','pending')
+        .limit(1);
+      S.hasPendingReferee=myRef&&myRef.length>0;
+    }
+  }catch(e){console.log('Load referral error:',e);}
+}
 
 /* ── CART ── */
 function renderCart(){
@@ -679,7 +835,13 @@ function renderCart(){
   </div>`;
   const sub=cartSub(), disc=getDisc(), ldAmt=sub*disc/100;
   const cAmt=S.couponApplied?sub*S.couponApplied.disc/100:0;
-  const fee=delivFee(), tot=Math.max(0,sub-ldAmt-cAmt+fee);
+  // Referral: réduction filleul (1ère commande, pending referral, min 30 DT)
+  const hasRefDisc=S.referredBy&&S.hasPendingReferee&&sub>=30;
+  const refDisc=hasRefDisc?5:0;
+  // Referral: crédit parrain (min 25 DT)
+  const hasRefCredit=S.referralCredit>0&&(!S.referralCreditExpires||new Date(S.referralCreditExpires)>new Date());
+  const refCreditAmt=S.useRefCredit&&hasRefCredit&&sub>=25?Math.min(S.referralCredit,Math.max(0,sub-ldAmt-cAmt-refDisc)):0;
+  const fee=delivFee(), tot=Math.max(0,sub-ldAmt-cAmt-refDisc-refCreditAmt+fee);
   const hasGift=sub>=200;
   return `<div class="cart-wrap">
     ${hasGift?`<div class="gift-notice">🎁 ${T('gift')}</div>`:
@@ -710,9 +872,18 @@ function renderCart(){
       <div class="s-row"><span>${T('subtotal')}</span><span>${fp(sub)}</span></div>
       ${disc>0?`<div class="s-row disc"><span>${T('rewardsdisc')} (−${disc}%)</span><span>−${fp(ldAmt)}</span></div>`:''}
       ${cAmt?`<div class="s-row disc"><span>${T('coupondisc')}</span><span>−${fp(cAmt)}</span></div>`:''}
+      ${refDisc>0?`<div class="s-row disc"><span>🤝 ${T('referraldiscref')}</span><span>−${fp(refDisc)}</span></div>`:''}
+      ${refCreditAmt>0?`<div class="s-row disc"><span>💰 ${T('referralcreditdisc')}</span><span>−${fp(refCreditAmt)}</span></div>`:''}
       <div class="s-row"><span>${T('delfee')}</span><span>${fp(fee)}</span></div>
       <div class="s-row total"><span>${T('total')}</span><span style="color:var(--g)">${fp(tot)}</span></div>
     </div>
+    ${hasRefCredit&&sub>=25?`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;font-size:12px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;color:var(--gd)">
+        <input type="checkbox" ${S.useRefCredit?'checked':''} onchange="S.useRefCredit=this.checked;render()" style="accent-color:var(--gd)">
+        💰 ${T('usecredit')} (${fp(S.referralCredit)})
+      </label>
+    </div>`:''}
     <div class="cod-badge">${T('cod')}</div>
     <button class="ck-btn" onclick="S.modal='delivery';render()">🚚 ${T('checkout')}</button>
   </div>`;}
@@ -810,6 +981,11 @@ function renderAccount(){
       </div>
       <div class="acc-row" onclick="S.subPage='addresses';render()">
         <span class="acc-icon">📍</span><span class="acc-label">${T('addresses')}</span>
+        <span style="font-size:12px;color:var(--ts)">‹</span>
+      </div>
+      <div class="acc-row" onclick="S.tab='rewards';render()">
+        <span class="acc-icon">🤝</span><span class="acc-label">${T('referral')}</span>
+        ${S.referralCredit>0?`<span class="pill pill-o">${fp(S.referralCredit)}</span>`:''}
         <span style="font-size:12px;color:var(--ts)">‹</span>
       </div>
     </div>
@@ -1077,6 +1253,7 @@ function renderAuth(){
         <input class="phone-inp" type="tel" placeholder="XX XXX XXX" maxlength="8"
           oninput="S.authF.phone=this.value.replace(/[^0-9]/g,'').slice(0,8)">
       </div>
+      <input class="auth-inp" placeholder="${L('رمز الدعوة (اختياري)','Code parrainage (optionnel)','Referral code (optional)')}" value="${S.authF.refCode||''}" style="text-transform:uppercase;letter-spacing:1px" oninput="S.authF.refCode=this.value.toUpperCase()">
       `:`
       <input class="auth-inp" placeholder="${L('البريد الإلكتروني أو رقم الهاتف','Email ou numéro de téléphone','Email or phone number')}" oninput="S.authF.email=this.value">
       `}
@@ -1175,7 +1352,8 @@ async function placeOrder(){
         p_house:      S.df.house||'',
         p_phone:      S.df.phone,
         p_coupon_code:S.coupon||null,
-        p_loyalty_pct:loyaltyPct
+        p_loyalty_pct:loyaltyPct,
+        p_use_referral_credit:S.useRefCredit&&S.referralCredit>0
       });
       if(error){
         console.log('Checkout error:',error);
@@ -1266,6 +1444,13 @@ async function doAuth(){
 
       S.user={id:data.user.id, name:S.authF.name, phone:S.authF.phone};
       S.df.phone=S.authF.phone;
+      // Apply referral code if provided at registration
+      if(S.authF.refCode&&S.authF.refCode.trim()){
+        try{
+          await db.rpc('apply_referral_code',{p_referee_id:data.user.id,p_referral_code:S.authF.refCode.trim()});
+        }catch(e){console.log('Referral apply error:',e);}
+      }
+      await loadReferralData();
       toast(L('🎉 تم إنشاء حسابك بنجاح!','🎉 Compte créé!','🎉 Account created!'));
       render();
     }
@@ -1310,6 +1495,7 @@ async function doAuth(){
       S.spend = parseFloat(profile?.monthly_spend || 0);
 
       await loadCart();
+      await loadReferralData();
       toast(L('👋 مرحباً بعودتك!','👋 Bon retour!','👋 Welcome back!'));
       render();
     }
@@ -1503,6 +1689,7 @@ async function initDB(){
         phone: session.user.user_metadata?.phone||''
       };
       await loadCart();
+      await loadReferralData();
     }
 
     // ── Écouter les changements de statut commandes en temps réel ──
@@ -1597,6 +1784,17 @@ window.addEventListener('orientationchange',()=>setTimeout(fixViewport,100));
 
 /* ═══════ INIT ═══════ */
 loadS();
+// Check URL for referral code (?ref=ND-XXXX)
+(function(){
+  const urlP=new URLSearchParams(window.location.search);
+  const refCode=urlP.get('ref');
+  if(refCode){
+    S.authF.refCode=refCode.toUpperCase();
+    S.authMode='register';
+    // Clean URL
+    window.history.replaceState({},'',window.location.pathname);
+  }
+})();
 if(typeof supabase!=='undefined'){initDB();}else{render();}
 
 if('serviceWorker' in navigator){
