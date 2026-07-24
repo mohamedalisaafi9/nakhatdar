@@ -1810,6 +1810,27 @@ async function initDB(){
       console.log('✅ Coupons chargés:',coupons.length);
     }
 
+    // ── Détecter reset password via URL hash ──
+    const _hash=window.location.hash;
+    if(_hash&&_hash.includes('type=recovery')){
+      S.authMode='reset';
+      S.user=null;
+      // Nettoyer le hash
+      window.history.replaceState({},'',window.location.pathname);
+      render();
+      return; // Ne pas auto-login
+    }
+    // ── Détecter erreur de lien expiré ──
+    if(_hash&&_hash.includes('error=access_denied')){
+      const params=new URLSearchParams(_hash.replace('#',''));
+      const errDesc=params.get('error_description')||'';
+      S.authMode='forgot';
+      window.history.replaceState({},'',window.location.pathname);
+      render();
+      setTimeout(()=>toast(L('الرابط منتهي الصلاحية، أعد الطلب','Lien expiré, réessayez','Link expired, try again'),'⚠️'),500);
+      return;
+    }
+
     // ── Vérifier session existante ──
     const{data:{session}}=await db.auth.getSession();
     if(session){
