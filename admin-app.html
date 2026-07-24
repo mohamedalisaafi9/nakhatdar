@@ -111,6 +111,7 @@ tbody tr:last-child td{border-bottom:none}
 .badge-vip{background:#f3e5f5;color:#6a1b9a}
 .badge-active{background:var(--green-pale);color:var(--green)}
 .badge-inactive{background:#f5f5f5;color:var(--text-mid)}
+.badge-warning{background:var(--gold-pale);color:#9b7309}
 
 /* ── GRID 2/3 ── */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -204,7 +205,9 @@ let adminState = {
   editItem: null,
   activeTab: 0,
   searchQ: '',
-  filterStatus: 'all'
+  filterStatus: 'all',
+  referralConfig: null,
+  referralsList: []
 };
 
 // ── MOCK DATA ──
@@ -449,6 +452,7 @@ function renderSidebar() {
     {section:'Clients',items:[
       {id:'customers',icon:'👥',label:'Clients'},
       {id:'coupons',icon:'🎟️',label:'Coupons'},
+      {id:'referrals',icon:'🤝',label:'Parrainage'},
     ]},
     {section:'Outils',items:[
       {id:'notifications',icon:'🔔',label:'Notifications'},
@@ -520,6 +524,7 @@ function renderPage() {
     case 'drivers': return renderDrivers();
     case 'customers': return renderCustomers();
     case 'coupons': return renderCoupons();
+    case 'referrals': return renderReferrals();
     case 'notifications': return renderNotifications();
     case 'analytics': return renderAnalytics();
     default: return '<div>Page not found</div>';
@@ -969,6 +974,148 @@ function renderCoupons() {
   </div>`;
 }
 
+// ── PARRAINAGE ──
+function renderReferrals() {
+  // Default config values
+  const cfg = adminState.referralConfig || {
+    enabled:true, referee_discount:5, sponsor_credit:3,
+    min_order_referee:30, min_order_sponsor_credit:25,
+    credit_validity_days:30, max_referrals_per_user:50,
+    message_ar:'ادعُ صديقك: يربح 5 دت وأنت تربح 3 دت!',
+    message_fr:'Invite un ami : il gagne 5 DT, tu gagnes 3 DT !',
+    message_en:'Invite a friend: they get 5 DT, you get 3 DT!'
+  };
+  const refs = adminState.referralsList || [];
+  const completed = refs.filter(r=>r.status==='completed');
+  const pending = refs.filter(r=>r.status==='pending');
+  const totalCredits = completed.reduce((a,r)=>a+(parseFloat(r.sponsor_credit)||0),0);
+
+  return `
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+    <div class="stat-card"><div class="stat-value">${refs.length}</div><div class="stat-label">Total parrainages</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${completed.length}</div><div class="stat-label">Complétés</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--orange)">${pending.length}</div><div class="stat-label">En attente</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--gold)">${totalCredits.toFixed(3)} DT</div><div class="stat-label">Crédits accordés</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:700">⚙️ Configuration du parrainage</h3>
+      <span class="badge ${cfg.enabled?'badge-active':'badge-inactive'}">${cfg.enabled?'Activé':'Désactivé'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Activer le parrainage</label>
+        <select class="form-input" onchange="updateRefConfig('enabled',this.value==='true')">
+          <option value="true" ${cfg.enabled?'selected':''}>Activé</option>
+          <option value="false" ${!cfg.enabled?'selected':''}>Désactivé</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Réduction filleul (DT)</label>
+        <input class="form-input" type="number" step="0.5" value="${cfg.referee_discount}" onchange="updateRefConfig('referee_discount',parseFloat(this.value))">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Crédit parrain (DT)</label>
+        <input class="form-input" type="number" step="0.5" value="${cfg.sponsor_credit}" onchange="updateRefConfig('sponsor_credit',parseFloat(this.value))">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Commande min filleul (DT)</label>
+        <input class="form-input" type="number" step="1" value="${cfg.min_order_referee}" onchange="updateRefConfig('min_order_referee',parseFloat(this.value))">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Commande min crédit parrain (DT)</label>
+        <input class="form-input" type="number" step="1" value="${cfg.min_order_sponsor_credit}" onchange="updateRefConfig('min_order_sponsor_credit',parseFloat(this.value))">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Validité crédit (jours)</label>
+        <input class="form-input" type="number" step="1" value="${cfg.credit_validity_days}" onchange="updateRefConfig('credit_validity_days',parseInt(this.value))">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max parrainages/utilisateur</label>
+        <input class="form-input" type="number" step="1" value="${cfg.max_referrals_per_user}" onchange="updateRefConfig('max_referrals_per_user',parseInt(this.value))">
+      </div>
+    </div>
+    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+      <div class="form-group">
+        <label class="form-label">📢 Message marketing (AR)</label>
+        <input class="form-input" value="${cfg.message_ar}" onchange="updateRefConfig('message_ar',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📢 Message marketing (FR)</label>
+        <input class="form-input" value="${cfg.message_fr}" onchange="updateRefConfig('message_fr',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📢 Message marketing (EN)</label>
+        <input class="form-input" value="${cfg.message_en}" onchange="updateRefConfig('message_en',this.value)">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="saveRefConfig()">💾 Enregistrer</button>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px">📋 Historique des parrainages</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Parrain</th><th>Filleul</th><th>Statut</th><th>Crédit</th><th>Réduction</th></tr></thead>
+        <tbody>${refs.length?refs.map(r=>`
+        <tr>
+          <td style="font-size:12px">${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+          <td style="font-size:12px">${r.sponsor_name||r.sponsor_id?.slice(0,8)||'—'}</td>
+          <td style="font-size:12px">${r.referee_name||r.referee_id?.slice(0,8)||'—'}</td>
+          <td><span class="badge ${r.status==='completed'?'badge-active':r.status==='pending'?'badge-warning':'badge-inactive'}">${r.status==='completed'?'Complété':r.status==='pending'?'En attente':'Annulé'}</span></td>
+          <td style="font-weight:600;color:var(--green)">${r.sponsor_credit?r.sponsor_credit.toFixed(3)+' DT':'—'}</td>
+          <td style="font-weight:600;color:var(--red)">${r.referee_discount?'-'+r.referee_discount.toFixed(3)+' DT':'—'}</td>
+        </tr>`).join(''):`<tr><td colspan="6" style="text-align:center;color:var(--text-mid);padding:30px">Aucun parrainage pour le moment</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function updateRefConfig(key, val) {
+  if(!adminState.referralConfig) adminState.referralConfig = {};
+  adminState.referralConfig[key] = val;
+}
+
+async function saveRefConfig() {
+  if(!db) { alert('Pas de connexion Supabase'); return; }
+  try {
+    const cfg = adminState.referralConfig;
+    const { error } = await db.from('settings')
+      .upsert({ key: 'referral_config', value: cfg, updated_at: new Date().toISOString() });
+    if(error) throw error;
+    alert('✅ Configuration enregistrée!');
+    render();
+  } catch(e) { console.error('Save ref config error:', e); alert('Erreur: ' + e.message); }
+}
+
+async function loadReferralsAdmin() {
+  if(!db) return;
+  try {
+    // Load config
+    const { data: cfgData } = await db.from('settings').select('value').eq('key', 'referral_config').single();
+    if(cfgData) adminState.referralConfig = cfgData.value;
+
+    // Load referrals with names
+    const { data: refs } = await db.from('referrals').select('*').order('created_at', { ascending: false }).limit(100);
+    if(refs && refs.length) {
+      // Get sponsor/referee names
+      const userIds = [...new Set(refs.flatMap(r => [r.sponsor_id, r.referee_id]))];
+      const { data: profiles } = await db.from('profiles').select('id, full_name').in('id', userIds);
+      const nameMap = {};
+      if(profiles) profiles.forEach(p => nameMap[p.id] = p.full_name);
+      refs.forEach(r => {
+        r.sponsor_name = nameMap[r.sponsor_id] || '—';
+        r.referee_name = nameMap[r.referee_id] || '—';
+      });
+      adminState.referralsList = refs;
+    } else {
+      adminState.referralsList = [];
+    }
+  } catch(e) { console.error('Load referrals error:', e); }
+}
+
 // ── NOTIFICATIONS ──
 function renderNotifications() {
   const templates = [
@@ -1283,7 +1430,10 @@ function toast(msg, type='success') {
 // ═══════════════════════════════════════
 // ACTIONS
 // ═══════════════════════════════════════
-function setPage(p) { adminState.page=p; adminState.searchQ=''; adminState.filterStatus='all'; render(); }
+function setPage(p) {
+  adminState.page=p; adminState.searchQ=''; adminState.filterStatus='all';
+  if(p==='referrals') loadReferralsAdmin().then(()=>render()); else render();
+}
 function openModal(m, item) { adminState.modal=m; adminState.editItem=item||null; render(); }
 function closeModal() { adminState.modal=null; adminState.editItem=null; pendingImages=[]; render(); }
 
@@ -1989,6 +2139,7 @@ async function initAdminSupabase() {
   try {
     db = supabase.createClient(SUPA_URL, SUPA_KEY);
     await loadAdminData();
+    await loadReferralsAdmin();
     listenOrders();
   } catch(e) { console.log('Using demo data'); }
   render();
