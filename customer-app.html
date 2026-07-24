@@ -380,7 +380,7 @@ const COUPONS={WELCOME10:{disc:10,min:0},RAMADAN15:{disc:15,min:50},AID20:{disc:
 let S={
   lang:'ar', tab:'home', catF:'all', search:'',
   cart:{}, favs:new Set(),
-  user:null, authMode:'login', authF:{name:'',phone:'',email:'',pass:'',refCode:''},
+  user:null, authMode:'login', authF:{name:'',phone:'',email:'',pass:'',pass2:'',refCode:''},
   promoType:'daily', modal:null,
   detailId:null, showAI:false, showNotif:false, subPage:null,
   orderDone:false, lastOrder:null, orderHistory:[],
@@ -1045,6 +1045,10 @@ function renderAccount(){
       </div>
     </div>
     <div class="acc-card">
+      <div class="acc-row" onclick="sendResetFromAccount()">
+        <span class="acc-icon">🔐</span><span class="acc-label">${L('تغيير كلمة المرور','Changer le mot de passe','Change password')}</span>
+        <span style="font-size:12px;color:var(--ts)">‹</span>
+      </div>
       <div class="acc-row danger" onclick="logout()">
         <span class="acc-icon">🚪</span><span class="acc-label">${T('logout')}</span>
       </div>
@@ -1287,6 +1291,23 @@ function renderAuth(){
       <div class="auth-sub">${L('توابل وبهارات من أجود المزارع التونسية','Épices des meilleures fermes tunisiennes','Spices from Tunisia\'s finest farms')}</div>
     </div>
     <div class="auth-form">
+      ${S.authMode==='forgot'?`
+      <div class="auth-title">${L('نسيت كلمة المرور','Mot de passe oublié','Forgot password')}</div>
+      <div class="auth-sub2">${L('أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين','Entrez votre email, nous vous enverrons un lien de réinitialisation','Enter your email, we\'ll send a reset link')}</div>
+      <input class="auth-inp" type="email" placeholder="${L('البريد الإلكتروني','Email','Email')}" oninput="S.authF.email=this.value" value="${S.authF.email||''}">
+      <button class="auth-btn" onclick="sendResetEmail()">📧 ${L('إرسال رابط التعيين','Envoyer le lien','Send reset link')}</button>
+      <div class="auth-switch">
+        <span onclick="S.authMode='login';render()">← ${L('العودة لتسجيل الدخول','Retour à la connexion','Back to login')}</span>
+      </div>
+
+      `:S.authMode==='reset'?`
+      <div class="auth-title">${L('كلمة مرور جديدة','Nouveau mot de passe','New password')}</div>
+      <div class="auth-sub2">${L('أدخل كلمة المرور الجديدة','Choisissez votre nouveau mot de passe','Choose your new password')}</div>
+      <input class="auth-inp" type="password" placeholder="${L('كلمة المرور الجديدة','Nouveau mot de passe','New password')}" oninput="S.authF.pass=this.value">
+      <input class="auth-inp" type="password" placeholder="${L('تأكيد كلمة المرور','Confirmer le mot de passe','Confirm password')}" oninput="S.authF.pass2=this.value">
+      <button class="auth-btn" onclick="doResetPassword()">🔐 ${L('تغيير كلمة المرور','Changer le mot de passe','Change password')}</button>
+
+      `:`
       <div class="auth-title">${S.authMode==='login'?T('login'):T('register')}</div>
       <div class="auth-sub2">${S.authMode==='login'?
         L('أدخل بريدك الإلكتروني أو رقم هاتفك','Connectez-vous avec email ou téléphone','Sign in with email or phone'):
@@ -1306,10 +1327,15 @@ function renderAuth(){
       `}
 
       <input class="auth-inp" type="password" placeholder="${T('pass')}" oninput="S.authF.pass=this.value">
+      ${S.authMode==='login'?`
+      <div style="text-align:left;margin:-4px 0 8px">
+        <span onclick="S.authMode='forgot';render()" style="font-size:12px;color:var(--g);font-weight:600;cursor:pointer">${L('نسيت كلمة المرور؟','Mot de passe oublié ?','Forgot password?')}</span>
+      </div>`:''}
       <button class="auth-btn" onclick="doAuth()">${S.authMode==='login'?T('login'):T('register')}</button>
       <div class="auth-switch">${S.authMode==='login'?L('ليس لديك حساب؟ ','Pas de compte? ','No account? '):L('لديك حساب؟ ','Déjà un compte? ','Have an account? ')}
         <span onclick="S.authMode=S.authMode==='login'?'register':'login';render()">${S.authMode==='login'?T('register'):T('login')}</span>
       </div>
+      `}
     </div>
   </div>`;}
 
@@ -1340,6 +1366,63 @@ function rmCart(id){
   });
 }
 function toggleFav(id){S.favs.has(id)?S.favs.delete(id):S.favs.add(id);render();}
+async function sendResetEmail(){
+  const email=S.authF.email?.trim();
+  if(!email||!email.includes('@')){
+    toast(L('أدخل بريداً إلكترونياً صحيحاً','Entrez un email valide','Enter a valid email'),'⚠️');
+    return;
+  }
+  if(!db){toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');return;}
+  toast(L('جاري الإرسال...','Envoi en cours...','Sending...'),'⏳');
+  const{error}=await db.auth.resetPasswordForEmail(email,{
+    redirectTo:window.location.origin+'/customer-app.html'
+  });
+  if(error){
+    toast(L('خطأ: ','Erreur: ','Error: ')+error.message,'⚠️');
+  }else{
+    toast(L('📧 تم إرسال رابط التعيين! تحقق من بريدك','📧 Lien envoyé! Vérifiez votre email','📧 Reset link sent! Check your email'));
+    S.authMode='login';
+    render();
+  }
+}
+
+async function doResetPassword(){
+  const pass=S.authF.pass, pass2=S.authF.pass2;
+  if(!pass||pass.length<6){
+    toast(L('كلمة المرور 6 أحرف على الأقل','Mot de passe min 6 caractères','Password min 6 characters'),'⚠️');
+    return;
+  }
+  if(pass!==pass2){
+    toast(L('كلمتا المرور غير متطابقتين','Les mots de passe ne correspondent pas','Passwords don\'t match'),'⚠️');
+    return;
+  }
+  if(!db){toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');return;}
+  toast(L('جاري التحديث...','Mise à jour...','Updating...'),'⏳');
+  const{error}=await db.auth.updateUser({password:pass});
+  if(error){
+    toast(L('خطأ: ','Erreur: ','Error: ')+error.message,'⚠️');
+  }else{
+    toast(L('🔐 تم تغيير كلمة المرور بنجاح!','🔐 Mot de passe modifié!','🔐 Password changed!'));
+    S.authMode='login';
+    S.authF.pass=''; S.authF.pass2='';
+    await db.auth.signOut();
+    S.user=null;
+    render();
+  }
+}
+
+async function sendResetFromAccount(){
+  if(!db||!S.user?.id){toast(L('لا يوجد اتصال','Pas de connexion','No connection'),'⚠️');return;}
+  const{data:{session}}=await db.auth.getSession();
+  if(!session?.user?.email){toast(L('لم يتم العثور على البريد','Email introuvable','Email not found'),'⚠️');return;}
+  toast(L('جاري الإرسال...','Envoi en cours...','Sending...'),'⏳');
+  const{error}=await db.auth.resetPasswordForEmail(session.user.email,{
+    redirectTo:window.location.origin+'/customer-app.html'
+  });
+  if(error){toast(L('خطأ: ','Erreur: ','Error: ')+error.message,'⚠️');}
+  else{toast(L('📧 تم إرسال رابط التغيير! تحقق من بريدك','📧 Lien envoyé! Vérifiez votre email','📧 Reset link sent! Check your email'));}
+}
+
 async function logout(){
   if(db) await db.auth.signOut();
   S.user=null; S.cart={}; S.spend=0; S.orderHistory=[];
@@ -1786,7 +1869,15 @@ async function initDB(){
 
     // ── Écouter changements auth ──
     db.auth.onAuthStateChange(async(event,session)=>{
+      if(event==='PASSWORD_RECOVERY'){
+        // User clicked the reset link in their email
+        S.authMode='reset';
+        S.user=null;
+        render();
+        return;
+      }
       if(event==='SIGNED_IN'&&session){
+        if(S.authMode==='reset')return; // Don't auto-login during password reset
         S.user={
           id:    session.user.id,
           name:  session.user.user_metadata?.full_name||'مستخدم',
