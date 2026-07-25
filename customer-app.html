@@ -1403,10 +1403,19 @@ async function doResetPassword(){
     return;
   }
   if(!db){toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');return;}
+  // Vérifier qu'on a une session active
+  const{data:{session:rs}}=await db.auth.getSession();
+  if(!rs){
+    toast(L('جلسة منتهية، أعد طلب الرابط','Session expirée, redemandez le lien','Session expired, request link again'),'⚠️');
+    S.authMode='forgot';
+    render();
+    return;
+  }
   toast(L('جاري التحديث...','Mise à jour...','Updating...'),'⏳');
   const{error}=await db.auth.updateUser({password:pass});
   if(error){
-    toast(L('خطأ: ','Erreur: ','Error: ')+error.message,'⚠️');
+    console.error('Update password error:',JSON.stringify(error));
+    toast(L('خطأ: ','Erreur: ','Error: ')+(error.message||JSON.stringify(error)),'⚠️');
   }else{
     toast(L('🔐 تم تغيير كلمة المرور بنجاح!','🔐 Mot de passe modifié!','🔐 Password changed!'));
     S.authMode='login';
@@ -1839,18 +1848,16 @@ async function initDB(){
       return;
     }
 
-    // ── Vérifier session existante (sauf recovery) ──
-    if(!_isRecovery){
-      const{data:{session}}=await db.auth.getSession();
-      if(session){
-        S.user={
-          id:    session.user.id,
-          name:  session.user.user_metadata?.full_name||'مستخدم',
-          phone: session.user.user_metadata?.phone||''
-        };
-        await loadCart();
-        await loadReferralData();
-      }
+    // ── Vérifier session existante ──
+    const{data:{session}}=await db.auth.getSession();
+    if(session&&!_isRecovery){
+      S.user={
+        id:    session.user.id,
+        name:  session.user.user_metadata?.full_name||'مستخدم',
+        phone: session.user.user_metadata?.phone||''
+      };
+      await loadCart();
+      await loadReferralData();
     }
 
     // ── Écouter les changements de statut commandes en temps réel ──
