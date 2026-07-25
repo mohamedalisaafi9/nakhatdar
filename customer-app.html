@@ -1405,6 +1405,8 @@ async function doResetPassword(){
   if(!db){toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');return;}
   // Vérifier qu'on a une session active
   const{data:{session:rs}}=await db.auth.getSession();
+  console.log('🔑 Reset session user:',rs?.user?.email,rs?.user?.id);
+  console.log('🔑 Session aal:',rs?.user?.aal);
   if(!rs){
     toast(L('جلسة منتهية، أعد طلب الرابط','Session expirée, redemandez le lien','Session expired, request link again'),'⚠️');
     S.authMode='forgot';
@@ -1412,7 +1414,8 @@ async function doResetPassword(){
     return;
   }
   toast(L('جاري التحديث...','Mise à jour...','Updating...'),'⏳');
-  const{error}=await db.auth.updateUser({password:pass});
+  const{data:updateData,error}=await db.auth.updateUser({password:pass});
+  console.log('🔑 Update result:',JSON.stringify({data:updateData?.user?.email,error}));
   if(error){
     console.error('Update password error:',JSON.stringify(error));
     toast(L('خطأ: ','Erreur: ','Error: ')+(error.message||JSON.stringify(error)),'⚠️');
@@ -1422,6 +1425,7 @@ async function doResetPassword(){
     S.authF.pass=''; S.authF.pass2='';
     await db.auth.signOut();
     S.user=null;
+    _isRecovery=false;
     render();
   }
 }
