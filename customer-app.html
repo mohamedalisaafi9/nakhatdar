@@ -1748,6 +1748,11 @@ async function syncCart(id,qty){
   try{await db.rpc('upsert_cart_item',{p_user_id:S.user.id,p_product_id:id,p_quantity:qty});}catch(e){}
 }
 
+// ── Détecter reset password AVANT la création du client Supabase ──
+const _preHash=window.location.hash||'';
+let _isRecovery=_preHash.includes('type=recovery');
+let _isExpiredLink=_preHash.includes('error=access_denied');
+
 async function initDB(){
   try{
     db=supabase.createClient(SUPA_URL,SUPA_KEY);
@@ -1816,37 +1821,36 @@ async function initDB(){
       console.log('✅ Coupons chargés:',coupons.length);
     }
 
-    // ── Détecter reset password via URL hash ──
-    const _hash=window.location.hash;
-    if(_hash&&_hash.includes('type=recovery')){
+    // ── Détecter reset password (pré-vérifié avant createClient) ──
+    if(_isRecovery){
       S.authMode='reset';
       S.user=null;
-      // Nettoyer le hash
       window.history.replaceState({},'',window.location.pathname);
       render();
-      return; // Ne pas auto-login
+      // Ne pas return — laisser onAuthStateChange s'enregistrer pour capter PASSWORD_RECOVERY
     }
     // ── Détecter erreur de lien expiré ──
-    if(_hash&&_hash.includes('error=access_denied')){
-      const params=new URLSearchParams(_hash.replace('#',''));
-      const errDesc=params.get('error_description')||'';
+    if(_isExpiredLink){
       S.authMode='forgot';
+      S.user=null;
       window.history.replaceState({},'',window.location.pathname);
       render();
       setTimeout(()=>toast(L('الرابط منتهي الصلاحية، أعد الطلب','Lien expiré, réessayez','Link expired, try again'),'⚠️'),500);
       return;
     }
 
-    // ── Vérifier session existante ──
-    const{data:{session}}=await db.auth.getSession();
-    if(session){
-      S.user={
-        id:    session.user.id,
-        name:  session.user.user_metadata?.full_name||'مستخدم',
-        phone: session.user.user_metadata?.phone||''
-      };
-      await loadCart();
-      await loadReferralData();
+    // ── Vérifier session existante (sauf recovery) ──
+    if(!_isRecovery){
+      const{data:{session}}=await db.auth.getSession();
+      if(session){
+        S.user={
+          id:    session.user.id,
+          name:  session.user.user_metadata?.full_name||'مستخدم',
+          phone: session.user.user_metadata?.phone||''
+        };
+        await loadCart();
+        await loadReferralData();
+      }
     }
 
     // ── Écouter les changements de statut commandes en temps réel ──
