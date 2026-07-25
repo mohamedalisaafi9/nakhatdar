@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nakhatddar.app",
+      "sha256_cert_fingerprints": [
+        "0C:A4:6D:B7:43:6E:B6:50:8B:68:67:D7:0D:C5:92:AA:D0:BB:63:CA:DF:4D:4F:83:EC:F7:61:EF:E1:BE:5A:24"
+      ]
+    }
+  }
+]
