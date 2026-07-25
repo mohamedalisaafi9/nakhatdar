@@ -1293,8 +1293,8 @@ function renderAuth(){
     <div class="auth-form">
       ${S.authMode==='forgot'?`
       <div class="auth-title">${L('نسيت كلمة المرور','Mot de passe oublié','Forgot password')}</div>
-      <div class="auth-sub2">${L('أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين','Entrez votre email, nous vous enverrons un lien de réinitialisation','Enter your email, we\'ll send a reset link')}</div>
-      <input class="auth-inp" type="email" placeholder="${L('البريد الإلكتروني','Email','Email')}" oninput="S.authF.email=this.value" value="${S.authF.email||''}">
+      <div class="auth-sub2">${L('أدخل بريدك الإلكتروني أو رقم هاتفك','Entrez votre email ou téléphone','Enter your email or phone number')}</div>
+      <input class="auth-inp" type="text" placeholder="${L('البريد الإلكتروني أو الهاتف','Email ou téléphone','Email or phone')}" oninput="S.authF.email=this.value" value="${S.authF.email||''}">
       <button class="auth-btn" onclick="sendResetEmail()">📧 ${L('إرسال رابط التعيين','Envoyer le lien','Send reset link')}</button>
       <div class="auth-switch">
         <span onclick="S.authMode='login';render()">← ${L('العودة لتسجيل الدخول','Retour à la connexion','Back to login')}</span>
@@ -1367,13 +1367,25 @@ function rmCart(id){
 }
 function toggleFav(id){S.favs.has(id)?S.favs.delete(id):S.favs.add(id);render();}
 async function sendResetEmail(){
-  const email=S.authF.email?.trim();
-  if(!email||!email.includes('@')){
-    toast(L('أدخل بريداً إلكترونياً صحيحاً','Entrez un email valide','Enter a valid email'),'⚠️');
+  const input=S.authF.email?.trim();
+  if(!input){
+    toast(L('أدخل بريدك أو رقم هاتفك','Entrez email ou téléphone','Enter email or phone'),'⚠️');
     return;
   }
   if(!db){toast(L('لا يوجد اتصال بالسيرفر','Pas de connexion serveur','No server connection'),'⚠️');return;}
   toast(L('جاري الإرسال...','Envoi en cours...','Sending...'),'⏳');
+
+  let email=input;
+  // Si c'est un téléphone, chercher l'email associé
+  if(!input.includes('@')){
+    const phone=input.replace(/[^0-9]/g,'');
+    const{data:pf}=await db.from('profiles').select('email').eq('phone',phone).single();
+    if(!pf?.email){
+      toast(L('رقم الهاتف غير مسجل أو ليس له بريد','Numéro non trouvé ou sans email','Phone not found or no email'),'⚠️');
+      return;
+    }
+    email=pf.email;
+  }
   try{
     const{error}=await db.auth.resetPasswordForEmail(email,{
       redirectTo:window.location.origin+'/customer-app.html'
@@ -1585,6 +1597,7 @@ async function doAuth(){
         id: data.user.id,
         full_name: S.authF.name,
         phone: S.authF.phone,
+        email: S.authF.email,
         preferred_lang: S.lang,
         loyalty_tier: 'starter',
         monthly_spend: 0,
@@ -1614,7 +1627,30 @@ async function doAuth(){
 
     // Détecter si c'est un email ou un téléphone
     const isEmail = input.includes('@');
-    const loginEmail = isEmail ? input : input.replace(/[^0-9]/g,'') + '@nakhat.tn';
+    let loginEmail = input;
+
+    if(!isEmail){
+      // Chercher le vrai email à partir du numéro de téléphone
+      const phone = input.replace(/[^0-9]/g,'');
+      toast(L('جاري البحث...','Recherche...','Searching...'),'⏳');
+      const{data:profile,error:pErr}=await db
+        .from('profiles')
+        .select('id')
+        .eq('phone',phone)
+        .single();
+      if(pErr||!profile){
+        toast(L('رقم الهاتف غير مسجل','Numéro non trouvé','Phone number not found'),'⚠️');
+        return;
+      }
+      // Chercher l'email dans profiles
+      const{data:pf2}=await db.from('profiles').select('email').eq('id',profile.id).single();
+      if(pf2?.email){
+        loginEmail=pf2.email;
+      }else{
+        toast(L('لم يتم العثور على البريد. سجّل بالإيميل','Email introuvable. Connectez-vous par email','Email not found. Use email to login'),'⚠️');
+        return;
+      }
+    }
 
     toast(L('جاري تسجيل الدخول...','Connexion...','Signing in...'),'⏳');
 
