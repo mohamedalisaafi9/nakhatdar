@@ -1830,14 +1830,6 @@ async function initDB(){
       console.log('✅ Coupons chargés:',coupons.length);
     }
 
-    // ── Détecter reset password (pré-vérifié avant createClient) ──
-    if(_isRecovery){
-      S.authMode='reset';
-      S.user=null;
-      window.history.replaceState({},'',window.location.pathname);
-      render();
-      // Ne pas return — laisser onAuthStateChange s'enregistrer pour capter PASSWORD_RECOVERY
-    }
     // ── Détecter erreur de lien expiré ──
     if(_isExpiredLink){
       S.authMode='forgot';
@@ -1846,6 +1838,11 @@ async function initDB(){
       render();
       setTimeout(()=>toast(L('الرابط منتهي الصلاحية، أعد الطلب','Lien expiré, réessayez','Link expired, try again'),'⚠️'),500);
       return;
+    }
+    // ── Si recovery : marquer le mode mais NE PAS nettoyer le hash ni render ──
+    if(_isRecovery){
+      S.authMode='reset';
+      S.user=null;
     }
 
     // ── Vérifier session existante ──
@@ -1907,21 +1904,23 @@ async function initDB(){
 
     // ── Écouter changements auth ──
     db.auth.onAuthStateChange(async(event,session)=>{
+      console.log('Auth event:',event);
       if(event==='PASSWORD_RECOVERY'){
-        // User clicked the reset link in their email
         S.authMode='reset';
         S.user=null;
+        window.history.replaceState({},'',window.location.pathname);
         render();
         return;
       }
       if(event==='SIGNED_IN'&&session){
-        if(S.authMode==='reset')return; // Don't auto-login during password reset
+        if(S.authMode==='reset'||_isRecovery)return;
         S.user={
           id:    session.user.id,
           name:  session.user.user_metadata?.full_name||'مستخدم',
           phone: session.user.user_metadata?.phone||''
         };
         await loadCart();
+        await loadReferralData();
         render();
       }else if(event==='SIGNED_OUT'){
         S.user=null;S.cart={};render();
