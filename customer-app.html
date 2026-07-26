@@ -2030,6 +2030,38 @@ fixViewport();
 window.addEventListener('resize',fixViewport);
 window.addEventListener('orientationchange',()=>setTimeout(fixViewport,100));
 
+/* ═══════ BACK BUTTON (Android) ═══════ */
+let _backExit=false;
+function navPush(){history.pushState({nd:1},'');}
+// Push initial state so first back doesn't exit
+history.replaceState({nd:1},'');
+navPush();
+
+window.addEventListener('popstate',function(){
+  // Modal open? close it
+  if(S.modal){S.modal=null;render();navPush();return;}
+  // Detail page? close it
+  if(S.detailId){S.detailId=null;render();navPush();return;}
+  // AI chat open? close it
+  if(S.showAI){S.showAI=false;render();navPush();return;}
+  // Notifications open? close them
+  if(S.showNotif){S.showNotif=false;render();navPush();return;}
+  // Sub-page (orders, favs, addresses)? go back to account
+  if(S.subPage){S.subPage=null;render();navPush();return;}
+  // Category filter? go back to all
+  if(S.catF!=='all'){S.catF='all';S.search='';render();navPush();return;}
+  // Search active? clear it
+  if(S.search){S.search='';render();navPush();return;}
+  // Not on home tab? go to home
+  if(S.tab!=='home'){S.tab='home';S.showAI=false;S.showNotif=false;S.detailId=null;S.subPage=null;render();navPush();return;}
+  // Already on home — double-back to exit
+  if(_backExit){return;} // let it exit naturally
+  _backExit=true;
+  toast(L('اضغط مرة أخرى للخروج','Appuyez encore pour quitter','Press back again to exit'),'⚠️');
+  navPush();
+  setTimeout(()=>{_backExit=false;},2000);
+});
+
 /* ═══════ INIT ═══════ */
 loadS();
 // Check URL for referral code (?ref=ND-XXXX)
