@@ -147,6 +147,10 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .pc-disc{position:absolute;top:6px;right:6px;background:var(--rd);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
 .pc-new{position:absolute;top:6px;right:6px;background:var(--gm);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
 .pc-noreward{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:8px;font-weight:600;padding:2px 6px;border-radius:10px}
+.cat-nav{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cat-nav::-webkit-scrollbar{display:none}
+.cat-nav-btn{flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid var(--brd);background:var(--bei);font-size:11px;font-weight:600;color:var(--tm);cursor:pointer;white-space:nowrap;transition:all .2s}
+.cat-nav-btn.active{background:var(--g);color:#fff;border-color:var(--g)}
 .pc-fav{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
 .pc-body{padding:8px 10px 10px}
 .pc-name{font-size:12px;font-weight:700;color:var(--td);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -509,6 +513,27 @@ function toast(msg,icon='✅'){
 }
 
 /* ═══════ RENDER ENGINE ═══════ */
+function renderCatNav(){
+  return `<div class="cat-nav">${CATS.map(c=>`<button class="cat-nav-btn ${S.catF===c.id?'active':''}" onclick="S.catF='${c.id}';render()">${c.e} ${c[S.lang]}</button>`).join('')}</div>`;
+}
+
+function liveSearch(){
+  const cont=document.getElementById('home-results');
+  if(!cont){render();return;}
+  const filt=S.search?PRODS.filter(p=>p.ar.includes(S.search)||p.fr.toLowerCase().includes(S.search.toLowerCase())):
+    (S.catF==='all'?PRODS.filter(p=>p.feat):PRODS.filter(p=>p.cat===S.catF));
+  if(S.search||S.catF!=='all'){
+    cont.innerHTML=`<div class="sec" style="padding-bottom:16px">
+      <div class="sec-h">
+        <span class="sec-t">${S.search?'🔍 ('+filt.length+')':CATS.find(c=>c.id===S.catF)?.e+' '+CATS.find(c=>c.id===S.catF)?.[S.lang]}</span>
+        ${S.catF!=='all'?'<button class="sec-a" onclick="S.catF=\'all\';render()">✕</button>':''}
+      </div>
+      ${S.catF!=='all'&&!S.search?renderCatNav():''}
+      <div class="pg">${filt.length?filt.map(p=>pc(p)).join(''):'<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ts)">'+L('لا توجد نتائج','Aucun résultat','No results')+'</div>'}</div>
+    </div>`;
+  } else { render(); }
+}
+
 function render(){
   const root=document.getElementById('root');
   if(!S.user){root.innerHTML=renderAuth();saveS();return;}
@@ -631,9 +656,10 @@ function renderHome(){
   return `
   <div class="srch"><div class="srch-inner">
     <span>🔍</span>
-    <input placeholder="${T('search')}" value="${S.search}" oninput="S.search=this.value;render()">
+    <input placeholder="${T('search')}" value="${S.search}" oninput="S.search=this.value;liveSearch()">
     ${S.search?`<button onclick="S.search='';render()" style="border:none;background:none;cursor:pointer;font-size:14px;color:var(--ts)">✕</button>`:''}
   </div></div>
+  <div id="home-results">
   ${!S.search&&S.catF==='all'?`
   <div class="bsc">
     <div class="bnr">
@@ -669,21 +695,23 @@ function renderHome(){
     <span class="sec-t">⭐ ${T('feat')}</span>
     <button class="sec-a" onclick="S.catF='all';render()">${T('seeall')}</button>
   </div></div>
-  <div class="psc">${feat.map(p=>pc(p)).join('')}</div>
+  <div class="pg">${feat.map(p=>pc(p)).join('')}</div>
   <div class="sec"><div class="sec-h"><span class="sec-t">🆕 ${T('newarr')}</span></div></div>
-  <div class="psc">${newP.map(p=>pc(p)).join('')}</div>
+  <div class="pg">${newP.map(p=>pc(p)).join('')}</div>
   <div class="sec"><div class="sec-h">
     <span class="sec-t">🔥 ${T('promoday')}</span>
     <button class="sec-a" onclick="S.tab='promos';render()">${T('seeall')}</button>
   </div></div>
-  <div class="psc">${promo.map(p=>pc(p)).join('')}</div>`:`
+  <div class="pg">${promo.map(p=>pc(p)).join('')}</div>`:`
   <div class="sec" style="padding-bottom:16px">
     <div class="sec-h">
       <span class="sec-t">${S.search?`🔍 (${filt.length})`:CATS.find(c=>c.id===S.catF)?.e+' '+CATS.find(c=>c.id===S.catF)?.[S.lang]}</span>
       ${S.catF!=='all'?`<button class="sec-a" onclick="S.catF='all';render()">✕</button>`:''}
     </div>
+    ${S.catF!=='all'&&!S.search?renderCatNav():''}
     <div class="pg">${filt.length?filt.map(p=>pc(p)).join(''):`<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ts)">${L('لا توجد نتائج','Aucun résultat','No results')}</div>`}</div>
-  </div>`}`;}
+  </div>`}
+  </div>`;}
 
 /* ── PROMOS ── */
 function renderPromos(){
