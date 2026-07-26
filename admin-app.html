@@ -928,7 +928,7 @@ function renderCustomers() {
           <td><span class="badge badge-${c.tier}">${MOCK_TIER_ICONS[c.tier]} ${tierLabel[c.tier]||c.tier}</span></td>
           <td style="font-size:12px;color:var(--text-mid)">${c.lastOrder}</td>
           <td>
-            <button class="btn btn-outline btn-sm">👁️ Profil</button>
+            <button class="btn btn-outline btn-sm" onclick="viewClient('${c.id}')">👁️ Profil</button>
             <button class="btn btn-outline btn-sm" onclick="toast('📞 ${c.phone}','warning')">📞</button>
           </td>
         </tr>`).join('')}
@@ -963,7 +963,7 @@ function renderCoupons() {
           <td style="font-size:12px">${c.valid}</td>
           <td><span class="badge ${c.isActive?'badge-active':'badge-inactive'}">${c.isActive?'Actif':'Inactif'}</span></td>
           <td>
-            <button class="btn btn-outline btn-sm">✏️</button>
+            <button class="btn btn-outline btn-sm" onclick="editCoupon('${c.code}')">✏️</button>
             <button class="btn btn-sm" style="background:${c.isActive?'#ffebee':'var(--green-pale)'};color:${c.isActive?'var(--red)':'var(--green)'};border:none;cursor:pointer" onclick="toggleCoupon('${c.code}')">
               ${c.isActive?'Désactiver':'Activer'}
             </button>
@@ -1260,18 +1260,20 @@ function renderProductForm(p) {
   </div>`;
 }
 
-function renderCouponForm() {
+function renderCouponForm(c) {
+  c = c || {};
+  const isEdit = !!c.code;
   return `
   <div class="form-grid">
-    <div class="form-group"><label class="form-label">Code</label><input class="form-input" placeholder="WELCOME10" style="text-transform:uppercase" id="new-coupon-code"></div>
-    <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" min="1" max="100" id="new-coupon-disc" placeholder="10"></div>
-    <div class="form-group"><label class="form-label">Commande minimum (DT)</label><input class="form-input" type="number" min="0" id="new-coupon-min" placeholder="0"></div>
-    <div class="form-group"><label class="form-label">Utilisations max</label><input class="form-input" type="number" id="new-coupon-max" placeholder="1000"></div>
-    <div class="form-group"><label class="form-label">Date expiration</label><input class="form-input" type="date" id="new-coupon-date"></div>
+    <div class="form-group"><label class="form-label">Code</label><input class="form-input" placeholder="WELCOME10" style="text-transform:uppercase" id="new-coupon-code" value="${c.code||''}" ${isEdit?'readonly style="text-transform:uppercase;background:var(--bg-hover);cursor:not-allowed"':''}></div>
+    <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" min="1" max="100" id="new-coupon-disc" placeholder="10" value="${c.disc||''}"></div>
+    <div class="form-group"><label class="form-label">Commande minimum (DT)</label><input class="form-input" type="number" min="0" id="new-coupon-min" placeholder="0" value="${c.min||0}"></div>
+    <div class="form-group"><label class="form-label">Utilisations max</label><input class="form-input" type="number" id="new-coupon-max" placeholder="1000" value="${c.maxUses||1000}"></div>
+    <div class="form-group"><label class="form-label">Date expiration</label><input class="form-input" type="date" id="new-coupon-date" value="${c.valid&&c.valid!=='—'?c.valid:''}"></div>
   </div>
   <div class="form-actions">
     <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
-    <button class="btn btn-primary" onclick="saveCoupon()">💾 Créer le coupon</button>
+    <button class="btn btn-primary" onclick="saveCoupon(${isEdit?"true":""})">💾 ${isEdit?'Modifier':'Créer le coupon'}</button>
   </div>`;
 }
 
@@ -1647,16 +1649,56 @@ function saveZone() {
   closeModal();
 }
 
-function saveCoupon() {
+function editCoupon(code) {
+  const c = MOCK.coupons.find(x=>x.code===code);
+  if(!c) return;
+  openModal('edit-coupon', {...c});
+}
+
+async function saveCoupon(isEdit) {
   const code = document.getElementById('new-coupon-code')?.value?.toUpperCase()?.trim();
   const disc = parseInt(document.getElementById('new-coupon-disc')?.value);
   const min  = parseFloat(document.getElementById('new-coupon-min')?.value||0);
   const max  = parseInt(document.getElementById('new-coupon-max')?.value||1000);
-  const date = document.getElementById('new-coupon-date')?.value || '2025-12-31';
+  const date = document.getElementById('new-coupon-date')?.value || null;
   if (!code || isNaN(disc) || disc<1||disc>100) { toast('Code et réduction obligatoires (1-100%)','error'); return; }
-  if (MOCK.coupons.find(c=>c.code===code)) { toast('Ce code existe déjà !','error'); return; }
-  MOCK.coupons.push({code, disc, min, uses:0, maxUses:max, valid:date, isActive:true});
-  toast(`✅ Coupon ${code} créé !`);
+
+  if (isEdit) {
+    // Update in Supabase
+    if (db) {
+      try {
+        const { error } = await db.from('coupons').update({
+          discount_pct: disc,
+          min_order: min,
+          max_uses: max,
+          valid_until: date || null
+        }).eq('code', code);
+        if (error) { toast('Erreur: '+error.message,'error'); return; }
+      } catch(e) { toast('Erreur Supabase: '+e.message,'error'); return; }
+    }
+    const c = MOCK.coupons.find(x=>x.code===code);
+    if (c) { c.disc=disc; c.min=min; c.maxUses=max; c.valid=date||'—'; }
+    toast(`✅ Coupon ${code} modifié !`);
+  } else {
+    if (MOCK.coupons.find(c=>c.code===code)) { toast('Ce code existe déjà !','error'); return; }
+    // Insert in Supabase
+    if (db) {
+      try {
+        const { error } = await db.from('coupons').insert({
+          code: code,
+          discount_pct: disc,
+          min_order: min,
+          max_uses: max,
+          valid_until: date || null,
+          is_active: true,
+          current_uses: 0
+        });
+        if (error) { toast('Erreur: '+error.message,'error'); return; }
+      } catch(e) { toast('Erreur Supabase: '+e.message,'error'); return; }
+    }
+    MOCK.coupons.push({code, disc, min, uses:0, maxUses:max, valid:date||'—', isActive:true});
+    toast(`✅ Coupon ${code} créé !`);
+  }
   closeModal();
 }
 
@@ -1670,9 +1712,77 @@ function editZone(id) {
   openModal('add-zone', z);
 }
 
-function toggleCoupon(code) {
+function viewClient(id) {
+  const c = MOCK.customers.find(x=>x.id===id);
+  if(!c) return;
+  const tierLabel = {starter:'Starter 🌱',bronze:'Bronze 🥉',silver:'Argent 🥈',gold:'Or 🥇',vip:'VIP 💎'};
+  const tierColors = {starter:'#6c757d',bronze:'#cd7f32',silver:'#aaa9ad',gold:'#ffd700',vip:'#9b59b6'};
+  const orders = MOCK.orders.filter(o=>o.customer===c.name);
+  adminState.editItem = c;
+  adminState.modal = 'view-client';
+  // Custom render for client modal
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.onclick = (e)=>{if(e.target===modal){modal.remove();}};
+  modal.innerHTML = `<div class="modal-content" style="max-width:500px">
+    <div class="modal-header"><span class="modal-title">👤 Profil client</span><button class="modal-close" onclick="this.closest('.modal-bg').remove()">✕</button></div>
+    <div class="modal-body">
+      <div style="text-align:center;padding:16px 0 12px">
+        <div style="width:64px;height:64px;border-radius:50%;background:${tierColors[c.tier]||'#6c757d'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px">${c.name.charAt(0).toUpperCase()}</div>
+        <div style="font-size:18px;font-weight:700">${c.name}</div>
+        <span class="badge badge-${c.tier}" style="margin-top:6px;display:inline-block">${tierLabel[c.tier]||c.tier}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0">
+        <div style="background:var(--bg-hover);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">${c.spend.toFixed(3)} DT</div>
+          <div style="font-size:11px;color:var(--text-mid)">Dépenses totales</div>
+        </div>
+        <div style="background:var(--bg-hover);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--green-dark)">${c.monthlySpend.toFixed(3)} DT</div>
+          <div style="font-size:11px;color:var(--text-mid)">Dépenses ce mois</div>
+        </div>
+        <div style="background:var(--bg-hover);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800">${c.orders}</div>
+          <div style="font-size:11px;color:var(--text-mid)">Commandes</div>
+        </div>
+        <div style="background:var(--bg-hover);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--gold)">${c.referralCredit.toFixed(3)} DT</div>
+          <div style="font-size:11px;color:var(--text-mid)">Crédit parrainage</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--text-mid)">📧 Email</span><span style="font-weight:600">${c.email}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--text-mid)">📞 Téléphone</span><span style="font-weight:600">${c.phone}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--text-mid)">🔗 Code parrainage</span><span style="font-weight:600">${c.referralCode}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--text-mid)">📅 Inscrit le</span><span style="font-weight:600">${c.createdAt}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--text-mid)">🛒 Dernière commande</span><span style="font-weight:600">${c.lastOrder}</span></div>
+      </div>
+      ${orders.length>0?`
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+        <div style="font-weight:700;margin-bottom:8px">Dernières commandes</div>
+        ${orders.slice(0,5).map(o=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--text-mid)">
+          <span>${o.num}</span><span>${o.date}</span><span style="font-weight:600;color:var(--green)">${parseFloat(o.total).toFixed(3)} DT</span>
+          <span class="badge badge-${o.status==='delivered'?'active':'warning'}" style="font-size:10px">${o.status}</span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function toggleCoupon(code) {
   const c = MOCK.coupons.find(x=>x.code===code);
-  if (c) { c.isActive=!c.isActive; toast(c.isActive?`Coupon ${code} activé`:`Coupon ${code} désactivé`); render(); }
+  if (!c) return;
+  const newState = !c.isActive;
+  if (db) {
+    try {
+      const { error } = await db.from('coupons').update({ is_active: newState }).eq('code', code);
+      if (error) { toast('Erreur: '+error.message,'error'); return; }
+    } catch(e) { toast('Erreur: '+e.message,'error'); return; }
+  }
+  c.isActive = newState;
+  toast(newState?`Coupon ${code} activé`:`Coupon ${code} désactivé`);
+  render();
 }
 
 async function sendNotification() {
@@ -1902,6 +2012,7 @@ function renderModal() {
     case 'add-product':  title='Nouveau produit';           body=renderProductForm({}); break;
     case 'edit-product': title='Modifier le produit';       body=renderProductForm(adminState.editItem||{}); break;
     case 'add-coupon':   title='Nouveau coupon';            body=renderCouponForm(); break;
+    case 'edit-coupon':  title='Modifier le coupon';        body=renderCouponForm(adminState.editItem||{}); break;
     case 'add-driver':   title='Nouveau livreur';           body=renderDriverForm(); break;
     case 'add-zone':     title=adminState.editItem?'Modifier la zone':'Nouvelle zone'; body=renderZoneForm(adminState.editItem||{}); break;
     case 'send-notif':   title='Envoyer une notification';  body=renderNotifModal(); break;
@@ -2270,11 +2381,16 @@ async function loadAdminData() {
       MOCK.customers = profiles.map(p => ({
         id: p.id,
         name: p.full_name || 'Client',
+        email: p.email || '—',
         phone: p.phone || '—',
         orders: MOCK.orders.filter(o=>o.customer===p.full_name).length,
         spend: parseFloat(p.total_spend||0),
+        monthlySpend: parseFloat(p.monthly_spend||0),
         tier: p.loyalty_tier || 'starter',
-        lastOrder: MOCK.orders.find(o=>o.customer===p.full_name)?.date || '—'
+        referralCode: p.referral_code || '—',
+        referralCredit: parseFloat(p.referral_credit||0),
+        lastOrder: MOCK.orders.find(o=>o.customer===p.full_name)?.date || '—',
+        createdAt: p.created_at?.split('T')[0] || '—'
       }));
     }
 
