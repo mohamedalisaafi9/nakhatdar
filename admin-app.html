@@ -735,6 +735,7 @@ function renderProducts() {
                 color:${p.isActive?'var(--green)':'var(--text-mid)'}">
               ${p.isActive?'● Actif':'○ Inactif'}
             </button>
+            ${p.noReward?'<span style="display:inline-block;margin-left:4px;padding:2px 6px;border-radius:10px;background:#fff3cd;color:#856404;font-size:9px;font-weight:600">Sans fidélité</span>':''}
           </td>
           <td style="white-space:nowrap">
             <button class="btn btn-outline btn-sm" onclick="editProduct('${p.id}')">✏️</button>
@@ -1527,6 +1528,7 @@ async function saveProduct() {
   const promo  = parseFloat(document.getElementById('prod-promo')?.value) || null;
   const unit   = document.getElementById('prod-unit')?.value || '100g';
   const desc   = document.getElementById('prod-desc')?.value?.trim() || '';
+  const noReward = document.getElementById('prod-no-reward')?.checked || false;
 
   if (!nameAr || !nameFr || isNaN(price)) {
     toast('Remplissez les champs obligatoires (*)','error'); return;
@@ -1552,6 +1554,7 @@ async function saveProduct() {
             stock_qty:    stock,
             images:       imagesList,
             category_id:  categoryId,
+            exclude_from_rewards: noReward,
             updated_at:   new Date().toISOString()
           })
           .eq('id', adminState.editItem.id);
@@ -1577,7 +1580,8 @@ async function saveProduct() {
             category_id:   categoryId,
             is_active:     true,
             is_featured:   false,
-            is_new:        true
+            is_new:        true,
+            exclude_from_rewards: noReward
           })
           .select()
           .single();
@@ -1806,6 +1810,13 @@ function renderProductForm(p) {
         </div>
       `).join('')}
     </div>
+  </div>
+  <div class="form-group" style="margin-top:10px">
+    <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="prod-no-reward" ${p.noReward?'checked':''} style="accent-color:#e67e22;width:18px;height:18px">
+      Exclure du système fidélité
+    </label>
+    <div style="font-size:11px;color:var(--text-mid);margin-top:4px">Ce produit ne bénéficiera pas de la réduction fidélité et ne comptera pas dans le cumul mensuel</div>
   </div>
   <div class="form-group" style="margin-top:10px"><label class="form-label">Description</label>
     <textarea class="form-textarea" id="prod-desc" placeholder="Description du produit...">${p.description||p.desc||''}</textarea></div>
@@ -2208,7 +2219,8 @@ async function loadAdminData() {
         stock: parseFloat(p.stock_qty||0),
         unit: p.unit || '100g',
         isActive: p.is_active,
-        description: p.description_ar || ''
+        description: p.description_ar || '',
+        noReward: p.exclude_from_rewards || false
       }));
       console.log('✅ Products loaded:', prods.length);
     }

@@ -146,6 +146,7 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .pc-img{width:100%;aspect-ratio:1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden}
 .pc-disc{position:absolute;top:6px;right:6px;background:var(--rd);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
 .pc-new{position:absolute;top:6px;right:6px;background:var(--gm);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+.pc-noreward{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:8px;font-weight:600;padding:2px 6px;border-radius:10px}
 .pc-fav{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
 .pc-body{padding:8px 10px 10px}
 .pc-name{font-size:12px;font-weight:700;color:var(--td);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -400,6 +401,7 @@ const getTier=s=>TIERS.find(t=>s>=t.min&&s<=t.max)||TIERS[0];
 const getDisc=()=>S.user?getTier(S.spend).disc:0;
 const cartCount=()=>Object.values(S.cart).reduce((a,b)=>a+b,0);
 const cartSub=()=>PRODS.filter(p=>S.cart[p.id]).reduce((a,p)=>a+(p.pp||p.p)*S.cart[p.id],0);
+const cartSubReward=()=>PRODS.filter(p=>S.cart[p.id]&&!p.noReward).reduce((a,p)=>a+(p.pp||p.p)*S.cart[p.id],0);
 const delivFee=()=>{
   const z=ZONES.find(z=>z.gov===S.df.gov&&z.city===S.df.city&&(z.area===S.df.area||z.area===''));
   return z?z.price:5;
@@ -606,6 +608,7 @@ function pc(p){
       ${p.pp?`<span class="pc-disc">−${Math.round((1-p.pp/p.p)*100)}%</span>`:''}
       ${p.new&&!p.pp?`<span class="pc-new">${L('جديد','Nouveau','New')}</span>`:''}
       <button class="pc-fav" onclick="event.stopPropagation();toggleFav('${p.id}')">${fav?'❤️':'🤍'}</button>
+      ${p.noReward?`<span class="pc-noreward">${L('بدون خصم فيداليتي','Sans réduction fidélité','No loyalty discount')}</span>`:''}
     </div>
     <div class="pc-body">
       <div class="pc-name">${S.lang==='ar'?p.ar:p.fr}</div>
@@ -880,7 +883,7 @@ function renderCart(){
     <div style="font-size:15px;font-weight:700;color:var(--tm);margin-bottom:6px">${T('empty')}</div>
     <button class="ck-btn" style="max-width:180px;margin:16px auto 0;display:block" onclick="S.tab='home';render()">${L('تسوق الآن','Magasiner','Shop now')}</button>
   </div>`;
-  const sub=cartSub(), disc=getDisc(), ldAmt=sub*disc/100;
+  const sub=cartSub(), disc=getDisc(), subR=cartSubReward(), ldAmt=subR*disc/100;
   const cAmt=S.couponApplied?sub*S.couponApplied.disc/100:0;
   // Referral: réduction filleul (1ère commande, pending referral, min 30 DT)
   const hasRefDisc=S.referredBy&&S.hasPendingReferee&&sub>=30;
@@ -1068,6 +1071,7 @@ function renderDetail(){
         <span class="pd-price">${fp(price)}</span>
         ${p.pp?`<span class="pd-old">${fp(p.p)}</span><span class="pill pill-r">−${Math.round((1-p.pp/p.p)*100)}%</span>`:''}
       </div>
+      ${p.noReward?`<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:6px 10px;margin-bottom:10px;font-size:11px;font-weight:600;color:#856404;display:flex;align-items:center;gap:6px">⚠️ ${L('هذا المنتج مستثنى من خصم الفيداليتي','Ce produit est exclu de la réduction fidélité','This product is excluded from the loyalty discount')}</div>`:''}
       <div class="pd-sec">${T('desc')}</div>
       <div class="pd-desc">${S.lang==='ar'?p.dar:p.dfr}</div>
       ${p.ben?.length?`<div class="pd-sec">${T('benefits')}</div>
@@ -1531,7 +1535,7 @@ async function placeOrder(){
       const num = orderData?.order_number || 'ND-'+Date.now().toString().slice(-6);
       S.lastOrder={id:num, num, total:sub, hasGift:sub>=200, date:new Date().toISOString(), items:ids};
       S.orderHistory.unshift(S.lastOrder);
-      S.spend+=sub; S.modal=null; S.orderDone=true; S.cart={};
+      S.spend+=cartSubReward(); S.modal=null; S.orderDone=true; S.cart={};
       render();
       return;
     }catch(e){
@@ -1543,7 +1547,7 @@ async function placeOrder(){
   const num='ND-'+Date.now().toString().slice(-6);
   S.lastOrder={id:num, num, total:sub, hasGift:sub>=200, date:new Date().toISOString(), items:ids};
   S.orderHistory.unshift(S.lastOrder);
-  S.spend+=sub; S.modal=null; S.orderDone=true; S.cart={};
+  S.spend+=cartSubReward(); S.modal=null; S.orderDone=true; S.cart={};
   render();
 }
 
@@ -1831,7 +1835,8 @@ async function initDB(){
           feat:  p.is_featured,
           dar:   p.description_ar||'',
           dfr:   p.description_fr||'',
-          ben:   p.benefits_ar?p.benefits_ar.split('\n'):[]
+          ben:   p.benefits_ar?p.benefits_ar.split('\n'):[],
+          noReward: p.exclude_from_rewards||false
         });
       });
       console.log('✅ Produits chargés depuis Supabase:',PRODS.length);
