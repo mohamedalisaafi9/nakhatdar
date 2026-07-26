@@ -1724,7 +1724,7 @@ function viewClient(id) {
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.onclick = (e)=>{if(e.target===modal){modal.remove();}};
-  modal.innerHTML = `<div class="modal-content" style="max-width:500px">
+  modal.innerHTML = `<div class="modal" style="max-width:500px">
     <div class="modal-header"><span class="modal-title">👤 Profil client</span><button class="modal-close" onclick="this.closest('.modal-bg').remove()">✕</button></div>
     <div class="modal-body">
       <div style="text-align:center;padding:16px 0 12px">
