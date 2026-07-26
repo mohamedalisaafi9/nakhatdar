@@ -1845,6 +1845,28 @@ async function initDB(){
       .eq('is_active',true)
       .order('is_featured',{ascending:false});
 
+    // ── Charger catégories depuis Supabase ──
+    const{data:cats}=await db
+      .from('categories')
+      .select('*')
+      .eq('is_active',true)
+      .order('sort_order',{ascending:true});
+
+    if(cats&&cats.length>0){
+      // Garder "Tous" en premier, remplacer le reste
+      CATS.length=1; // garde {id:'all',...}
+      cats.forEach(c=>{
+        CATS.push({
+          id:   c.slug,
+          e:    c.icon_url||'🏷️',
+          ar:   c.name_ar||c.name_fr,
+          fr:   c.name_fr,
+          en:   c.name_en||c.name_fr
+        });
+      });
+      console.log('✅ Catégories chargées:',cats.length);
+    }
+
     if(prods&&prods.length>0){
       // Remplacer les données locales par Supabase
       PRODS.length=0;
