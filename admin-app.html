@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --sidebar-w: 220px;
@@ -504,7 +505,10 @@ function renderTopbar() {
         🔍 <input placeholder="Rechercher..." value="${adminState.searchQ}"
           oninput="adminState.searchQ=this.value;render()">
       </div>
-      ${adminState.page==='products'?`<button class="btn btn-primary" onclick="openModal('add-product')">+ Produit</button>`:''}
+      ${adminState.page==='products'?`<button class="btn btn-primary" onclick="openModal('add-product')">+ Produit</button>
+        <button class="btn btn-outline" onclick="document.getElementById('excel-import').click()">📥 Import Excel</button>
+        <input type="file" id="excel-import" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
+        <button class="btn btn-outline" onclick="downloadTemplate()">📄 Modèle</button>`:''}
       ${adminState.page==='coupons'?`<button class="btn btn-primary" onclick="openModal('add-coupon')">+ Coupon</button>`:''}
       ${adminState.page==='drivers'?`<button class="btn btn-primary" onclick="openModal('add-driver')">+ Livreur</button>`:''}
       ${adminState.page==='zones'?`<button class="btn btn-primary" onclick="openModal('add-zone')">+ Zone</button>`:''}
@@ -1768,6 +1772,98 @@ function viewClient(id) {
     </div>
   </div>`;
   document.body.appendChild(modal);
+}
+
+// ── EXCEL IMPORT ──
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const headers = ['nom_arabe','nom_francais','categorie_slug','prix','prix_promo','unite','stock','nouveau','description_ar','description_fr','bienfaits'];
+  const example = ['فلفل أحمر حار','Piment rouge','spices',4.500,3.200,'100g',50,'oui','فلفل تونسي أصيل','Piment tunisien authentique','🔥 مضاد للأكسدة|💊 يحسن الدورة الدموية'];
+  const catHeaders = ['slug','nom_fr','nom_ar'];
+  const catData = MOCK.categories.map(c=>[c.slug||c.id, c.name, c.nameAr||'']);
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  ws['!cols'] = [{wch:22},{wch:22},{wch:16},{wch:10},{wch:10},{wch:10},{wch:8},{wch:10},{wch:30},{wch:30},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Produits');
+
+  const ws2 = XLSX.utils.aoa_to_sheet([catHeaders, ...catData]);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Catégories');
+
+  XLSX.writeFile(wb, 'modele_produits_nakhatdar.xlsx');
+  toast('📄 Modèle téléchargé !');
+}
+
+async function importExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data);
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws);
+
+    if (!rows.length) { toast('Fichier vide !','error'); return; }
+
+    // Map category slugs to IDs
+    const catMap = {};
+    MOCK.categories.forEach(c => { catMap[c.slug||c.id] = c.id; catMap[c.name?.toLowerCase()] = c.id; });
+
+    let added = 0, errors = 0;
+    for (const row of rows) {
+      const nameAr = (row.nom_arabe || row.name_ar || row['Nom arabe'] || '').toString().trim();
+      const nameFr = (row.nom_francais || row.name_fr || row['Nom français'] || row['Nom francais'] || '').toString().trim();
+      const catSlug = (row.categorie_slug || row.categorie || row.category || row['Catégorie'] || 'spices').toString().trim().toLowerCase();
+      const price = parseFloat(row.prix || row.price || 0);
+      const promo = parseFloat(row.prix_promo || row.promo_price || 0) || null;
+      const unit = (row.unite || row.unit || row['Unité'] || '100g').toString().trim();
+      const stock = parseInt(row.stock || 0);
+      const isNew = ['oui','yes','true','1','نعم'].includes((row.nouveau || row.is_new || '').toString().toLowerCase());
+      const descAr = (row.description_ar || row.desc_ar || '').toString().trim();
+      const descFr = (row.description_fr || row.desc_fr || '').toString().trim();
+      const benefits = (row.bienfaits || row.benefits || '').toString().trim();
+
+      if (!nameAr || !nameFr || !price || isNaN(price)) {
+        errors++;
+        console.log('Ligne ignorée (données manquantes):', row);
+        continue;
+      }
+
+      const categoryId = catMap[catSlug] || catMap[catSlug.replace(/-/g,'')] || MOCK.categories[0]?.id || null;
+
+      if (db) {
+        try {
+          const { error } = await db.from('products').insert({
+            name_ar: nameAr,
+            name_fr: nameFr,
+            name_en: nameFr,
+            description_ar: descAr,
+            description_fr: descFr,
+            benefits_ar: benefits.replace(/\|/g, '\n'),
+            price: price,
+            promo_price: promo,
+            unit: unit,
+            stock_qty: stock,
+            stock_unit: 'kg',
+            images: ['📦'],
+            category_id: categoryId,
+            is_active: true,
+            is_featured: false,
+            is_new: isNew
+          });
+          if (error) { errors++; console.log('Erreur insert:', error.message, row); }
+          else { added++; }
+        } catch(e) { errors++; console.log('Exception:', e.message); }
+      }
+    }
+
+    await loadAdminData();
+    render();
+    toast(`✅ Import terminé : ${added} produits ajoutés${errors>0?`, ${errors} erreurs`:''}`);
+  } catch(e) {
+    toast('Erreur lecture fichier: ' + e.message, 'error');
+  }
 }
 
 async function toggleCoupon(code) {
