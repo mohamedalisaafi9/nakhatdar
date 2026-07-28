@@ -135,6 +135,14 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .sec-t{font-size:15px;font-weight:700}
 .sec-a{font-size:12px;color:var(--gm);font-weight:600;cursor:pointer;border:none;background:none;font-family:inherit}
+.sec-voir{display:flex;align-items:center;justify-content:center;gap:4px;margin:0 16px 16px;padding:10px;border-radius:var(--r14);border:1px dashed var(--bm);color:var(--ts);font-size:13px;font-weight:600;cursor:pointer;background:none;width:calc(100% - 32px)}
+.sec-voir:active{background:var(--bei)}
+.sec-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px}
+.sec-badge.new{background:var(--gm);color:#fff}
+.sec-badge.promo{background:var(--rd);color:#fff}
+.sec-badge.cheap{background:#27ae60;color:#fff}
+.sec-back{display:flex;align-items:center;gap:6px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--tx);font-family:inherit}
+.sec-back:active{opacity:.7}
 
 /* PRODUCT CARD */
 .pg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
@@ -387,7 +395,7 @@ let S={
   cart:{}, favs:new Set(),
   user:null, authMode:'login', authF:{name:'',phone:'',email:'',pass:'',pass2:'',refCode:''},
   promoType:'daily', modal:null,
-  detailId:null, showAI:false, showNotif:false, subPage:null,
+  detailId:null, showAI:false, showNotif:false, subPage:null, viewSection:null,
   orderDone:false, lastOrder:null, orderHistory:[],
   df:{gov:'Sousse',city:'Sousse',area:'Sousse Centre',street:'',house:'',phone:''},
   savedAddresses:[],
@@ -423,6 +431,11 @@ function T(k){
     newarr:L('وصل حديثاً','Nouveautés','New Arrivals'),
     promoday:L('عروض اليوم','Promos du jour','Today\'s Deals'),
     seeall:L('عرض الكل','Voir tout','See all'),
+    seemore:L('عرض المزيد','Voir plus','See more'),
+    topdem:L('الأكثر طلباً','Les plus demandés','Most Popular'),
+    cheapp:L('أسعار صغيرة','Petits prix','Small Prices'),
+    essential:L('أساسيات المطبخ','Essentiels cuisine','Kitchen Essentials'),
+    backhome:L('← الرئيسية','← Accueil','← Home'),
     empty:L('سلتك فارغة','Panier vide','Cart is empty'),
     subtotal:L('المجموع','Sous-total','Subtotal'),
     rewardsdisc:L('خصم المكافآت','Remise récompenses','Rewards discount'),
@@ -520,18 +533,17 @@ function renderCatNav(){
 function liveSearch(){
   const cont=document.getElementById('home-results');
   if(!cont){render();return;}
+  if(!S.search&&S.catF==='all'){render();return;}
   const filt=S.search?PRODS.filter(p=>p.ar.includes(S.search)||p.fr.toLowerCase().includes(S.search.toLowerCase())):
-    (S.catF==='all'?PRODS.filter(p=>p.feat):PRODS.filter(p=>p.cat===S.catF));
-  if(S.search||S.catF!=='all'){
-    cont.innerHTML=`<div class="sec" style="padding-bottom:16px">
-      <div class="sec-h">
-        <span class="sec-t">${S.search?'🔍 ('+filt.length+')':CATS.find(c=>c.id===S.catF)?.e+' '+CATS.find(c=>c.id===S.catF)?.[S.lang]}</span>
-        ${S.catF!=='all'?'<button class="sec-a" onclick="S.catF=\'all\';render()">✕</button>':''}
-      </div>
-      ${S.catF!=='all'&&!S.search?renderCatNav():''}
-      <div class="pg">${filt.length?filt.map(p=>pc(p)).join(''):'<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ts)">'+L('لا توجد نتائج','Aucun résultat','No results')+'</div>'}</div>
-    </div>`;
-  } else { render(); }
+    PRODS.filter(p=>p.cat===S.catF);
+  cont.innerHTML=`<div class="sec" style="padding-bottom:16px">
+    <div class="sec-h">
+      <span class="sec-t">${S.search?'🔍 ('+filt.length+')':CATS.find(c=>c.id===S.catF)?.e+' '+CATS.find(c=>c.id===S.catF)?.[S.lang]}</span>
+      ${S.catF!=='all'?'<button class="sec-a" onclick="S.catF=\'all\';render()">✕</button>':''}
+    </div>
+    ${S.catF!=='all'&&!S.search?renderCatNav():''}
+    <div class="pg">${filt.length?filt.map(p=>pc(p)).join(''):'<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ts)">'+L('لا توجد نتائج','Aucun résultat','No results')+'</div>'}</div>
+  </div>`;
 }
 
 function render(){
@@ -649,10 +661,52 @@ function pc(p){
   </div>`;}
 
 /* ── HOME ── */
+function getHomeSections(){
+  const newP=PRODS.filter(p=>p.new);
+  const promo=PRODS.filter(p=>p.pp);
+  const topDem=[...PRODS].sort((a,b)=>(b.orderCount||0)-(a.orderCount||0)||(b.feat?1:0)-(a.feat?1:0)).slice(0,20);
+  const cheap=PRODS.filter(p=>(p.pp||p.p)<=2).sort((a,b)=>(a.pp||a.p)-(b.pp||b.p));
+  const essCats=['conserve','spices','oils','trad'];
+  const essential=PRODS.filter(p=>essCats.includes(p.cat)||p.feat).slice(0,20);
+  return {newP,promo,topDem,cheap,essential};
+}
+
+function renderSection(icon,title,items,sectionId,badge,max){
+  max=max||4;
+  const shown=items.slice(0,max);
+  if(!shown.length) return '';
+  return `
+  <div class="sec"><div class="sec-h">
+    <span class="sec-t">${icon} ${title}${badge||''}</span>
+  </div></div>
+  <div class="pg">${shown.map(p=>pc(p)).join('')}</div>
+  ${items.length>max?`<button class="sec-voir" onclick="S.viewSection='${sectionId}';navPush();render()">
+    ${T('seemore')} (${items.length}) →
+  </button>`:''}`;
+}
+
 function renderHome(){
-  const feat=PRODS.filter(p=>p.feat), newP=PRODS.filter(p=>p.new), promo=PRODS.filter(p=>p.pp);
+  const {newP,promo,topDem,cheap,essential}=getHomeSections();
+
+  // Si on affiche une section complète (Voir plus)
+  if(S.viewSection){
+    const sections={
+      newP:{icon:'✨',title:T('newarr'),items:newP},
+      promo:{icon:'🏷️',title:T('promoday'),items:promo},
+      topDem:{icon:'🔥',title:T('topdem'),items:topDem},
+      cheap:{icon:'💰',title:T('cheapp'),items:cheap},
+      essential:{icon:'🍳',title:T('essential'),items:essential}
+    };
+    const sec=sections[S.viewSection];
+    if(sec) return `
+    <button class="sec-back" onclick="S.viewSection=null;render()">${T('backhome')}</button>
+    <div class="sec"><div class="sec-h"><span class="sec-t">${sec.icon} ${sec.title} (${sec.items.length})</span></div></div>
+    <div class="pg">${sec.items.length?sec.items.map(p=>pc(p)).join(''):`<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ts)">${L('لا توجد منتجات','Aucun produit','No products')}</div>`}</div>`;
+    S.viewSection=null;
+  }
+
   const filt=S.search?PRODS.filter(p=>p.ar.includes(S.search)||p.fr.toLowerCase().includes(S.search.toLowerCase())):
-    (S.catF==='all'?feat:PRODS.filter(p=>p.cat===S.catF));
+    (S.catF==='all'?null:PRODS.filter(p=>p.cat===S.catF));
   return `
   <div class="srch"><div class="srch-inner">
     <span>🔍</span>
@@ -691,18 +745,11 @@ function renderHome(){
     <div class="cat ${S.catF===c.id?'active':''}" onclick="S.catF='${c.id}';render()">
       <span class="cat-ic">${c.e}</span><span class="cat-nm">${c[S.lang]}</span>
     </div>`).join('')}</div>
-  <div class="sec"><div class="sec-h">
-    <span class="sec-t">⭐ ${T('feat')}</span>
-    <button class="sec-a" onclick="S.catF='all';render()">${T('seeall')}</button>
-  </div></div>
-  <div class="pg">${feat.map(p=>pc(p)).join('')}</div>
-  <div class="sec"><div class="sec-h"><span class="sec-t">🆕 ${T('newarr')}</span></div></div>
-  <div class="pg">${newP.map(p=>pc(p)).join('')}</div>
-  <div class="sec"><div class="sec-h">
-    <span class="sec-t">🔥 ${T('promoday')}</span>
-    <button class="sec-a" onclick="S.tab='promos';render()">${T('seeall')}</button>
-  </div></div>
-  <div class="pg">${promo.map(p=>pc(p)).join('')}</div>`:`
+  ${renderSection('✨',T('newarr'),newP,'newP','<span class="sec-badge new">NEW</span>',4)}
+  ${renderSection('🏷️',T('promoday'),promo,'promo','<span class="sec-badge promo">%</span>',4)}
+  ${renderSection('🔥',T('topdem'),topDem,'topDem','',4)}
+  ${renderSection('💰',T('cheapp'),cheap,'cheap','<span class="sec-badge cheap">&lt;2DT</span>',4)}
+  ${renderSection('🍳',T('essential'),essential,'essential','',4)}`:`
   <div class="sec" style="padding-bottom:16px">
     <div class="sec-h">
       <span class="sec-t">${S.search?`🔍 (${filt.length})`:CATS.find(c=>c.id===S.catF)?.e+' '+CATS.find(c=>c.id===S.catF)?.[S.lang]}</span>
@@ -1871,6 +1918,7 @@ async function initDB(){
       // Remplacer les données locales par Supabase
       PRODS.length=0;
       prods.forEach(p=>{
+        const _now=Date.now(), _14d=14*24*60*60*1000;
         PRODS.push({
           id:    p.id,
           cat:   p.categories?.slug||'spices',
@@ -1881,8 +1929,9 @@ async function initDB(){
           p:     parseFloat(p.price),
           pp:    p.promo_price?parseFloat(p.promo_price):null,
           s:     parseFloat(p.stock_qty||0),
-          new:   p.is_new,
+          new:   p.created_at?(_now-new Date(p.created_at).getTime()<_14d):false,
           feat:  p.is_featured,
+          orderCount: parseInt(p.order_count||0),
           dar:   p.description_ar||'',
           dfr:   p.description_fr||'',
           ben:   p.benefits_ar?p.benefits_ar.split('\n'):[],
@@ -2063,6 +2112,7 @@ window.addEventListener('popstate',function(){
   // Modal open? close it
   if(S.modal){S.modal=null;render();navPush();return;}
   // Detail page? close it
+  if(S.viewSection){S.viewSection=null;render();navPush();return;}
   if(S.detailId){S.detailId=null;render();navPush();return;}
   // AI chat open? close it
   if(S.showAI){S.showAI=false;render();navPush();return;}
