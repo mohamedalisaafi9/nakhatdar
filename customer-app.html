@@ -760,18 +760,33 @@ function renderHome(){
   <div id="home-results">
   ${!S.search&&S.catF==='all'?`
   <div class="bsc">
-    <div class="bnr">
-      <div class="bnr-badge">🌟 ${L('عرض خاص','Offre spéciale','Special Offer')}</div>
-      <div class="bnr-title">${L('توابل أصيلة','Épices authentiques','Authentic Spices')}</div>
-      <div class="bnr-sub">${L('جودة لا مثيل لها من تونس','Qualité de Tunisie','Quality from Tunisia')}</div>
-      <button class="bnr-btn" onclick="S.tab='promos';render()">${L('اكتشف العروض','Voir les offres','See offers')} ←</button>
-    </div>
-    <div class="bnr gold">
-      <div class="bnr-badge">🎁 ${L('برنامج المكافآت','Programme récompenses','Rewards Program')}</div>
-      <div class="bnr-title">${L('وفّر حتى 15%','Économisez 15%','Save up to 15%')}</div>
-      <div class="bnr-sub">${L('كلما اشتريت أكثر وفّرت أكثر','Plus vous achetez plus vous économisez','More you buy more you save')}</div>
-      <button class="bnr-btn" onclick="S.tab='rewards';render()">${L('اعرف أكثر','En savoir plus','Learn more')} ←</button>
-    </div>
+    ${(()=>{
+      const promoProds=PRODS.filter(p=>p.pp);
+      const maxDisc=promoProds.length?Math.max(...promoProds.map(p=>Math.round((1-p.pp/p.p)*100))):0;
+      const starProd=promoProds.length?promoProds.sort((a,b)=>(a.pp||a.p)-(b.pp||b.p))[0]:null;
+      return `<div class="bnr" onclick="S.tab='promos';render()">
+      <div class="bnr-badge">🔥 ${promoProds.length} ${L('منتج في عرض','produits en promo','products on sale')}</div>
+      <div class="bnr-title">${L('خصم يصل إلى','Jusqu\\'à','Up to')} −${maxDisc}%</div>
+      ${starProd?`<div class="bnr-sub" style="margin-top:4px">⭐ ${S.lang==='ar'?starProd.ar:starProd.fr} — <strong style="color:var(--go)">${fp(starProd.pp)}</strong> <span style="text-decoration:line-through;opacity:.6">${fp(starProd.p)}</span></div>`:''}
+      <button class="bnr-btn" onclick="S.tab='promos';render()">🔥 ${L('شوف العروض','Voir les promos','See deals')} ←</button>
+    </div>`;})()}
+    ${(()=>{
+      const tier=getTier(S.spend);
+      const next=TIERS.find(t=>t.min>tier.min);
+      const pct=next?Math.min(100,Math.round((S.spend-tier.min)/(next.min-tier.min)*100)):100;
+      const saved=(S.spend*tier.disc/100).toFixed(3);
+      return `<div class="bnr gold" onclick="S.tab='rewards';render()">
+      <div class="bnr-badge">${tier.icon} ${L(tier.ar,tier.fr,tier.fr)} · −${tier.disc}%</div>
+      <div class="bnr-title" style="display:flex;align-items:center;gap:8px">${L('مستواك','Votre niveau','Your level')} <span style="font-size:28px">${tier.icon}</span></div>
+      ${next?`
+      <div style="background:rgba(255,255,255,.15);border-radius:20px;height:6px;margin:8px 0 4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--wh);border-radius:20px;transition:width .6s"></div>
+      </div>
+      <div class="bnr-sub">${L('باقي','Encore','Still')} <strong>${fp(next.min-S.spend)}</strong> ${L('للمستوى','pour','for')} ${next.icon} ${L(next.ar,next.fr,next.fr)} (−${next.disc}%)</div>
+      `:`<div class="bnr-sub">🎉 ${L('أنت في أعلى مستوى!','Niveau maximum!','Max level!')}</div>`}
+      ${parseFloat(saved)>0?`<div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px">💰 ${L('وفّرت هذا الشهر:','Économisé ce mois:','Saved this month:')} <strong style="color:#fff">${fp(parseFloat(saved))}</strong></div>`:''}
+      <button class="bnr-btn" onclick="S.tab='rewards';render()">${L('مكافآتي','Mes récompenses','My rewards')} ←</button>
+    </div>`;})()}
     <div class="bnr ref-bnr">
       <div class="ref-bnr-bg"></div>
       <div class="bnr-badge" style="background:rgba(240,180,41,.3);color:#fff">🤝 ${L('برنامج الدعوة','Parrainage','Referral')}</div>
