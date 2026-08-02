@@ -766,7 +766,7 @@ function renderHome(){
       const starProd=promoProds.length?promoProds.sort((a,b)=>(a.pp||a.p)-(b.pp||b.p))[0]:null;
       return `<div class="bnr" onclick="S.tab='promos';render()">
       <div class="bnr-badge">🔥 ${promoProds.length} ${L('منتج في عرض','produits en promo','products on sale')}</div>
-      <div class="bnr-title">${L('خصم يصل إلى','Jusqu\\'à','Up to')} −${maxDisc}%</div>
+      <div class="bnr-title">${L('خصم يصل إلى','Jusqu\'à','Up to')} −${maxDisc}%</div>
       ${starProd?`<div class="bnr-sub" style="margin-top:4px">⭐ ${S.lang==='ar'?starProd.ar:starProd.fr} — <strong style="color:var(--go)">${fp(starProd.pp)}</strong> <span style="text-decoration:line-through;opacity:.6">${fp(starProd.p)}</span></div>`:''}
       <button class="bnr-btn" onclick="S.tab='promos';render()">🔥 ${L('شوف العروض','Voir les promos','See deals')} ←</button>
     </div>`;})()}
