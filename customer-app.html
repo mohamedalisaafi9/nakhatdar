@@ -27,26 +27,34 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 #root{height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;background:var(--wh);position:relative;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.15)}
 
 /* AUTH */
-.auth{position:absolute;inset:0;z-index:100;background:var(--wh);display:flex;flex-direction:column;overflow-y:auto}
-.auth-hero{background:var(--gd);padding:50px 24px 40px;text-align:center;flex-shrink:0}
+.auth{position:absolute;inset:0;z-index:100;background:var(--gd);display:flex;flex-direction:column;overflow-y:auto}
+.auth-hero{background:transparent;padding:44px 24px 20px;text-align:center;flex-shrink:0}
 .auth-lang{display:flex;justify-content:center;gap:6px;margin-bottom:18px}
 .auth-lang button{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
 .auth-logo{margin-bottom:8px}
-.auth-logo img{width:120px;height:120px;border-radius:20px}
-.auth-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:6px}
-.auth-form{flex:1;padding:24px 20px 40px}
-.auth-title{font-size:18px;font-weight:900;color:var(--td);margin-bottom:4px}
-.auth-sub2{font-size:13px;color:var(--ts);margin-bottom:20px}
-.auth-inp{width:100%;padding:12px 14px;border:1.5px solid var(--bm);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;color:var(--td);background:var(--wh);margin-bottom:10px;transition:.2s}
-.auth-inp:focus{border-color:var(--gm)}
-.auth-btn{width:100%;background:var(--gd);color:#fff;border:none;border-radius:var(--r22);padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin-top:4px}
-/* auth-demo removed */
-.auth-switch{text-align:center;font-size:13px;color:var(--ts);margin-top:14px}
-.auth-switch span{color:var(--g);font-weight:700;cursor:pointer}
+.auth-logo img{width:100px;height:100px;border-radius:20px;box-shadow:0 0 30px rgba(116,198,157,.4)}
+.auth-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px}
+.auth-form{flex:1;padding:0 20px 40px;display:flex;flex-direction:column;justify-content:center}
+.auth-card{position:relative;background:rgba(255,255,255,.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--r22);padding:28px 20px;border:1px solid rgba(116,198,157,.15);overflow:hidden}
+.auth-card::before{content:'';position:absolute;inset:-2px;border-radius:var(--r22);padding:2px;background:conic-gradient(from var(--auth-angle,0deg),transparent 0deg,var(--gl) 60deg,var(--go) 120deg,transparent 180deg,var(--gm) 240deg,var(--gl) 300deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:auth-glow 4s linear infinite;pointer-events:none;opacity:.7}
+@property --auth-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes auth-glow{to{--auth-angle:360deg}}
+@supports not (background: paint(a)){.auth-card::before{background:linear-gradient(135deg,var(--gl),var(--go),var(--gm),var(--gl));background-size:300% 300%;animation:auth-glow-fb 4s ease infinite}@keyframes auth-glow-fb{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}}
+.auth-card-label{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:900;color:var(--gl);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px}
+.auth-title{font-size:18px;font-weight:900;color:#fff;margin-bottom:4px}
+.auth-sub2{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px}
+.auth-inp{width:100%;padding:12px 14px;border:1px solid rgba(116,198,157,.25);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;color:#fff;background:rgba(255,255,255,.07);margin-bottom:10px;transition:.3s}
+.auth-inp::placeholder{color:rgba(255,255,255,.35)}
+.auth-inp:focus{border-color:var(--gl);box-shadow:0 0 12px rgba(116,198,157,.2);background:rgba(255,255,255,.1)}
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--gm),var(--gl));color:var(--gd);border:none;border-radius:var(--r22);padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;margin-top:8px;box-shadow:0 4px 20px rgba(116,198,157,.3);transition:transform .15s,box-shadow .15s}
+.auth-btn:active{transform:scale(.97);box-shadow:0 2px 10px rgba(116,198,157,.2)}
+.auth-switch{text-align:center;font-size:13px;color:rgba(255,255,255,.5);margin-top:16px}
+.auth-switch span{color:var(--gl);font-weight:700;cursor:pointer}
 .phone-wrap{position:relative;margin-bottom:10px}
-.phone-prefix{position:absolute;top:50%;transform:translateY(-50%);right:14px;font-size:13px;font-weight:700;color:var(--tm);pointer-events:none;z-index:1}
-.phone-inp{width:100%;padding:12px 55px 12px 14px;border:1.5px solid var(--bm);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;color:var(--td);background:var(--wh);transition:.2s}
-.phone-inp:focus{border-color:var(--gm)}
+.phone-prefix{position:absolute;top:50%;transform:translateY(-50%);right:14px;font-size:13px;font-weight:700;color:rgba(255,255,255,.5);pointer-events:none;z-index:1}
+.phone-inp{width:100%;padding:12px 55px 12px 14px;border:1px solid rgba(116,198,157,.25);border-radius:var(--r14);font-family:inherit;font-size:14px;outline:none;color:#fff;background:rgba(255,255,255,.07);transition:.3s}
+.phone-inp::placeholder{color:rgba(255,255,255,.35)}
+.phone-inp:focus{border-color:var(--gl);box-shadow:0 0 12px rgba(116,198,157,.2);background:rgba(255,255,255,.1)}
 
 /* HEADER */
 .hd{background:var(--gd);color:#fff;padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
@@ -122,13 +130,14 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .bnr-btn{margin-top:12px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block;font-family:inherit}
 
 /* CATEGORIES */
-.cats{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 0}
+.cats{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 0}
 .cats::-webkit-scrollbar{display:none}
-.cat{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;cursor:pointer;padding:8px 10px;border-radius:var(--r14);background:var(--bei);border:1.5px solid transparent;min-width:64px}
-.cat.active{background:var(--gp);border-color:var(--gm)}
-.cat-ic{font-size:22px}
-.cat-nm{font-size:10px;font-weight:600;color:var(--tm);white-space:nowrap}
-.cat.active .cat-nm{color:var(--g)}
+.cat{display:flex;flex-direction:row;align-items:center;gap:0;flex-shrink:0;cursor:pointer;padding:10px 12px;border-radius:999px;background:var(--bei);border:1.5px solid transparent;min-width:auto;transition:all .4s cubic-bezier(.22,1,.36,1);overflow:hidden}
+.cat.active{background:var(--gp);border-color:var(--gm);padding:10px 16px;box-shadow:0 0 16px rgba(64,145,108,.18)}
+.cat-ic{font-size:20px;flex-shrink:0;transition:transform .3s}
+.cat.active .cat-ic{transform:scale(1.1)}
+.cat-nm{font-size:0;max-width:0;opacity:0;font-weight:600;color:var(--tm);white-space:nowrap;overflow:hidden;transition:all .4s cubic-bezier(.22,1,.36,1)}
+.cat.active .cat-nm{font-size:11px;max-width:80px;opacity:1;margin-right:6px;color:var(--g)}
 
 /* SECTION */
 .sec{padding:16px 16px 0}
@@ -149,7 +158,7 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .psc{display:flex;gap:10px;overflow-x:auto;padding:0 16px 16px}
 .psc::-webkit-scrollbar{display:none}
 .psc .pc{min-width:140px;max-width:160px;flex-shrink:0}
-.pc{background:var(--wh);border-radius:var(--r14);box-shadow:var(--sh);overflow:hidden;cursor:pointer;border:1px solid var(--bm)}
+.pc{background:var(--wh);border-radius:var(--r14);box-shadow:var(--sh);overflow:hidden;cursor:pointer;border:1px solid var(--bm);position:relative}
 .pc:active{transform:scale(.97)}
 .pc-img{width:100%;aspect-ratio:1;background:var(--bei);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden}
 .pc-disc{position:absolute;top:6px;right:6px;background:var(--rd);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
@@ -157,8 +166,8 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .pc-noreward{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;font-size:8px;font-weight:600;padding:2px 6px;border-radius:10px}
 .cat-nav{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .cat-nav::-webkit-scrollbar{display:none}
-.cat-nav-btn{flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid var(--brd);background:var(--bei);font-size:11px;font-weight:600;color:var(--tm);cursor:pointer;white-space:nowrap;transition:all .2s}
-.cat-nav-btn.active{background:var(--g);color:#fff;border-color:var(--g)}
+.cat-nav-btn{flex-shrink:0;padding:6px 12px;border-radius:999px;border:1.5px solid var(--bm);background:var(--bei);font-size:11px;font-weight:600;color:var(--tm);cursor:pointer;white-space:nowrap;transition:all .35s cubic-bezier(.22,1,.36,1)}
+.cat-nav-btn.active{background:var(--g);color:#fff;border-color:var(--g);padding:6px 18px;box-shadow:0 0 12px rgba(45,106,79,.2)}
 .pc-fav{position:absolute;top:6px;left:6px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
 .pc-body{padding:8px 10px 10px}
 .pc-name{font-size:12px;font-weight:700;color:var(--td);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -334,6 +343,11 @@ body{background:var(--bei);color:var(--td);direction:rtl}
 .tour-tip-dots span{width:6px;height:6px;border-radius:50%;background:var(--bm)}
 .tour-tip-dots span.active{background:var(--go)}
 .tour-tip-btn{background:var(--gd);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* RIPPLE */
+.ripple-wrap{position:relative;overflow:hidden}
+.ripple-wave{position:absolute;border-radius:50%;background:rgba(255,255,255,.35);transform:scale(0);animation:ripple-anim .5s ease-out forwards;pointer-events:none}
+@keyframes ripple-anim{to{transform:scale(4);opacity:0}}
 
 /* PILL */
 .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -524,6 +538,23 @@ function toast(msg,icon='✅'){
   clearTimeout(t._to);
   t._to=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},2500);
 }
+
+/* ═══════ RIPPLE ═══════ */
+document.addEventListener('pointerdown',function(e){
+  const btn=e.target.closest('.add-btn,.ck-btn,.auth-btn,.confirm-btn,.bnr-btn,.ref-share-btn,.coupon-btn,.pd-add,.cat,.cat-nav-btn,.ni');
+  if(!btn)return;
+  const rect=btn.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height);
+  const x=e.clientX-rect.left-size/2;
+  const y=e.clientY-rect.top-size/2;
+  const wave=document.createElement('span');
+  wave.className='ripple-wave';
+  wave.style.cssText=`width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  btn.style.position=btn.style.position||'relative';
+  btn.style.overflow='hidden';
+  btn.appendChild(wave);
+  wave.addEventListener('animationend',()=>wave.remove());
+},{passive:true});
 
 /* ═══════ RENDER ENGINE ═══════ */
 function renderCatNav(){
@@ -1361,17 +1392,18 @@ function renderAuth(){
   return `<div class="auth">
     <div class="auth-hero">
       <div class="auth-lang">
-        <button onclick="setLang('ar')" style="border:1.5px solid ${S.lang==='ar'?'var(--go)':'rgba(255,255,255,.3)'};background:${S.lang==='ar'?'var(--go)':'transparent'};color:${S.lang==='ar'?'var(--gd)':'rgba(255,255,255,.8)'}">عربي</button>
-        <button onclick="setLang('fr')" style="border:1.5px solid ${S.lang==='fr'?'var(--go)':'rgba(255,255,255,.3)'};background:${S.lang==='fr'?'var(--go)':'transparent'};color:${S.lang==='fr'?'var(--gd)':'rgba(255,255,255,.8)'}">FR</button>
-        <button onclick="setLang('en')" style="border:1.5px solid ${S.lang==='en'?'var(--go)':'rgba(255,255,255,.3)'};background:${S.lang==='en'?'var(--go)':'transparent'};color:${S.lang==='en'?'var(--gd)':'rgba(255,255,255,.8)'}">EN</button>
+        <button onclick="setLang('ar')" style="border:1.5px solid ${S.lang==='ar'?'var(--go)':'rgba(255,255,255,.2)'};background:${S.lang==='ar'?'var(--go)':'rgba(255,255,255,.08)'};color:${S.lang==='ar'?'var(--gd)':'rgba(255,255,255,.6)'}">عربي</button>
+        <button onclick="setLang('fr')" style="border:1.5px solid ${S.lang==='fr'?'var(--go)':'rgba(255,255,255,.2)'};background:${S.lang==='fr'?'var(--go)':'rgba(255,255,255,.08)'};color:${S.lang==='fr'?'var(--gd)':'rgba(255,255,255,.6)'}">FR</button>
+        <button onclick="setLang('en')" style="border:1.5px solid ${S.lang==='en'?'var(--go)':'rgba(255,255,255,.2)'};background:${S.lang==='en'?'var(--go)':'rgba(255,255,255,.08)'};color:${S.lang==='en'?'var(--gd)':'rgba(255,255,255,.6)'}">EN</button>
       </div>
       <div class="auth-logo"><img src="/icon-512.png" alt="نكهة الدار"></div>
       <div style="font-size:22px;font-weight:900;color:var(--go);margin-bottom:4px">نكهة الدار</div>
       <div class="auth-sub">${L('توابل وبهارات من أجود المزارع التونسية','Épices des meilleures fermes tunisiennes','Spices from Tunisia\'s finest farms')}</div>
     </div>
     <div class="auth-form">
+      <div class="auth-card">
+        <div class="auth-card-label">🔐 ${S.authMode==='forgot'?L('استعادة','Récupération','Recovery'):S.authMode==='reset'?L('تعيين جديد','Réinitialisation','Reset'):S.authMode==='login'?L('تسجيل الدخول','Connexion','Login'):L('حساب جديد','Inscription','Sign up')}</div>
       ${S.authMode==='forgot'?`
-      <div class="auth-title">${L('نسيت كلمة المرور','Mot de passe oublié','Forgot password')}</div>
       <div class="auth-sub2">${L('أدخل بريدك الإلكتروني أو رقم هاتفك','Entrez votre email ou téléphone','Enter your email or phone number')}</div>
       <input class="auth-inp" type="text" placeholder="${L('البريد الإلكتروني أو الهاتف','Email ou téléphone','Email or phone')}" oninput="S.authF.email=this.value" value="${S.authF.email||''}">
       <button class="auth-btn" onclick="sendResetEmail()">📧 ${L('إرسال رابط التعيين','Envoyer le lien','Send reset link')}</button>
@@ -1380,14 +1412,12 @@ function renderAuth(){
       </div>
 
       `:S.authMode==='reset'?`
-      <div class="auth-title">${L('كلمة مرور جديدة','Nouveau mot de passe','New password')}</div>
       <div class="auth-sub2">${L('أدخل كلمة المرور الجديدة','Choisissez votre nouveau mot de passe','Choose your new password')}</div>
       <input class="auth-inp" type="password" placeholder="${L('كلمة المرور الجديدة','Nouveau mot de passe','New password')}" oninput="S.authF.pass=this.value">
       <input class="auth-inp" type="password" placeholder="${L('تأكيد كلمة المرور','Confirmer le mot de passe','Confirm password')}" oninput="S.authF.pass2=this.value">
       <button class="auth-btn" onclick="doResetPassword()">🔐 ${L('تغيير كلمة المرور','Changer le mot de passe','Change password')}</button>
 
       `:`
-      <div class="auth-title">${S.authMode==='login'?T('login'):T('register')}</div>
       <div class="auth-sub2">${S.authMode==='login'?
         L('أدخل بريدك الإلكتروني أو رقم هاتفك','Connectez-vous avec email ou téléphone','Sign in with email or phone'):
         L('أنشئ حساباً للاستفادة من العروض','Créez un compte','Create an account')}</div>
@@ -1408,13 +1438,14 @@ function renderAuth(){
       <input class="auth-inp" type="password" placeholder="${T('pass')}" oninput="S.authF.pass=this.value">
       ${S.authMode==='login'?`
       <div style="text-align:left;margin:-4px 0 8px">
-        <span onclick="S.authMode='forgot';render()" style="font-size:12px;color:var(--g);font-weight:600;cursor:pointer">${L('نسيت كلمة المرور؟','Mot de passe oublié ?','Forgot password?')}</span>
+        <span onclick="S.authMode='forgot';render()" style="font-size:12px;color:var(--gl);font-weight:600;cursor:pointer">${L('نسيت كلمة المرور؟','Mot de passe oublié ?','Forgot password?')}</span>
       </div>`:''}
       <button class="auth-btn" onclick="doAuth()">${S.authMode==='login'?T('login'):T('register')}</button>
       <div class="auth-switch">${S.authMode==='login'?L('ليس لديك حساب؟ ','Pas de compte? ','No account? '):L('لديك حساب؟ ','Déjà un compte? ','Have an account? ')}
         <span onclick="S.authMode=S.authMode==='login'?'register':'login';render()">${S.authMode==='login'?T('register'):T('login')}</span>
       </div>
       `}
+      </div>
     </div>
   </div>`;}
 
