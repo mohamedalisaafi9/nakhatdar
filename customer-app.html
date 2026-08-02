@@ -498,7 +498,7 @@ function T(k){
     referraldiscref:L('خصم دعوة','Réduction parrainage','Referral discount'),
     referralcreditdisc:L('رصيد دعوة','Crédit parrainage','Referral credit'),
     referralph:L('رمز صديقك','Code d\'un ami','Friend\'s code'),
-    referralinvite:L('ادعُ صديقك: يربح 5 دت وأنت تربح 3 دت!','Invite un ami : il gagne 5 DT, tu gagnes 3 DT !','Invite a friend: they get 5 DT, you get 3 DT!'),
+    referralinvite:L('إجيب صاحبك: وأنت تاخذ 5 دت وهو ياخذ 5 دت','Invite un ami : il gagne 5 DT, tu gagnes 5 DT !','Invite a friend: they get 5 DT, you get 5 DT!'),
     usecredit:L('استخدام الرصيد','Utiliser le crédit','Use credit')
   })[k]||k;
 }
@@ -864,9 +864,9 @@ function renderReferralSection(){
   <div class="ref-card">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">${T('referralinvite')}</div>
     <div style="font-size:11px;opacity:.8;margin-bottom:4px">${L(
-      'شارك رمزك مع أصدقائك واربح 3 دت عن كل صديق!',
-      'Partagez votre code et gagnez 3 DT par ami!',
-      'Share your code and earn 3 DT per friend!')}</div>
+      'شارك رمزك مع أصدقائك واربح 5 دت عن كل صديق!',
+      'Partagez votre code et gagnez 5 DT par ami!',
+      'Share your code and earn 5 DT per friend!')}</div>
     <div class="ref-code-box">
       <div style="font-size:10px;opacity:.6;margin-bottom:4px">${T('referralcode')}</div>
       <div class="ref-code">${S.referralCode||'...'}</div>
