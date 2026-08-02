@@ -693,12 +693,25 @@ function pc(p){
 
 /* ── HOME ── */
 function getHomeSections(){
-  const newP=PRODS.filter(p=>p.new);
+  // Nouveautés : produits créés il y a moins de 14 jours (max 12)
+  const newP=PRODS.filter(p=>p.new).slice(0,12);
+
+  // En promo : produits avec prix promo
   const promo=PRODS.filter(p=>p.pp);
-  const topDem=[...PRODS].sort((a,b)=>(b.orderCount||0)-(a.orderCount||0)||(b.feat?1:0)-(a.feat?1:0)).slice(0,20);
+
+  // Les plus demandés : par order_count réel, sinon mélange aléatoire (pas de fallback feat)
+  const hasOrders=PRODS.some(p=>(p.orderCount||0)>0);
+  const topDem=hasOrders
+    ?[...PRODS].filter(p=>(p.orderCount||0)>0).sort((a,b)=>(b.orderCount||0)-(a.orderCount||0)).slice(0,20)
+    :[...PRODS].sort(()=>Math.random()-.5).slice(0,12);
+
+  // Petits prix : <= 2 DT
   const cheap=PRODS.filter(p=>(p.pp||p.p)<=2).sort((a,b)=>(a.pp||a.p)-(b.pp||b.p));
+
+  // Essentiels cuisine : SEULEMENT par catégorie, sans feat
   const essCats=['conserve','spices','oils','trad'];
-  const essential=PRODS.filter(p=>essCats.includes(p.cat)||p.feat).slice(0,20);
+  const essential=PRODS.filter(p=>essCats.includes(p.cat)).slice(0,20);
+
   return {newP,promo,topDem,cheap,essential};
 }
 
