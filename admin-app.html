@@ -878,6 +878,7 @@ function renderZones() {
         <button class="btn btn-sm" style="background:${z.isActive?'#ffebee':'var(--green-pale)'};color:${z.isActive?'var(--red)':'var(--green)'};border:none;cursor:pointer" onclick="toggleZone('${z.id}')">
           ${z.isActive?'🔴':'🟢'}
         </button>
+        <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:none;cursor:pointer" onclick="deleteZone('${z.id}')">🗑️</button>
       </div>
     </div>`).join('')}
   </div>`;
@@ -1709,9 +1710,29 @@ async function saveCoupon(isEdit) {
   closeModal();
 }
 
-function toggleZone(id) {
+async function toggleZone(id) {
   const z = MOCK.zones.find(x=>x.id===id);
-  if (z) { z.isActive=!z.isActive; toast(z.isActive?'Zone activée':'Zone désactivée'); render(); }
+  if (!z) return;
+  z.isActive = !z.isActive;
+  if (db) {
+    try { await db.from('delivery_zones').update({ is_active: z.isActive }).eq('id', id); }
+    catch(e) { console.log('Toggle zone sync failed'); }
+  }
+  toast(z.isActive ? '✅ Zone activée' : '🔴 Zone désactivée');
+  render();
+}
+
+async function deleteZone(id) {
+  if (!confirm('Supprimer cette zone de livraison ?')) return;
+  if (db) {
+    try {
+      const { error } = await db.from('delivery_zones').delete().eq('id', id);
+      if (error) { toast('❌ Impossible de supprimer (zone utilisée dans des commandes). Désactivez-la plutôt.', 'error'); return; }
+    } catch(e) { toast('❌ Erreur de suppression', 'error'); return; }
+  }
+  MOCK.zones = MOCK.zones.filter(x => x.id !== id);
+  toast('🗑️ Zone supprimée');
+  render();
 }
 
 function editZone(id) {
