@@ -1714,7 +1714,7 @@ async function toggleZone(id) {
   const z = MOCK.zones.find(x=>x.id===id);
   if (!z) return;
   z.isActive = !z.isActive;
-  if (db) {
+  if (db && isUUID(id)) {
     try { await db.from('delivery_zones').update({ is_active: z.isActive }).eq('id', id); }
     catch(e) { console.log('Toggle zone sync failed'); }
   }
@@ -1724,11 +1724,11 @@ async function toggleZone(id) {
 
 async function deleteZone(id) {
   if (!confirm('Supprimer cette zone de livraison ?')) return;
-  if (db) {
+  if (db && isUUID(id)) {
     try {
       const { error } = await db.from('delivery_zones').delete().eq('id', id);
-      if (error) { toast('❌ Impossible de supprimer (zone utilisée dans des commandes). Désactivez-la plutôt.', 'error'); return; }
-    } catch(e) { toast('❌ Erreur de suppression', 'error'); return; }
+      if (error) { toast('❌ Impossible de supprimer: '+error.message, 'error'); return; }
+    } catch(e) { toast('❌ Erreur: '+e.message, 'error'); return; }
   }
   MOCK.zones = MOCK.zones.filter(x => x.id !== id);
   toast('🗑️ Zone supprimée');
@@ -2656,22 +2656,28 @@ window.saveZone = async function() {
   if (!gov || !city || isNaN(price)) { toast('Tous les champs sont obligatoires','error'); return; }
   if (db) {
     try {
-      if (adminState.editItem?.id) {
-        await db.from('delivery_zones').update({ governorate:gov, city, area, price }).eq('id', adminState.editItem.id);
+      if (adminState.editItem?.id && isUUID(adminState.editItem.id)) {
+        const { error } = await db.from('delivery_zones').update({ governorate:gov, city, area, price }).eq('id', adminState.editItem.id);
+        if (error) { toast('❌ Erreur: '+error.message,'error'); return; }
       } else {
-        await db.from('delivery_zones').insert({ governorate:gov, city, area, price, is_active:true });
+        const { error } = await db.from('delivery_zones').insert({ governorate:gov, city, area, price, is_active:true });
+        if (error) { toast('❌ Erreur: '+error.message,'error'); return; }
       }
       await loadAdminData();
-    } catch(e) { console.log('Zone sync failed'); }
+    } catch(e) { toast('❌ Sync failed: '+e.message,'error'); }
   } else {
     if (adminState.editItem) { const z=MOCK.zones.find(x=>x.id===adminState.editItem.id); if(z){z.gov=gov;z.city=city;z.area=area;z.price=price;} }
     else { MOCK.zones.push({id:'z'+Date.now(),gov,city,area,price,isActive:true}); }
   }
   toast(adminState.editItem?'✅ Zone modifiée !':'✅ Zone ajoutée !');
   closeModal();
+  render();
 };
 
 // ── OVERRIDE saveDriver to sync Supabase ──
+// Helper: check if id looks like a Supabase UUID
+function isUUID(v){ return /^[0-9a-f]{8}-/.test(v); }
+
 const _localSaveDriver = saveDriver;
 window.saveDriver = async function() {
   const name  = document.getElementById('drv-name')?.value?.trim();
@@ -2681,13 +2687,15 @@ window.saveDriver = async function() {
 
   if (db) {
     try {
-      if (adminState.editItem?.id) {
-        await db.from('drivers').update({ name, phone, zones }).eq('id', adminState.editItem.id);
+      if (adminState.editItem?.id && isUUID(adminState.editItem.id)) {
+        const { error } = await db.from('drivers').update({ name, phone, zones }).eq('id', adminState.editItem.id);
+        if (error) { toast('❌ Erreur modification: '+error.message,'error'); return; }
       } else {
-        await db.from('drivers').insert({ name, phone, zones, status:'available', orders:0, is_active:true });
+        const { error } = await db.from('drivers').insert({ name, phone, zones, status:'available', orders:0, is_active:true });
+        if (error) { toast('❌ Erreur ajout: '+error.message,'error'); return; }
       }
       await loadAdminData();
-    } catch(e) { console.log('Driver sync failed:', e); }
+    } catch(e) { toast('❌ Sync failed: '+e.message,'error'); }
   } else {
     if (adminState.editItem) {
       const d = MOCK.drivers.find(x=>x.id===adminState.editItem.id);
@@ -2698,6 +2706,7 @@ window.saveDriver = async function() {
   }
   toast(adminState.editItem ? '✅ Livreur modifié !' : '✅ Livreur ajouté !');
   closeModal();
+  render();
 };
 
 function editDriver(id) {
@@ -2708,11 +2717,11 @@ function editDriver(id) {
 
 async function deleteDriver(id) {
   if (!confirm('Supprimer ce livreur ?')) return;
-  if (db) {
+  if (db && isUUID(id)) {
     try {
       const { error } = await db.from('drivers').delete().eq('id', id);
-      if (error) { toast('❌ Erreur de suppression','error'); return; }
-    } catch(e) { toast('❌ Erreur','error'); return; }
+      if (error) { toast('❌ Erreur: '+error.message,'error'); return; }
+    } catch(e) { toast('❌ Erreur: '+e.message,'error'); return; }
   }
   MOCK.drivers = MOCK.drivers.filter(x => x.id !== id);
   toast('🗑️ Livreur supprimé');
@@ -2725,7 +2734,7 @@ async function toggleDriverStatus(id) {
   const states = ['available','busy','offline'];
   const next = states[(states.indexOf(d.status)+1) % states.length];
   d.status = next;
-  if (db) {
+  if (db && isUUID(id)) {
     try { await db.from('drivers').update({ status: next }).eq('id', id); }
     catch(e) { console.log('Driver status sync failed'); }
   }
