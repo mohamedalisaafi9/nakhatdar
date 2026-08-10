@@ -2076,23 +2076,29 @@ function renderZoneForm(z) {
     <button class="btn btn-primary" onclick="saveZone()">💾 ${z.id?'Modifier':'Ajouter'}</button>
   </div>`;}
 
-function renderDriverForm() {
+function renderDriverForm(d) {
+  d = d || {};
+  const dZones = d.zones || [];
   return `
   <div class="form-grid">
     <div class="form-group"><label class="form-label">Nom complet *</label>
-      <input class="form-input" id="drv-name" placeholder="Prénom Nom"></div>
+      <input class="form-input" id="drv-name" value="${d.name||''}" placeholder="Prénom Nom"></div>
     <div class="form-group"><label class="form-label">Téléphone *</label>
-      <input class="form-input" type="tel" id="drv-phone" placeholder="+216 XX XXX XXX"></div>
+      <input class="form-input" type="tel" id="drv-phone" value="${d.phone||''}" placeholder="+216 XX XXX XXX"></div>
   </div>
   <div class="form-group" style="margin-top:10px"><label class="form-label">Zones assignées</label>
     <select class="form-select" id="drv-zones" multiple style="height:110px">
-      ${MOCK.zones.map(z=>`<option value="${z.gov} — ${z.city}${z.area?' ('+z.area+')':''}">${z.gov} — ${z.city}${z.area?' · '+z.area:''}</option>`).join('')}
+      ${MOCK.zones.map(z=>{
+        const val = z.gov+' — '+z.city+(z.area?' ('+z.area+')':'');
+        const sel = dZones.includes(val)||dZones.includes(z.area)||dZones.includes(z.city) ? 'selected' : '';
+        return `<option value="${val}" ${sel}>${z.gov} — ${z.city}${z.area?' · '+z.area:''}</option>`;
+      }).join('')}
     </select>
     <span style="font-size:11px;color:var(--text-mid)">Maintenez Ctrl/Cmd pour sélection multiple</span>
   </div>
   <div class="form-actions">
     <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
-    <button class="btn btn-primary" onclick="saveDriver()">✅ Ajouter le livreur</button>
+    <button class="btn btn-primary" onclick="saveDriver()">💾 ${d.id?'Modifier':'Ajouter'}</button>
   </div>`;}
 
 // Override driver render to use real IDs
@@ -2119,8 +2125,9 @@ function renderDrivers() {
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="font-size:12px;color:var(--text-mid)"><strong style="color:var(--text)">${d.orders||0}</strong> livraisons</div>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-outline btn-sm" onclick="openModal('add-driver',null)">✏️ Edit</button>
-          <button class="btn btn-primary btn-sm" onclick="assignOrderToDriver('${d.full_name||d.name}')">📦 Assigner</button>
+          <button class="btn btn-outline btn-sm" onclick="editDriver('${d.id}')">✏️</button>
+          <button class="btn btn-primary btn-sm" onclick="assignOrderToDriver('${d.full_name||d.name}')">📦</button>
+          <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:none;cursor:pointer" onclick="deleteDriver('${d.id}')">🗑️</button>
         </div>
       </div>
     </div>`).join('')}
@@ -2136,7 +2143,7 @@ function renderModal() {
     case 'edit-product': title='Modifier le produit';       body=renderProductForm(adminState.editItem||{}); break;
     case 'add-coupon':   title='Nouveau coupon';            body=renderCouponForm(); break;
     case 'edit-coupon':  title='Modifier le coupon';        body=renderCouponForm(adminState.editItem||{}); break;
-    case 'add-driver':   title='Nouveau livreur';           body=renderDriverForm(); break;
+    case 'add-driver':   title=adminState.editItem?'Modifier le livreur':'Nouveau livreur'; body=renderDriverForm(adminState.editItem||{}); break;
     case 'add-zone':     title=adminState.editItem?'Modifier la zone':'Nouvelle zone'; body=renderZoneForm(adminState.editItem||{}); break;
     case 'send-notif':   title='Envoyer une notification';  body=renderNotifModal(); break;
     case 'add-promo':    title='Nouvelle promotion';        body=renderPromoForm(); break;
@@ -2485,6 +2492,17 @@ async function loadAdminData() {
       }));
     }
 
+    // Load drivers
+    const { data: drivers } = await db.from('drivers').select('*');
+    if (drivers && drivers.length > 0) {
+      MOCK.drivers = drivers.map(d => ({
+        id: d.id, name: d.name, phone: d.phone,
+        zones: d.zones || [], status: d.status || 'available',
+        orders: d.orders || 0, isActive: d.is_active !== false
+      }));
+      console.log('✅ Drivers loaded:', drivers.length);
+    }
+
     // Load coupons
     const { data: coupons } = await db.from('coupons').select('*');
     if (coupons && coupons.length > 0) {
@@ -2652,6 +2670,67 @@ window.saveZone = async function() {
   toast(adminState.editItem?'✅ Zone modifiée !':'✅ Zone ajoutée !');
   closeModal();
 };
+
+// ── OVERRIDE saveDriver to sync Supabase ──
+const _localSaveDriver = saveDriver;
+window.saveDriver = async function() {
+  const name  = document.getElementById('drv-name')?.value?.trim();
+  const phone = document.getElementById('drv-phone')?.value?.trim();
+  if (!name || !phone) { toast('Nom et téléphone obligatoires','error'); return; }
+  const zones = [...document.querySelectorAll('#drv-zones option:checked')].map(o=>o.value);
+
+  if (db) {
+    try {
+      if (adminState.editItem?.id) {
+        await db.from('drivers').update({ name, phone, zones }).eq('id', adminState.editItem.id);
+      } else {
+        await db.from('drivers').insert({ name, phone, zones, status:'available', orders:0, is_active:true });
+      }
+      await loadAdminData();
+    } catch(e) { console.log('Driver sync failed:', e); }
+  } else {
+    if (adminState.editItem) {
+      const d = MOCK.drivers.find(x=>x.id===adminState.editItem.id);
+      if(d){ d.name=name; d.phone=phone; d.zones=zones; }
+    } else {
+      MOCK.drivers.push({id:'d'+Date.now(), name, phone, zones, status:'available', orders:0, isActive:true});
+    }
+  }
+  toast(adminState.editItem ? '✅ Livreur modifié !' : '✅ Livreur ajouté !');
+  closeModal();
+};
+
+function editDriver(id) {
+  const d = MOCK.drivers.find(x=>x.id===id);
+  if(!d) return;
+  openModal('add-driver', d);
+}
+
+async function deleteDriver(id) {
+  if (!confirm('Supprimer ce livreur ?')) return;
+  if (db) {
+    try {
+      const { error } = await db.from('drivers').delete().eq('id', id);
+      if (error) { toast('❌ Erreur de suppression','error'); return; }
+    } catch(e) { toast('❌ Erreur','error'); return; }
+  }
+  MOCK.drivers = MOCK.drivers.filter(x => x.id !== id);
+  toast('🗑️ Livreur supprimé');
+  render();
+}
+
+async function toggleDriverStatus(id) {
+  const d = MOCK.drivers.find(x=>x.id===id);
+  if (!d) return;
+  const states = ['available','busy','offline'];
+  const next = states[(states.indexOf(d.status)+1) % states.length];
+  d.status = next;
+  if (db) {
+    try { await db.from('drivers').update({ status: next }).eq('id', id); }
+    catch(e) { console.log('Driver status sync failed'); }
+  }
+  render();
+}
 
 // ── INIT ──
 if (typeof supabase !== 'undefined') {
