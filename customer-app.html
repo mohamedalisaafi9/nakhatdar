@@ -1253,13 +1253,15 @@ function renderAI(){
       ${S.msgs.length===0?`
       <div class="bubble bot">${L('👋 مرحباً! أنا مساعدك في نكهة الدار.\n\nيمكنني مساعدتك في:\n• اقتراح الوصفات\n• اختيار التوابل\n• فوائد المنتجات\n• برنامج المكافآت','👋 Bonjour! Je suis votre assistant نكهة الدار.\n\nJe peux vous aider avec:\n• Recettes tunisiennes\n• Choix des épices\n• Bienfaits des produits\n• Programme récompenses','👋 Hello! I\'m your نكهة الدار assistant.\n\nI can help with:\n• Tunisian recipes\n• Choosing spices\n• Product benefits\n• Rewards program')}</div>
       <div class="chat-sugs">
-        <button class="sug-btn" onclick="sendAI('${L('أريد عمل كسكسي','Je veux faire un couscous','I want to make couscous')}')">${L('كسكسي','Couscous','Couscous')}</button>
-        <button class="sug-btn" onclick="sendAI('${L('وصفة طاجين','Recette tagine','Tagine recipe')}')">${L('طاجين','Tagine','Tagine')}</button>
-        <button class="sug-btn" onclick="sendAI('${L('فوائد الهريسة','Harissa tunisienne','Tunisian harissa')}')">${L('الهريسة','Harissa','Harissa')}</button>
-        <button class="sug-btn" onclick="sendAI('${L('برنامج المكافآت','Programme récompenses','Rewards program')}')">${L('المكافآت','Récompenses','Rewards')}</button>
+        <button class="sug-btn" onclick="sendAI('${L('أريد عمل كسكسي','Je veux faire un couscous','I want to make couscous')}')">${L('🍲 كسكسي','🍲 Couscous','🍲 Couscous')}</button>
+        <button class="sug-btn" onclick="sendAI('${L('شنو التوابل في بروموسيون؟','Quelles épices sont en promo?','Which spices are on sale?')}')">${L('🔥 العروض','🔥 Promos','🔥 Deals')}</button>
+        <button class="sug-btn" onclick="sendAI('${L('فوائد الكركم','Bienfaits du curcuma','Turmeric benefits')}')">${L('💛 فوائد','💛 Bienfaits','💛 Benefits')}</button>
+        <button class="sug-btn" onclick="sendAI('${L('كيفاش يخدم برنامج الولاء؟','Comment marche la fidélité?','How does loyalty work?')}')">${L('🏆 الولاء','🏆 Fidélité','🏆 Loyalty')}</button>
+        <button class="sug-btn" onclick="sendAI('${L('أريد نعمل لبلابي','Je veux faire du lablabi','I want to make lablabi')}')">${L('🥣 لبلابي','🥣 Lablabi','🥣 Lablabi')}</button>
+        <button class="sug-btn" onclick="sendAI('${L('كيفاش نربح من الباراناج؟','Comment gagner avec le parrainage?','How to earn with referrals?')}')">${L('🤝 باراناج','🤝 Parrainage','🤝 Referral')}</button>
       </div>`:
       S.msgs.map(m=>`
-      <div class="bubble ${m.r}" style="white-space:pre-line">${m.t}
+      <div class="bubble ${m.r}" dir="auto" style="white-space:pre-line;text-align:start">${m.t}
         ${m.prods&&m.prods.length?`<button class="add-all-btn" onclick="addAll(${JSON.stringify(m.prods)})">🛒 ${L('أضف الكل للسلة','Tout ajouter','Add all to cart')}</button>`:''}
       </div>`).join('')}
     </div>
@@ -1916,10 +1918,14 @@ async function sendAI(msg){
   }catch(e){
     S.msgs.pop();
     const lo=msg.toLowerCase();
-    let t=lo.includes('كسكسي')||lo.includes('couscous')?L('🍲 لعمل كسكسي:\n• كركم أصلي\n• فلفل أحمر\n• هريسة تونسية\n• زيت زيتون بكر','🍲 Pour le couscous:\n• Curcuma\n• Piment rouge\n• Harissa\n• Huile d\'olive','🍲 For couscous:\n• Turmeric\n• Red chili\n• Harissa\n• Olive oil'):
-      lo.includes('طاجين')||lo.includes('tagine')?L('🥘 للطاجين:\n• كركم\n• قرفة سيلانية\n• فلفل أحمر\n• زيت زيتون','🥘 Tagine:\n• Curcuma\n• Cannelle\n• Piment\n• Huile','🥘 Tagine:\n• Turmeric\n• Cinnamon\n• Chili\n• Olive oil'):
-      L('👋 يمكنني مساعدتك في الوصفات والمنتجات. جرب: "أريد عمل كسكسي"','👋 Je peux vous aider avec les recettes. Essayez: "Je veux faire un couscous"',"👋 I can help with recipes. Try: 'I want to make couscous'");
-    const prods=PRODS.filter(p=>t.includes(p.ar)).map(p=>p.id).slice(0,4);
+    let t=lo.includes('كسكسي')||lo.includes('couscous')?L('🍲 لعمل كسكسي تحتاج:\n• كركم أصلي — 5.900 د.ت\n• فلفل أحمر — 3.200 د.ت (بروموسيون!)\n• هريسة تونسية — 4.200 د.ت\n• زيت زيتون بكر — 18.000 د.ت\nأضفهم للسلة مباشرة! 🛒','🍲 Pour le couscous:\n• Curcuma — 5.900 DT\n• Piment rouge — 3.200 DT (PROMO!)\n• Harissa — 4.200 DT\n• Huile d\'olive — 18.000 DT\nAjoutez-les au panier! 🛒','🍲 For couscous:\n• Turmeric — 5.900 DT\n• Red chili — 3.200 DT (SALE!)\n• Harissa — 4.200 DT\n• Olive oil — 18.000 DT'):
+      lo.includes('طاجين')||lo.includes('tagine')?L('🥘 للطاجين:\n• كركم — 5.900 د.ت\n• قرفة سيلانية — 4.800 د.ت (بروموسيون!)\n• فلفل أحمر — 3.200 د.ت\n• زيت زيتون — 18.000 د.ت','🥘 Tagine:\n• Curcuma — 5.900 DT\n• Cannelle — 4.800 DT (PROMO!)\n• Piment — 3.200 DT\n• Huile d\'olive — 18.000 DT','🥘 Tagine:\n• Turmeric — 5.900 DT\n• Cinnamon — 4.800 DT (SALE!)\n• Chili — 3.200 DT\n• Olive oil — 18.000 DT'):
+      lo.includes('لبلابي')||lo.includes('lablabi')?L('🥣 للبلابي:\n• كركم — 5.900 د.ت\n• هريسة تونسية — 4.200 د.ت\n• زيت زيتون بكر — 18.000 د.ت\nنصيحة: زيد شوية زعتر بلدي (7.800 د.ت) تعطيه نكهة خاصة! 👨‍🍳','🥣 Lablabi:\n• Curcuma — 5.900 DT\n• Harissa — 4.200 DT\n• Huile d\'olive — 18.000 DT\nAstuce: ajoutez du zaatar (7.800 DT) pour plus de saveur! 👨‍🍳','🥣 Lablabi:\n• Turmeric — 5.900 DT\n• Harissa — 4.200 DT\n• Olive oil — 18.000 DT'):
+      lo.includes('عرض')||lo.includes('promo')||lo.includes('بروم')?L('🔥 العروض الحالية:\n• فلفل أحمر: 3.200 بدل 4.500 د.ت\n• قرفة سيلانية: 4.800 بدل 6.200 د.ت\n• لوز طبيعي: 10.000 بدل 12.500 د.ت\n• مشمش مجفف: 5.900 بدل 7.200 د.ت\n• بذور الشيا: 7.200 بدل 8.900 د.ت\nاستعمل كوبون WELCOME10 لخصم إضافي 10%! 🎉','🔥 Promos actuelles:\n• Piment rouge: 3.200 au lieu de 4.500 DT\n• Cannelle: 4.800 au lieu de 6.200 DT\n• Amandes: 10.000 au lieu de 12.500 DT\n• Abricots secs: 5.900 au lieu de 7.200 DT\n• Graines de chia: 7.200 au lieu de 8.900 DT\nCode WELCOME10 pour -10% supplémentaire! 🎉','🔥 Current deals:\n• Red chili: 3.200 instead of 4.500 DT\n• Cinnamon: 4.800 instead of 6.200 DT\n• Almonds: 10.000 instead of 12.500 DT'):
+      lo.includes('ولاء')||lo.includes('fidél')||lo.includes('مكافآت')||lo.includes('récompens')?L('🏆 برنامج الولاء:\n🌱 مبتدئ (0-99 د.ت): خصم 3%\n🥉 برونز (100-199): خصم 5%\n🥈 فضي (200-399): خصم 7%\n🥇 ذهبي (400-999): خصم 10%\n💎 VIP (+1000): خصم 15%\n\nوهدية مفاجأة على كل طلب ≥200 د.ت! 🎁','🏆 Programme fidélité:\n🌱 Starter (0-99 DT): -3%\n🥉 Bronze (100-199): -5%\n🥈 Argent (200-399): -7%\n🥇 Or (400-999): -10%\n💎 VIP (+1000): -15%\n\nCadeau surprise pour commande ≥200 DT! 🎁','🏆 Loyalty program:\n🌱 Starter: -3%\n🥉 Bronze: -5%\n🥈 Silver: -7%\n🥇 Gold: -10%\n💎 VIP: -15%'):
+      lo.includes('باراناج')||lo.includes('parrain')||lo.includes('referr')?L('🤝 برنامج الباراناج:\n• شارك رمزك مع صحابك\n• صاحبك يربح -5 د.ت في أول طلب (≥30 د.ت)\n• إنتي تربح 5 د.ت رصيد!\n• الرصيد يمشي في 30 يوم\nروح للمكافآت تلقى رمزك! 📤','🤝 Programme parrainage:\n• Partagez votre code avec vos amis\n• Votre ami reçoit -5 DT sur sa 1ère commande (≥30 DT)\n• Vous recevez 5 DT de crédit!\n• Le crédit expire après 30 jours\nAllez dans Récompenses pour votre code! 📤','🤝 Referral program:\n• Share your code with friends\n• Friend gets -5 DT on 1st order (≥30 DT)\n• You get 5 DT credit!'):
+      L('👋 أنا مساعدك في نكهة الدار!\nنجم نعاونك في:\n• وصفات تونسية 🍲\n• اختيار التوابل والمنتجات 🌶️\n• فوائد المنتجات 💛\n• العروض والخصومات 🔥\n• برنامج الولاء والباراناج 🏆\n\nجرب اسألني: "أريد عمل كسكسي" أو "شنو العروض؟"','👋 Je suis votre assistant نكهة الدار!\nJe peux vous aider avec:\n• Recettes tunisiennes 🍲\n• Choix d\'épices et produits 🌶️\n• Bienfaits des produits 💛\n• Promos et réductions 🔥\n• Fidélité et parrainage 🏆\n\nEssayez: "couscous" ou "quelles promos?"','👋 I\'m your نكهة الدار assistant!\nI can help with recipes, products, deals, and rewards!');
+    const prods=PRODS.filter(p=>t.includes(p.ar)||t.toLowerCase().includes(p.fr.toLowerCase())).map(p=>p.id).slice(0,5);
     S.msgs.push({r:'bot',t,prods});
   }
   render();
@@ -2051,11 +2057,17 @@ async function initDB(){
     // ── Vérifier session existante ──
     const{data:{session}}=await db.auth.getSession();
     if(session&&!_isRecovery){
+      // Charger le profil complet depuis la table profiles
+      const{data:profile}=await db.from('profiles')
+        .select('full_name, phone, loyalty_tier, monthly_spend')
+        .eq('id', session.user.id).single();
       S.user={
         id:    session.user.id,
-        name:  session.user.user_metadata?.full_name||'مستخدم',
-        phone: session.user.user_metadata?.phone||''
+        name:  profile?.full_name||session.user.user_metadata?.full_name||'مستخدم',
+        phone: profile?.phone||session.user.user_metadata?.phone||''
       };
+      S.df.phone = S.user.phone;
+      S.spend = parseFloat(profile?.monthly_spend||0);
       await loadCart();
       await loadReferralData();
     }
@@ -2117,11 +2129,16 @@ async function initDB(){
       }
       if(event==='SIGNED_IN'&&session){
         if(S.authMode==='reset'||_isRecovery)return;
+        const{data:profile}=await db.from('profiles')
+          .select('full_name, phone, monthly_spend')
+          .eq('id', session.user.id).single();
         S.user={
           id:    session.user.id,
-          name:  session.user.user_metadata?.full_name||'مستخدم',
-          phone: session.user.user_metadata?.phone||''
+          name:  profile?.full_name||session.user.user_metadata?.full_name||'مستخدم',
+          phone: profile?.phone||session.user.user_metadata?.phone||''
         };
+        S.df.phone = S.user.phone;
+        S.spend = parseFloat(profile?.monthly_spend||0);
         await loadCart();
         await loadReferralData();
         render();
